@@ -1,0 +1,29 @@
+:root {
+  /* Layout & Backgrounds */
+  --color-bg: #101010;
+  --color-panel-1: #FEFEFE;
+
+  /* Typography */
+  --color-text-primary: #000000;
+  --color-text-secondary: #7B7B7B;
+  --color-text-highlight: #E81C1F;
+
+  /* Brand & UI Elements */
+  --color-plus: #66BC32;
+  --color-decline: #E32626;
+  --color-blue: #72A3FF;
+  --color-red: #FF5151;
+  --color-green: #31AE36;
+
+  /* Grays & Neutrals */
+  --color-gray: #AEAEAE;
+  --color-warm-grey: #9F8E86;
+
+  /* Clock & Digital Elements */
+  --color-clock-digit: #FFFFFF;
+  --color-digit-day: #FFFFFF;
+  --color-digit-hour: #FFFFFF;
+  --color-digit-min: #FFFFFF;
+  --color-digit-month: #FFFFFF;
+  --color-digit-year: #FFFFFF;
+}
