@@ -97,7 +97,6 @@ function setTransformByIndex(idx: number, withTransition: boolean) {
   if (!track || !windowEl) return;
 
   const y = computeYByIndex(idx, windowEl);
-  console.log("y", y)
   if (!withTransition) {
     track.style.transition = "none";
     track.style.transform = `translateY(${y}px)`;
@@ -217,7 +216,6 @@ watch(
     () => props.value,
     async (nv) => {
       if (nv == null) return;
-      console.log(props.type, nv, lastValue)
       await goTo(nv);
     }
 );
@@ -270,7 +268,7 @@ watch(
   align-items: center;
 
   font-weight: bold;
-  font-size: 2rem;
+  font-size: 2.2rem;
   color: white;
 
   transition: transform 520ms cubic-bezier(0.16, 1, 0.3, 1);

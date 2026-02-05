@@ -56,29 +56,50 @@ const year = computed(() => {
 
 <template>
   <div class="flex rounded-md overflow-hidden w-fit clock" style="gap:0.2rem">
-    <!-- YEAR -->
-    <FlipClockItem :value="year" type="year"/>
+    <div class="item">
+      <span>year</span>
+      <FlipClockItem :value="year" type="year"/>
+    </div>
 
-    <!-- MONTH -->
-    <FlipClockItem :value="month" type="month"/>
+    <div class="item">
+      <span>month</span>
+      <FlipClockItem :value="month" type="month"/>
+    </div>
 
-    <!-- DAY -->
-    <FlipClockItem :value="day" type="day"/>
+    <div class="item">
+      <span>day</span>
+      <FlipClockItem :value="day" type="day"/>
+    </div>
 
-    <!-- HOUR -->
-    <FlipClockItem :value="hour" type="hour"/>
+    <div class="item">
+      <span>hour</span>
+      <FlipClockItem :value="hour" type="hour"/>
+    </div>
 
-    <!-- MINUTE -->
-    <FlipClockItem :value="minute" type="minute"/>
+    <div class="item">
+      <span>min</span>
+      <FlipClockItem :value="minute" type="minute"/>
+    </div>
 
-    <!-- SECOND -->
-    <FlipClockItem :value="second" type="second"/>
+    <div class="item">
+      <span>sec</span>
+      <FlipClockItem :value="second" type="second"/>
+    </div>
   </div>
 </template>
 
 <style scoped>
 .clock {
-
   font-family: "Big Shoulders", sans-serif;
+  font-size: 1.2rem;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  color: #4D4D4D;
+  font-weight: 700;
 }
 </style>

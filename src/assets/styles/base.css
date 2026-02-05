@@ -1,29 +1,29 @@
 :root {
-  /* Layout & Backgrounds */
-  --color-bg: #101010;
-  --color-panel-1: #FEFEFE;
+  /* Main Background & Text */
+  --background: #101010;
+  --primary-text: #000000;
+  --secondary-text: #7B7B7B;
+  --highlight-text: #E81C1F;
 
-  /* Typography */
-  --color-text-primary: #000000;
-  --color-text-secondary: #7B7B7B;
-  --color-text-highlight: #E81C1F;
+  /* Theme Panels */
+  --panel-theme-1: #FEFEFE;
+  --clock-main-digit-color: #FFFFFF;
 
-  /* Brand & UI Elements */
-  --color-plus: #66BC32;
-  --color-decline: #E32626;
+  /* UI Elements */
+  --plus: #66BC32;
+  --decline: #E32626;
+
+  /* Standard Colors */
+  --color-gray: #AEAEAE;
   --color-blue: #72A3FF;
   --color-red: #FF5151;
   --color-green: #31AE36;
-
-  /* Grays & Neutrals */
-  --color-gray: #AEAEAE;
   --color-warm-grey: #9F8E86;
 
-  /* Clock & Digital Elements */
-  --color-clock-digit: #FFFFFF;
-  --color-digit-day: #FFFFFF;
-  --color-digit-hour: #FFFFFF;
-  --color-digit-min: #FFFFFF;
-  --color-digit-month: #FFFFFF;
-  --color-digit-year: #FFFFFF;
+  /* Digit Specific Colors */
+  --digit-day: #FFFFFF;
+  --digit-hour: #FFFFFF;
+  --digit-min: #FFFFFF;
+  --digit-month: #FFFFFF;
+  --digit-year: #FFFFFF;
 }

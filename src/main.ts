@@ -1,4 +1,4 @@
-import './assets/styles/tailwind.css'
+import './assets/styles/index.css'
 import "gplay-app-sdk/style.css";
 import {init, type ProjectConfigData} from "gplay-app-sdk"
 
@@ -14,10 +14,9 @@ const config: ProjectConfigData = {
         id: 'com.gcognify.death-clock',
         name: 'Death Clock'
     },
-    additionalRouter:[{
-        name:'profile',
-        path:'/profile',
-        component: () => import('./screens/profile/ProfileScreen.vue')
-    }],
+    color: {
+        background:'#101010',
+        primaryText:'#000000',
+    }
 }
 init(config)
