@@ -2,13 +2,17 @@
 import {computed, onBeforeUnmount, onMounted, ref} from "vue";
 import FlipClockItem from "@/components/flip-clock/FlipClockItem.vue";
 
+const props = defineProps<{
+  showLabel?: boolean
+}>()
+
 const now = ref(new Date());
 let timer: number | undefined;
 
 onMounted(() => {
   timer = window.setInterval(() => {
     now.value = new Date();
-  }, 500);
+  }, 1000);
 });
 
 onBeforeUnmount(() => {
@@ -23,7 +27,7 @@ const second = computed(() => {
 
   // Chia 1000 để lấy phần thập phân, sau đó toFixed(1) để lấy 1 chữ số
   // Kết quả sẽ là 3.0, 3.1, ..., 3.5...
-  return parseFloat((s + ms / 1000).toFixed(1));
+  return parseFloat((s + ms / 1000).toFixed(0));
 });
 
 const minute = computed(() => {
@@ -57,33 +61,33 @@ const year = computed(() => {
 <template>
   <div class="flex rounded-md overflow-hidden w-fit clock" style="gap:0.2rem">
     <div class="item">
-      <span>year</span>
+      <span v-if="props.showLabel">year</span>
       <FlipClockItem :value="year" type="year"/>
     </div>
 
     <div class="item">
-      <span>month</span>
+      <span v-if="props.showLabel">month</span>
       <FlipClockItem :value="month" type="month"/>
     </div>
 
     <div class="item">
-      <span>day</span>
+      <span v-if="props.showLabel">day</span>
       <FlipClockItem :value="day" type="day"/>
     </div>
 
     <div class="item">
-      <span>hour</span>
+      <span v-if="props.showLabel">hour</span>
       <FlipClockItem :value="hour" type="hour"/>
     </div>
 
     <div class="item">
-      <span>min</span>
+      <span v-if="props.showLabel">min</span>
       <FlipClockItem :value="minute" type="minute"/>
     </div>
 
     <div class="item">
-      <span>sec</span>
-      <FlipClockItem :value="second" type="second"/>
+      <span v-if="props.showLabel">sec</span>
+      <FlipClockItem :scale-near="1" :value="second" type="second"/>
     </div>
   </div>
 </template>

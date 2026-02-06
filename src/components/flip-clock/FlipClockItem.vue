@@ -4,6 +4,9 @@ import {computed, nextTick, onBeforeUnmount, onMounted, ref, watch} from "vue";
 const props = defineProps<{
   value?: number; // ✅ nhận float
   type?: "year" | "month" | "day" | "hour" | "minute" | "second";
+  scaleNear?: number;
+  scaleMid?: number;
+  scaleFar?: number;
 }>();
 
 const start = ref(0);
@@ -178,19 +181,35 @@ function circularDist(a: number, b: number, s: number) {
   return Math.min(d, s - d);
 }
 
-function itemClass(i: number) {
+function itemStyle(i: number) {
   const s = sizeC.value;
-  if (s <= 0) return "";
+  if (s <= 0) return {};
 
-  // center dựa trên visualIndex (float) -> lấy phần gần nhất
   const center = normIndex(Math.round(visualIndex.value));
   const cur = normIndex(i);
   const dist = circularDist(cur, center, s);
 
-  if (dist === 0) return "is-center";
-  if (dist === 1) return "is-near";
-  if (dist === 2) return "is-mid";
-  return "is-far";
+  let scale = 1;
+  let opacity = 1;
+
+  if (dist === 0) {
+    scale = 1;
+    opacity = 1;
+  } else if (dist === 1) {
+    scale = props.scaleNear ?? 0.8; // Dùng props, nếu không có thì mặc định 0.8
+    opacity = 0.8;
+  } else if (dist === 2) {
+    scale = props.scaleMid ?? 0.6;
+    opacity = 0.5;
+  } else {
+    scale = props.scaleFar ?? 0.4;
+    opacity = 0.2;
+  }
+
+  return {
+    transform: `scale(${scale})`,
+    opacity: opacity
+  };
 }
 
 onMounted(async () => {
@@ -225,10 +244,10 @@ watch(
   <div class="clock-wrapper">
     <div ref="windowRef" class="clock-window">
       <div ref="trackRef" class="clock-track">
-        <p v-for="(n, i) in numbers" :key="`${n}-${i}`" :class="itemClass(i)">
+        <p v-for="(n, i) in numbers" :key="`${n}-${i}`" :style="itemStyle(i)">
           {{ n }}
         </p>
-        <p v-for="(n, i) in numbers" :key="`${n}-${i}`" :class="itemClass(i)">
+        <p v-for="(n, i) in numbers" :key="`${n}-${i}`" :style="itemStyle(i)">
           {{ n }}
         </p>
       </div>

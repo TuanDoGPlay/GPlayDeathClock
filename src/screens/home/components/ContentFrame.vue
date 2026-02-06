@@ -9,6 +9,7 @@ const props = defineProps<{
   currentTab?: number
   totalTab?: number
   showBack?: boolean
+  hideSplitBar?: boolean
 }>()
 
 const emit = defineEmits(['back'])
@@ -16,7 +17,9 @@ const emit = defineEmits(['back'])
 
 <template>
   <div class="p-3 flex flex-col h-full">
-    <div class="flex gap-2 items-center justify-center border-b border-gray-500 pb-2">
+    <div :class="{'border-b': !props.hideSplitBar}"
+         class="flex gap-2 items-center justify-center  border-gray-500 pb-2"
+    >
       <Left v-if="props.showBack" class="h-5 w-5 cursor-pointer absolute left-4" @click="emit('back')"/>
       <Component :is="props.icon" class="h-5 w-5" style="color: var(--highlight-text)"/>
       <span class="font-bold" style="font-size: 0.9rem">{{ props.title }}</span>

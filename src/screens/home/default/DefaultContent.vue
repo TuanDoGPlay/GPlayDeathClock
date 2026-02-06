@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import {ref} from 'vue'
-import TodayLifeRitual from "@/screens/home/default/items/TodayLifeRitual.vue";
-import BucketList from "@/screens/home/default/items/BucketList.vue";
+import TodayLifeRitual from "@/screens/home/default/components/TodayLifeRitual.vue";
+import BucketList from "@/screens/home/default/components/BucketList.vue";
 
 const scrollContainer = ref<HTMLElement | null>(null)
 const currentIndex = ref(0)
