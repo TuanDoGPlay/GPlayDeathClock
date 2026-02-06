@@ -1,45 +1,35 @@
 <script lang="ts" setup>
-import {computed, onBeforeUnmount, onMounted, ref} from "vue";
+import {computed, ref, watch} from "vue";
 import FlipClockItem from "@/components/flip-clock/FlipClockItem.vue";
 
 const props = defineProps<{
   showLabel?: boolean
+  value: number
 }>()
 
-const now = ref(new Date());
-let timer: number | undefined;
+const dateInstance = ref(new Date(props.value));
 
-onMounted(() => {
-  timer = window.setInterval(() => {
-    now.value = new Date();
-  }, 1000);
-});
-
-onBeforeUnmount(() => {
-  if (timer) clearInterval(timer);
-});
-
-/* ===== TÍNH GIÁ TRỊ DẠNG FLOAT (TRUYỀN ĐỘNG) ===== */
+watch(() => props.value, () => {
+  dateInstance.value = new Date(props.value);
+})
 
 const second = computed(() => {
-  const s = now.value.getSeconds();
-  const ms = now.value.getMilliseconds();
+  const s = dateInstance.value.getSeconds();
+  const ms = dateInstance.value.getMilliseconds();
 
-  // Chia 1000 để lấy phần thập phân, sau đó toFixed(1) để lấy 1 chữ số
-  // Kết quả sẽ là 3.0, 3.1, ..., 3.5...
   return parseFloat((s + ms / 1000).toFixed(0));
 });
 
 const minute = computed(() => {
-  return now.value.getMinutes() + second.value / 60;
+  return dateInstance.value.getMinutes() + second.value / 60;
 });
 
 const hour = computed(() => {
-  return (now.value.getHours() % 24) + minute.value / 60;
+  return (dateInstance.value.getHours() % 24) + minute.value / 60;
 });
 
 const day = computed(() => {
-  return now.value.getDate() + hour.value / 24;
+  return dateInstance.value.getDate() + hour.value / 24;
 });
 
 function daysInMonth(year: number, month: number) {
@@ -47,14 +37,14 @@ function daysInMonth(year: number, month: number) {
 }
 
 const month = computed(() => {
-  const m = now.value.getMonth(); // 0-11
-  const d = now.value.getDate() - 1 + hour.value / 24;
-  const dim = daysInMonth(now.value.getFullYear(), m);
+  const m = dateInstance.value.getMonth(); // 0-11
+  const d = dateInstance.value.getDate() - 1 + hour.value / 24;
+  const dim = daysInMonth(dateInstance.value.getFullYear(), m);
   return (m + 1) + d / dim;
 });
 
 const year = computed(() => {
-  return (now.value.getFullYear() % 100) + (month.value - 1) / 12;
+  return (dateInstance.value.getFullYear() % 100) + (month.value - 1) / 12;
 });
 </script>
 

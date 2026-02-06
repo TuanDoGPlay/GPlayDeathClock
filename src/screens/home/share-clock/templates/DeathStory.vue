@@ -10,6 +10,8 @@ import {Utils} from "@/common/utils.ts";
 
 const emit = defineEmits(['back'])
 
+const originTime = ref(new Date().getTime())
+const displayTime = ref(originTime.value)
 const currentIndex = ref(0)
 const list = [
   {id: 1, label: "Lots of smoking", time: 31536000},
@@ -27,22 +29,31 @@ function handleBack() {
 }
 
 function next() {
-  if (currentIndex.value < list.length - 1) currentIndex.value = (currentIndex.value + 1)
-}
+  if (currentIndex.value < list.length - 1) {
+    currentIndex.value++;
+    changeDisplayTime()
 
-function prev() {
-  currentIndex.value = (currentIndex.value - 1 + list.length) % list.length
+  }
 }
 
 function goTo(index: number) {
   currentIndex.value = index
+  changeDisplayTime()
+}
+
+function changeDisplayTime() {
+  // Tính tổng thời gian của các item từ index 0 đến currentIndex hiện tại
+  const timeConsumed = list
+      .slice(0, currentIndex.value + 1)
+      .reduce((acc, item) => acc + item.time, 0);
+
+  displayTime.value = originTime.value - timeConsumed;
 }
 </script>
 
 <template>
   <ContentFrame :icon="Story" hide-split-bar show-back title="Death Story" @back="handleBack">
     <div class="h-full w-full flex flex-col">
-      <!-- ✅ click nền mới đổi -->
       <div class="flex-1 relative rounded-lg overflow-hidden bg p-2" @click="next()">
         <div class="flex gap-1 w-full mb-4">
           <span
@@ -55,7 +66,7 @@ function goTo(index: number) {
         </div>
 
         <div>
-          <FlipClock style="width: 100%;"/>
+          <FlipClock :value="displayTime" style="width: 100%;"/>
         </div>
 
         <div class="relative" style="height: 30vh">
