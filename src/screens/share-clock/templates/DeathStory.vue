@@ -2,11 +2,11 @@
 import Story from '@/assets/icons/story.svg'
 import Share from '@/assets/icons/share.svg'
 import Video from '@/assets/icons/video.svg'
-import ContentFrame from "@/screens/home/components/ContentFrame.vue";
 import ButtonComponent from "@/components/button/ButtonComponent.vue";
 import {computed, ref} from "vue";
 import FlipClock from "@/components/flip-clock/FlipClock.vue";
 import {Utils} from "@/common/utils.ts";
+import ContentFrame from "@/components/content-frame/ContentFrame.vue";
 
 const emit = defineEmits(['back'])
 

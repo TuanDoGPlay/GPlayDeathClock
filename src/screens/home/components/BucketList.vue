@@ -1,11 +1,11 @@
 <script lang="ts" setup>
 import Star from "@/assets/icons/star.svg";
 import Add from "@/assets/icons/add.svg";
-import ContentFrame from "@/screens/home/components/ContentFrame.vue";
 import CheckboxComponent from "@/components/checkbox/CheckboxComponent.vue";
 import {ref} from "vue";
 import ShareArrow from "@/assets/icons/share-arrow.svg";
 import ButtonComponent from "@/components/button/ButtonComponent.vue";
+import ContentFrame from "@/components/content-frame/ContentFrame.vue";
 
 
 const tasks = ref([

@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import Heart from '@/assets/icons/heart.svg'
 import Share from '@/assets/icons/share.svg'
-import ContentFrame from "@/screens/home/components/ContentFrame.vue";
 import ButtonComponent from "@/components/button/ButtonComponent.vue";
+import ContentFrame from "@/components/content-frame/ContentFrame.vue";
 
 const emit = defineEmits(['back'])
 

@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import Share from '@/assets/icons/share.svg'
-import ContentFrame from "@/screens/home/components/ContentFrame.vue";
 import ButtonComponent from "@/components/button/ButtonComponent.vue";
 import {Swiper, SwiperSlide} from "swiper/vue";
 import {EffectCoverflow} from "swiper/modules";
@@ -8,9 +7,12 @@ import "swiper/css";
 import "swiper/css/effect-coverflow";
 import {onMounted, ref} from "vue";
 import {type ShareTemplate, Utils} from "@/common/utils.ts";
+import ContentFrame from "@/components/content-frame/ContentFrame.vue";
+import {goToRouter} from "gplay-app-sdk";
 
 const emit = defineEmits<{
   (e: "select", id: number): void;
+
 }>();
 
 const templates = ref<ShareTemplate[]>([])
@@ -32,10 +34,16 @@ function onSelect() {
   }
   emit('select', selectedTemplate.id);
 }
+
+function handleBack() {
+  goToRouter({
+    name: 'home',
+  })
+}
 </script>
 
 <template>
-  <ContentFrame :icon="Share" title="Share Clock">
+  <ContentFrame :icon="Share" show-back title="Share Clock" @back="handleBack">
     <div class="flex flex-col items-center justify-center h-full pb-2 overflow-hidden">
       <p class="font-semibold my-4">{{ templates[activeIndex]?.title }}</p>
       <Swiper

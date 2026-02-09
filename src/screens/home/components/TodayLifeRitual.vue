@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 import EyeQuestion from "@/assets/icons/eye-question.svg";
 import ShareArrow from "@/assets/icons/share-arrow.svg";
-import ContentFrame from "@/screens/home/components/ContentFrame.vue";
 import CheckboxComponent from "@/components/checkbox/CheckboxComponent.vue";
 import {ref} from "vue";
 import ButtonComponent from "@/components/button/ButtonComponent.vue";
+import ContentFrame from "@/components/content-frame/ContentFrame.vue";
 
 const tasks = ref([
   {

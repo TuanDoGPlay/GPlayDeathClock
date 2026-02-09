@@ -1,3 +1,4 @@
 export enum EventEnum {
-    ToggleClock = 'toggleClock'
+    ToggleClock = 'toggleClock',
+    ChangeContent = 'changeContent'
 }

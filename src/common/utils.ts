@@ -1,6 +1,6 @@
 import type {Component} from "vue";
-import DeathStory from "@/screens/home/share-clock/templates/DeathStory.vue";
-import SaveADate from "@/screens/home/share-clock/templates/SaveADate.vue";
+import DeathStory from "@/screens/share-clock/templates/DeathStory.vue";
+import SaveADate from "@/screens/share-clock/templates/SaveADate.vue";
 
 export interface ShareTemplate {
     id: number,

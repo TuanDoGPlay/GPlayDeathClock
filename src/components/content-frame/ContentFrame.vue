@@ -18,11 +18,13 @@ const emit = defineEmits(['back'])
 <template>
   <div class="p-3 flex flex-col h-full">
     <div :class="{'border-b': !props.hideSplitBar}"
-         class="flex gap-2 items-center justify-center  border-gray-500 pb-2"
+         class="flex gap-2 items-center justify-center border-gray-500 pb-2"
     >
       <Left v-if="props.showBack" class="h-5 w-5 cursor-pointer absolute left-4" @click="emit('back')"/>
       <Component :is="props.icon" class="h-5 w-5" style="color: var(--highlight-text)"/>
       <span class="font-bold" style="font-size: 0.9rem">{{ props.title }}</span>
+      <span v-if="props.showPaginationInTitle" class="font-bold"
+            style="color: var(--secondary-text)">({{ (props.currentTab ?? 0) + 1 }}/{{ props.totalTab }})</span>
     </div>
     <div class="flex-1">
       <slot/>
