@@ -1,0 +1,49 @@
+[
+  {
+    "id": 0,
+    "question": "What is your name?",
+    "field": "name",
+    "type": "text"
+  },
+  {
+    "id": 1,
+    "question": "Enter your date of birth",
+    "field": "dob",
+    "type": "date"
+  },
+  {
+    "id": 2,
+    "question": "Enter your height (cm)",
+    "field": "height",
+    "type": "number"
+  },
+  {
+    "id": 3,
+    "question": "Enter your current weight (kg)",
+    "field": "weight",
+    "type": "number"
+  },
+  {
+    "id": 4,
+    "question": "What is your biological sex?",
+    "field": "sex",
+    "type": "select",
+    "options": [
+      "Male",
+      "Female",
+      "Other"
+    ]
+  },
+  {
+    "id": 5,
+    "question": "What is your sexual orientation?",
+    "field": "sexualOrientation",
+    "type": "select",
+    "options": [
+      "Straight",
+      "Homosexual",
+      "Bisexual",
+      "Other"
+    ]
+  }
+]

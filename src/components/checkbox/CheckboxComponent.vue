@@ -4,10 +4,11 @@ const props = defineProps<{
   label?: string
 }>()
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'change'])
 
 const toggle = () => {
   emit('update:modelValue', !props.modelValue)
+  emit('change')
 }
 </script>
 
@@ -19,7 +20,7 @@ const toggle = () => {
     <div class="flex items-center gap-3">
       <div
           :class="modelValue ? 'bg-transparent' : 'bg-[#D9D9D9]'"
-          class="rounded-full flex items-center justify-center transition-all duration-200 border-4"
+          class="rounded-full flex items-center justify-center transition-all duration-200 border-4 flex-shrink-0"
           style="border-color: #D9D9D9;height: 1.05rem; width: 1.05rem"
       >
         <svg

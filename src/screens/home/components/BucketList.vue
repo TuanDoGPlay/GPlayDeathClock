@@ -2,34 +2,20 @@
 import Star from "@/assets/icons/star.svg";
 import Add from "@/assets/icons/add.svg";
 import CheckboxComponent from "@/components/checkbox/CheckboxComponent.vue";
-import {ref} from "vue";
+import {onMounted, ref} from "vue";
 import ShareArrow from "@/assets/icons/share-arrow.svg";
 import ButtonComponent from "@/components/button/ButtonComponent.vue";
 import ContentFrame from "@/components/content-frame/ContentFrame.vue";
+import type {BucketItemData} from "@/common/types.ts";
+import {CommonController} from "@/common/controller.ts";
+import AddBucketPopup from "@/screens/home/popups/AddBucketPopup.vue";
 
+const bucketList = ref<BucketItemData[]>([])
+const isShowAdd = ref(false)
 
-const tasks = ref([
-  {
-    id: 1,
-    label: "Have a car",
-    completed: true,
-  },
-  {
-    id: 2,
-    label: "Built a house for family",
-    completed: true,
-  },
-  {
-    id: 3,
-    label: "Have two children",
-    completed: true,
-  },
-  {
-    id: 4,
-    label: "Go to Iceland once",
-    completed: false,
-  },
-])
+onMounted(async () => {
+  bucketList.value = await CommonController.getBucketList()
+})
 </script>
 
 <template>
@@ -37,7 +23,7 @@ const tasks = ref([
     <div class="mt-2 flex flex-col justify-between h-full" style="font-size: 0.9rem">
       <div>
         <CheckboxComponent
-            v-for="task in tasks"
+            v-for="task in bucketList"
             :key="task.id"
             v-model="task.completed"
             :label="task.label"
@@ -46,10 +32,14 @@ const tasks = ref([
         </CheckboxComponent>
       </div>
       <div class="flex justify-between w-full">
-        <ButtonComponent :icon="Add" template="primary" text="Add New"/>
+        <ButtonComponent :icon="Add" template="primary" text="Add New" @click="isShowAdd = true"/>
         <ButtonComponent :icon="ShareArrow" template="primary" text="Share List"/>
       </div>
     </div>
+    <AddBucketPopup
+        :is-show="isShowAdd"
+        @close="isShowAdd = false"
+    />
   </ContentFrame>
 </template>
 

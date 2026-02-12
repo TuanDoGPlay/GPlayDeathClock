@@ -2,7 +2,7 @@ import './assets/styles/index.css'
 import "gplay-app-sdk/style.css";
 import {init, type ProjectConfigData} from "gplay-app-sdk"
 import AppLayout from "@/screens/AppLayout.vue";
-
+import {CommonController} from "@/common/controller.ts";
 
 const config: ProjectConfigData = {
     layout: {
@@ -33,3 +33,4 @@ const config: ProjectConfigData = {
     }
 }
 init(config)
+CommonController.init().then()

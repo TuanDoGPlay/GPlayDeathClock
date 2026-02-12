@@ -1,43 +1,309 @@
 [
   {
-    "id": 0,
-    "question": "What is your name?",
-    "type": 2
-  },
-  {
     "id": 1,
-    "question": "Enter your date of birth",
-    "type": 2
+    "question": "Does anyone in your family have a history of serious illness? (Cancer, heart disease, diabetes, genetic diseases)",
+    "type": "text",
+    "method": 1
   },
   {
     "id": 2,
-    "question": "Enter your height",
-    "type": 2
+    "question": "Do you currently have a serious illness? (Cancer, brain/neurological tumors, severe heart/liver/lung diseases)",
+    "type": "text",
+    "method": 1
   },
   {
     "id": 3,
-    "question": "Enter your current weight",
-    "type": 2
+    "question": "Do you have regular health check-ups?",
+    "type": "select",
+    "options": ["Every 6 months", "Once a year", "Rarely/Never"]
   },
   {
     "id": 4,
-    "question": "What is your biological sex?",
-    "type": 1,
-    "options": [
-      "Male",
-      "Female",
-      "Other"
-    ]
+    "question": "Do you smoke?",
+    "type": "select",
+    "options": ["Often", "Occasionally", "No"]
   },
   {
     "id": 5,
-    "question": "What is your sexual orientation?",
-    "type": 1,
-    "options": [
-      "Straight",
-      "Homosexual",
-      "Bisexual",
-      "Other"
-    ]
+    "question": "Do you drink alcohol/beer?",
+    "type": "select",
+    "options": ["Often", "Occasionally", "No"]
+  },
+  {
+    "id": 6,
+    "question": "Do you use addictive substances?",
+    "type": "select",
+    "options": ["Often", "A few times", "No"]
+  },
+  {
+    "id": 7,
+    "question": "Average daily sleep hours",
+    "type": "slider",
+    "min": 0,
+    "max": 24
+  },
+  {
+    "id": 8,
+    "question": "Do you drink enough 2L (≈ 8 glasses) of water daily?",
+    "type": "select",
+    "options": ["Yes", "Around 1L", "Very little water"]
+  },
+  {
+    "id": 9,
+    "question": "How many meals do you eat per day?",
+    "type": "number",
+    "min": 1,
+    "max": 5
+  },
+  {
+    "id": 10,
+    "question": "How many hours do you sit continuously per day?",
+    "type": "select",
+    "options": ["Over 5 hours", "2-5 hours", "Under 2 hours"]
+  },
+  {
+    "id": 11,
+    "question": "Do you eat breakfast?",
+    "type": "select",
+    "options": ["Almost every day", "Sometimes", "No"]
+  },
+  {
+    "id": 12,
+    "question": "Do you consume fast food or sugary/carbonated drinks?",
+    "type": "select",
+    "options": ["Often", "Occasionally", "No"]
+  },
+  {
+    "id": 13,
+    "question": "Do your daily meals include vegetables?",
+    "type": "select",
+    "options": ["Often", "Occasionally", "No"]
+  },
+  {
+    "id": 14,
+    "question": "Does your diet include a lot of salt/fish sauce?",
+    "type": "select",
+    "options": ["Often", "A little", "No"]
+  },
+  {
+    "id": 15,
+    "question": "Do you often eat canned or processed foods?",
+    "type": "select",
+    "options": ["Often", "A little", "No"]
+  },
+  {
+    "id": 16,
+    "question": "Are you a vegetarian/vegan?",
+    "type": "select",
+    "options": ["I am vegan", "Occasionally", "No"]
+  },
+  {
+    "id": 17,
+    "question": "Do you often eat after 9 PM?",
+    "type": "select",
+    "options": ["Yes", "No"]
+  },
+  {
+    "id": 18,
+    "question": "Do you eat until you are overfull?",
+    "type": "select",
+    "options": ["Yes", "No"]
+  },
+  {
+    "id": 19,
+    "question": "Do you often skip meals?",
+    "type": "select",
+    "options": ["Often", "Sometimes", "No"]
+  },
+  {
+    "id": 20,
+    "question": "Do you use electronic devices while eating?",
+    "type": "select",
+    "options": ["Frequently", "Occasionally", "No"]
+  },
+  {
+    "id": 21,
+    "question": "Do you cook at home or eat out/order in?",
+    "type": "select",
+    "options": ["Cook at home", "Eat out/Order in", "Balanced"]
+  },
+  {
+    "id": 22,
+    "question": "Is your food often greasy/oily?",
+    "type": "select",
+    "options": ["Often", "Sometimes", "No"]
+  },
+  {
+    "id": 23,
+    "question": "Is your food often spicy or hot?",
+    "type": "select",
+    "options": ["Often", "A little", "No"]
+  },
+  {
+    "id": 24,
+    "question": "Do you often eat fruit?",
+    "type": "select",
+    "options": ["Often", "A little", "No"]
+  },
+  {
+    "id": 25,
+    "question": "Do you walk regularly?",
+    "type": "select",
+    "options": ["At least 30 mins/day", "Less than 30 mins", "Hardly ever"]
+  },
+  {
+    "id": 26,
+    "question": "Do you practice Yoga or stretching exercises?",
+    "type": "select",
+    "options": ["Frequently", "Occasionally", "No"]
+  },
+  {
+    "id": 27,
+    "question": "Do you go to the gym?",
+    "type": "select",
+    "options": ["At least 3 sessions/week", "1-2 sessions", "No"]
+  },
+  {
+    "id": 28,
+    "question": "Do you play sports?",
+    "type": "select",
+    "options": ["At least 3 sessions/week", "1-2 sessions", "No"]
+  },
+  {
+    "id": 29,
+    "question": "Do you use health tracking devices (e.g., Smartwatch)?",
+    "type": "select",
+    "options": ["Yes", "No"]
+  },
+  {
+    "id": 30,
+    "question": "Do you experience shortness of breath or chest pain during heavy exercise?",
+    "type": "select",
+    "options": ["Yes", "No"]
+  },
+  {
+    "id": 31,
+    "question": "Do you use phones/computers frequently?",
+    "type": "select",
+    "options": ["Over 8 hours", "4-7 hours", "2-3 hours", "Rarely"]
+  },
+  {
+    "id": 32,
+    "question": "Do you go swimming often?",
+    "type": "select",
+    "options": ["Yes", "No"]
+  },
+  {
+    "id": 33,
+    "question": "Do you spend more time outdoors or indoors?",
+    "type": "select",
+    "options": ["Outdoors", "Indoors"]
+  },
+  {
+    "id": 34,
+    "question": "Do you often go traveling or on picnics?",
+    "type": "select",
+    "options": ["Yes", "Not regularly"]
+  },
+  {
+    "id": 35,
+    "question": "Do you sleep before 11 PM?",
+    "type": "select",
+    "options": ["Almost always", "Sometimes stay up late", "Usually stay up late"]
+  },
+  {
+    "id": 36,
+    "question": "Do you take afternoon naps?",
+    "type": "select",
+    "options": ["Frequently", "Occasionally", "Rarely"]
+  },
+  {
+    "id": 37,
+    "question": "Do you snore while sleeping?",
+    "type": "select",
+    "options": ["Frequently", "Occasionally", "Rarely"]
+  },
+  {
+    "id": 38,
+    "question": "Do you feel tired when waking up?",
+    "type": "select",
+    "options": ["Frequently", "Occasionally", "Rarely"]
+  },
+  {
+    "id": 39,
+    "question": "Do you often have nightmares?",
+    "type": "select",
+    "options": ["Frequently", "Occasionally", "Rarely"]
+  },
+  {
+    "id": 40,
+    "question": "Do you travel frequently between countries?",
+    "type": "select",
+    "options": ["Yes", "No"]
+  },
+  {
+    "id": 41,
+    "question": "Which country do you mainly live in?",
+    "type": "text"
+  },
+  {
+    "id": 42,
+    "question": "Are you currently working at a company?",
+    "type": "select",
+    "options": ["Yes", "No"]
+  },
+  {
+    "id": 43,
+    "question": "Is your work based at an office or at home?",
+    "type": "select",
+    "options": ["Office", "Home/Remote", "Both"]
+  },
+  {
+    "id": 44,
+    "question": "Does school/work cause you significant pressure?",
+    "type": "select",
+    "options": ["Very pressured", "Normal", "No pressure"]
+  },
+  {
+    "id": 45,
+    "question": "Where do you live?",
+    "type": "select",
+    "options": ["City", "Heavy industrial area", "Rural area"]
+  },
+  {
+    "id": 46,
+    "question": "What is your main mode of transport?",
+    "type": "select",
+    "options": ["Car", "Motorbike", "Bicycle", "Public Transport"]
+  },
+  {
+    "id": 47,
+    "question": "Do you often wear a seatbelt in a car?",
+    "type": "select",
+    "options": ["Always", "Sometimes", "Never"]
+  },
+  {
+    "id": 48,
+    "question": "Do you wear a helmet on a motorbike?",
+    "type": "select",
+    "options": ["Always", "Sometimes", "Never"]
+  },
+  {
+    "id": 49,
+    "question": "Are there many factories/plants near your area?",
+    "type": "select",
+    "options": ["Many", "Few", "None"]
+  },
+  {
+    "id": 50,
+    "question": "Is there a lot of noise around your home/workplace?",
+    "type": "select",
+    "options": ["Very noisy", "Normal", "Quiet"]
+  },
+  {
+    "id": 51,
+    "question": "Do you often feel lonely?",
+    "type": "select",
+    "options": ["Very frequently", "Occasionally", "Hardly ever"]
   }
 ]

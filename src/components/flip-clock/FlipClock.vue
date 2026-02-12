@@ -49,34 +49,64 @@ const year = computed(() => {
 </script>
 
 <template>
-  <div class="flex rounded-md overflow-hidden w-fit clock" style="gap:0.2rem">
+  <div class="flex rounded-md overflow-hidden w-full clock" style="gap:0.2rem">
     <div class="item">
-      <span v-if="props.showLabel">year</span>
+      <div
+          :class="props.showLabel ? 'max-h-6 opacity-100' : 'max-h-0 opacity-0'"
+          class="overflow-hidden transition-all duration-500"
+      >
+        <span>year</span>
+      </div>
       <FlipClockItem :value="year" type="year"/>
     </div>
 
     <div class="item">
-      <span v-if="props.showLabel">month</span>
+      <div
+          :class="props.showLabel ? 'max-h-6 opacity-100' : 'max-h-0 opacity-0'"
+          class="overflow-hidden transition-all duration-500"
+      >
+        <span>month</span>
+      </div>
       <FlipClockItem :value="month" type="month"/>
     </div>
 
     <div class="item">
-      <span v-if="props.showLabel">day</span>
+      <div
+          :class="props.showLabel ? 'max-h-6 opacity-100' : 'max-h-0 opacity-0'"
+          class="overflow-hidden transition-all duration-500"
+      >
+        <span>day</span>
+      </div>
       <FlipClockItem :value="day" type="day"/>
     </div>
 
     <div class="item">
-      <span v-if="props.showLabel">hour</span>
+      <div
+          :class="props.showLabel ? 'max-h-6 opacity-100' : 'max-h-0 opacity-0'"
+          class="overflow-hidden transition-all duration-500"
+      >
+        <span>hour</span>
+      </div>
       <FlipClockItem :value="hour" type="hour"/>
     </div>
 
     <div class="item">
-      <span v-if="props.showLabel">min</span>
+      <div
+          :class="props.showLabel ? 'max-h-6 opacity-100' : 'max-h-0 opacity-0'"
+          class="overflow-hidden transition-all duration-500"
+      >
+        <span>min</span>
+      </div>
       <FlipClockItem :value="minute" type="minute"/>
     </div>
 
     <div class="item">
-      <span v-if="props.showLabel">sec</span>
+      <div
+          :class="props.showLabel ? 'max-h-6 opacity-100' : 'max-h-0 opacity-0'"
+          class="overflow-hidden transition-all duration-500"
+      >
+        <span>sec</span>
+      </div>
       <FlipClockItem :scale-near="1" :value="second" type="second"/>
     </div>
   </div>
@@ -86,6 +116,8 @@ const year = computed(() => {
 .clock {
   font-family: "Big Shoulders", sans-serif;
   font-size: 1.2rem;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
 }
 
 .item {

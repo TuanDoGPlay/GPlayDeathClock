@@ -259,7 +259,7 @@ watch(
 .clock-wrapper {
   --window-h: 4rem;
   --item-h: 2rem;
-  width: 3rem;
+  width: 100%;
   position: relative;
   height: var(--window-h);
 }

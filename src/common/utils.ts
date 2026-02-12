@@ -13,13 +13,13 @@ const shareTemplateMapping = new Map<number, ShareTemplate>([
     [1, {
         id: 1,
         title: 'Death Story',
-        image: '/death-story.png',
+        image: '/templates/death-story/thumbnail.png',
         component: DeathStory
     }],
     [2, {
         id: 2,
         title: 'Save a Date',
-        image: '/save-a-date.png',
+        image: '/templates/save-a-date/thumbnail.png',
         component: SaveADate
     }]
 
@@ -58,6 +58,34 @@ export const Utils = {
         });
 
         return parts.join(', ');
-    }
+    },
+    formatShortDuration(seconds: number): string {
+        if (seconds <= 0) return '0s';
 
+        const units = [
+            {label: 'y', value: 31536000}, // 365 * 24 * 60 * 60
+            {label: 'mo', value: 2592000}, // 30 * 24 * 60 * 60
+            {label: 'w', value: 604800},   // 7 * 24 * 60 * 60
+            {label: 'd', value: 86400},    // 24 * 60 * 60
+            {label: 'h', value: 3600},
+            {label: 'm', value: 60},
+            {label: 's', value: 1},
+        ];
+
+        const result: string[] = [];
+        let remainingSeconds = seconds;
+
+        for (const {label, value} of units) {
+            const amount = Math.floor(remainingSeconds / value);
+            if (amount > 0) {
+                result.push(`${amount}${label}`);
+                remainingSeconds %= value;
+            }
+
+            // Dừng lại khi đã lấy đủ 2 đơn vị
+            if (result.length === 2) break;
+        }
+
+        return result.join(' ');
+    },
 }

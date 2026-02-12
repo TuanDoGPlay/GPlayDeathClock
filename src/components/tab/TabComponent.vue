@@ -146,7 +146,7 @@ defineExpose({scrollToTab});
           @click="scrollToTab(idx)"
       >
         <div
-            :class="idx === currentIndex ? 'bg-black scale-110' : 'bg-gray-300'"
+            :class="idx === currentIndex ? 'bg-[#535353]' : 'bg-[#D9D9D9]'"
             class="w-2 h-2 rounded-full transition-all duration-200"
         ></div>
       </div>

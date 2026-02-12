@@ -1,27 +1,53 @@
 <script lang="ts" setup>
 
 import ButtonComponent from "@/components/button/ButtonComponent.vue";
-import {QuestionTypeEnum} from "@/constants/questionType.ts";
-import type {QuestionType} from "@/common/types.ts";
+import type {QuestionData} from "@/common/types.ts";
+import InputComponent from "@/components/input/InputComponent.vue";
+import {onMounted, ref} from "vue";
+import {showToast} from "gplay-app-sdk";
 
 const emit = defineEmits(['next'])
 
 const props = defineProps<{
-  question: QuestionType
+  question: QuestionData
 }>()
+
+const answer = ref()
+const inputRef = ref()
+
+onMounted(() => {
+  const inputElement = inputRef.value?.$el?.querySelector('input') || inputRef.value?.querySelector?.('input');
+  if (inputElement) {
+    inputElement.focus();
+  }
+});
+
+function onSelected(option: string) {
+  answer.value = option
+}
+
+function goNext() {
+  if (!answer.value) {
+    showToast({
+      text: 'Please answer this question'
+    })
+    return
+  }
+  emit('next', {[props.question.field]: answer.value});
+}
 
 </script>
 
 <template>
   <div class="flex flex-col gap-3 items-center justify-center h-full pb-10">
     <p class="font-bold text-center mb-10">{{ props.question.question }}</p>
-    <div v-if="props.question.type == QuestionTypeEnum.Input">
-      input
-    </div>
-    <div v-else>
-      <ButtonComponent v-for="option in props.question.options" :text="option" class="mt-3" style="width: 80%"
+    <div v-if="props.question.type == 'select'" class="w-full">
+      <ButtonComponent v-for="option in props.question.options" :text="option" class="mt-3 mx-auto" style="width: 80%"
                        template="primary"
-                       @click="emit('next')"/>
+                       @click="onSelected(option)"/>
+    </div>
+    <div v-else class="w-2/3">
+      <InputComponent ref="inputRef" v-model="answer" :type="props.question.type" @keydown.enter.prevent="goNext"/>
     </div>
   </div>
 </template>

@@ -3,7 +3,7 @@ import Share from "@/assets/icons/share.svg";
 import Add from "@/assets/icons/add.svg";
 import ButtonComponent from "@/components/button/ButtonComponent.vue";
 import {onMounted} from "vue";
-import {loadRewardedVideo, showRewardedVideo} from "gplay-app-sdk";
+import {goToRouter, loadRewardedVideo, showRewardedVideo} from "gplay-app-sdk";
 
 onMounted(() => {
   loadRewardedVideo()
@@ -16,17 +16,19 @@ function handleAddMore() {
 }
 
 function handleShareClock() {
-  showRewardedVideo(() => {
-
+  goToRouter({
+    name: 'share-clock'
   })
+  // showRewardedVideo(() => {
+  // })
 }
 </script>
 
 <template>
-  <div class="flex flex-col gap-3 items-center  h-full py-10">
+  <div class="flex flex-col gap-3 items-center w-full h-full py-10">
     <p class="font-bold text-center ">Do you want more questions?</p>
     <p class="text-center mb-10 mx-3">More questions give better accuracy clock</p>
-    <div class="flex justify-between w-full">
+    <div class="flex justify-center gap-1.5">
       <ButtonComponent :icon="Add" show-ad-tag template="primary" text="Ten more" @click="handleAddMore"/>
       <ButtonComponent :icon="Share" show-ad-tag template="primary" text="Share Clock" @click="handleShareClock"/>
     </div>
