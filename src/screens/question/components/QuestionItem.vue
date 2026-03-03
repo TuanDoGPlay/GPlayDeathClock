@@ -24,6 +24,7 @@ onMounted(() => {
 
 function onSelected(option: string) {
   answer.value = option
+  goNext()
 }
 
 function goNext() {

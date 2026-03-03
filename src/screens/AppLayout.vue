@@ -1,17 +1,21 @@
 <script lang="ts" setup>
+import {onBeforeUnmount, onMounted, ref} from "vue";
+import {Preferences} from "@capacitor/preferences";
+import {goToRouter} from "gplay-app-sdk";
+import gsap from "gsap"; // Import GSAP
 import Question from '@/assets/icons/question.svg'
 import Share from '@/assets/icons/share.svg'
 import FlipClock from "@/components/flip-clock/FlipClock.vue";
 import ButtonComponent from "@/components/button/ButtonComponent.vue";
-import {onBeforeUnmount, onMounted, ref} from "vue";
 import {EventEnum} from "@/constants/events.ts";
-import {goToRouter} from "gplay-app-sdk";
-import FirstTimeScreen from "@/screens/FirstTimeScreen.vue";
-import {Preferences} from "@capacitor/preferences";
 
+// --- GSAP Refs ---
+const clockWrapper = ref(null);
+const textWrapper = ref(null);
 
-const isShowClock = ref(true)
-const isFirstTime = ref(false)
+// --- Logic State ---
+const isShowClock = ref(true);
+const isFirstTime = ref(true); // Mặc định true để hiện Road Screen
 
 const years = 85;
 const msInYear = 365.25 * 24 * 60 * 60 * 1000;
@@ -19,28 +23,55 @@ const duration85Years = years * msInYear;
 const time = ref(duration85Years);
 let timer: number | undefined;
 
-onMounted(async () => {
+// Road Screen Lines
+const lines = Array.from({length: 20});
 
+onMounted(async () => {
+  // --- 1. KỊCH BẢN GSAP ---
+  const tl = gsap.timeline();
+
+  // Bước 1: Đồng hồ mờ dần (1s)
+  tl.to(clockWrapper.value, {
+    opacity: 1,
+    duration: 1,
+    ease: "power2.inOut"
+  })
+      // Bước 2: Chữ hiện ra và bay lên vị trí gốc (0.8s), chạy ngay sau đồng hồ
+      .to(textWrapper.value, {
+        opacity: 1,
+        y: 0,
+        duration: 0.8,
+        ease: "power2.out"
+      }, "+=0");
+
+
+  // --- 2. LẮNG NGHE SỰ KIỆN ---
   document.addEventListener(EventEnum.ToggleClock, (e) => {
-    const event = e as CustomEvent<{ isShow: boolean }>
-    isShowClock.value = event.detail.isShow
-  })
+    const event = e as CustomEvent<{ isShow: boolean }>;
+    isShowClock.value = event.detail.isShow;
+  });
+
   document.addEventListener(EventEnum.ChangeTime, (e) => {
-    const event = e as CustomEvent<{ time: number }>
-    time.value += event.detail.time
-  })
+    const event = e as CustomEvent<{ time: number }>;
+    time.value += event.detail.time;
+  });
 
   Preferences.get({key: 'visited'}).then(({value}) => {
-    // isFirstTime.value = value != 'true';
-    // if (isFirstTime.value) goToRouter({name: 'question'})
-  })
-  timer = window.setInterval(() => {
-    time.value += 1000;
-  }, 1000);
+    const hasVisited = value === 'true';
+    if (!hasVisited) {
+      setTimeout(() => {
+        isFirstTime.value = false;
+        goToQuestion()
+      }, 5000);
+    } else {
+      isFirstTime.value = false;
+    }
+  });
 
-  setTimeout(() => {
-    isFirstTime.value = false
-  }, 2000)
+  // --- 4. ĐỒNG HỒ ĐẾM NGƯỢC ---
+  timer = window.setInterval(() => {
+    time.value -= 1000;
+  }, 1000);
 });
 
 onBeforeUnmount(() => {
@@ -48,31 +79,35 @@ onBeforeUnmount(() => {
 });
 
 async function goToQuestion() {
-  await goToRouter({name: 'question'})
+  await goToRouter({name: 'question'});
 }
 
 async function goToShareClock() {
-  await goToRouter({name: 'share-clock'})
+  await goToRouter({name: 'share-clock'});
 }
 </script>
 
 <template>
-  <div class="flex flex-col items-center justify-center h-full px-2 pt-10 relative">
+  <div class="main-container flex flex-col items-center justify-center h-full px-2 pt-10 relative overflow-hidden">
 
     <div
         :class="[
-    isShowClock ? 'max-h-[50vh]' : 'max-h-0',
+        isShowClock ? 'max-h-[50vh]' : 'max-h-0',
         isFirstTime ? 'mt-60' : ''
-
-  ]"
-        class="w-full overflow-hidden transition-all duration-1000 "
-        style="z-index: 100"
+      ]"
+        class="w-full overflow-hidden z-[100]"
+        style="transition: all 1s ease"
     >
       <div class="flex flex-col items-center">
-        <FlipClock :show-label="!isFirstTime" :value="time"/>
+
+        <div ref="clockWrapper" class="opacity-0">
+          <FlipClock :show-label="!isFirstTime" :value="time"/>
+        </div>
+
         <div
             :class="{ 'opacity-0 pointer-events-none': isFirstTime, 'opacity-100': !isFirstTime }"
-            class="flex w-full justify-around my-5 transition-opacity  duration-[3000]"
+            class="flex w-full justify-around my-5"
+            style="transition: opacity 0.5s ease"
         >
           <ButtonComponent :icon="Question" :text="'Questions'" @click="goToQuestion"/>
           <ButtonComponent :icon="Share" :text="'Share Clock'" @click="goToShareClock"/>
@@ -80,32 +115,104 @@ async function goToShareClock() {
       </div>
     </div>
 
-    <FirstTimeScreen :class="{ 'opacity-0 pointer-events-none': !isFirstTime, 'opacity-100': isFirstTime }"
-                     class="absolute top-0 left-0 w-full h-full z-10 transition-opacity duration-[3000]"/>
+    <Transition name="fade-out">
+      <div v-if="isFirstTime" class="road-wrapper fixed inset-0 z-50 overflow-hidden bg-black">
+        <img alt="way" class="h-full w-full object-cover" src="/way.svg">
+        <div class="white-line left-2"></div>
+        <div class="white-line right-2"></div>
 
-    <div :class="{ 'opacity-0 pointer-events-none': isFirstTime, 'opacity-100': !isFirstTime }"
-         class="w-full flex-1 rounded-2xl overflow-hidden transition-opacity duration-[3000]"
-         style="background-color: var(--panel-theme-1)">
+        <div class="absolute inset-0 flex flex-col items-center road-animation">
+          <div v-for="(_, index) in lines" :key="index" class="lane-line"></div>
+        </div>
 
+        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+          <div ref="textWrapper" class="text-center px-10 opacity-0 mt-20">
+            <h2 class="road-text">
+              How much time<br>do you have left?
+            </h2>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
+    <div
+        :class="{ 'opacity-0 pointer-events-none': isFirstTime, 'opacity-100': !isFirstTime }"
+        class="w-full flex-1 rounded-2xl overflow-hidden"
+        style="background-color: var(--panel-theme-1); transition: opacity 2s ease"
+    >
       <RouterView v-slot="{ Component }">
         <Transition mode="out-in" name="fade">
           <component :is="Component" class="h-full w-full"/>
         </Transition>
       </RouterView>
-
     </div>
+
   </div>
 </template>
 
-
 <style scoped>
-.fade-enter-active,
-.fade-leave-active {
+/* --- Hiệu ứng biến mất màn hình Road Screen --- */
+.fade-out-leave-active {
+  transition: opacity 1s ease;
+}
+
+.fade-out-leave-to {
+  opacity: 0;
+}
+
+/* --- Router View Transition --- */
+.fade-enter-active, .fade-leave-active {
   transition: opacity 0.2s ease;
 }
 
-.fade-enter-from,
-.fade-leave-to {
+.fade-enter-from, .fade-leave-to {
   opacity: 0;
+}
+
+/* --- Road Screen Styles --- */
+.road-wrapper {
+  height: 100vh;
+  width: 100vw;
+}
+
+.road-animation {
+  gap: 4rem;
+  padding-top: 2rem;
+  animation: scroll-down 1.2s linear infinite;
+}
+
+.lane-line {
+  width: 1rem;
+  height: 5rem;
+  opacity: 0.4;
+  background: #D8A721;
+  border-radius: 0.2rem;
+  flex-shrink: 0;
+  box-shadow: 0 0 15px rgba(216, 167, 33, 0.4);
+}
+
+@keyframes scroll-down {
+  0% {
+    transform: translateY(-9rem);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.road-text {
+  color: #E4E4E4;
+  font-weight: 700;
+  line-height: 1.2;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1.2rem;
+}
+
+.white-line {
+  height: 100%;
+  width: 0.75rem;
+  background-color: var(--panel-theme-1);
+  position: absolute;
+  top: 0;
 }
 </style>

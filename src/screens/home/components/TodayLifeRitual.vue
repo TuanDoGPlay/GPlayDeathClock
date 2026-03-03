@@ -6,22 +6,27 @@ import ButtonComponent from "@/components/button/ButtonComponent.vue";
 import ContentFrame from "@/components/content-frame/ContentFrame.vue";
 import {goToRouter} from "gplay-app-sdk";
 import {CommonController} from "@/common/controller.ts";
-import {ref} from "vue";
+import {onMounted, ref} from "vue";
 import type {MissionInstance} from "@/common/types.ts";
 import {EventEnum} from "@/constants/events.ts";
 
 
-const dailyMissions = ref(CommonController.getDailyMission())
+const dailyMissions = ref()
+
+onMounted(async ()=>{
+  dailyMissions.value = await CommonController.getDailyMission()
+})
 
 function changeClock(mission: MissionInstance) {
+  CommonController.editMission(mission)
   document.dispatchEvent(new CustomEvent(EventEnum.ChangeTime, {detail: {time: mission.completed ? mission.time : -mission.time}}))
 }
 </script>
 
 <template>
   <ContentFrame :current-tab="0" :icon="EyeQuestion" title="Today's Life Ritual">
-    <div class="mt-2 flex flex-col justify-between h-full" style="font-size: 0.9rem">
-      <div class="flex-1">
+    <div class="pt-2 flex flex-col justify-between h-full" style="font-size: 0.9rem">
+      <div class="flex-1 overflow-y-auto">
         <CheckboxComponent
             v-for="mission in dailyMissions"
             :key="mission.id"
@@ -37,8 +42,10 @@ function changeClock(mission: MissionInstance) {
         >+{{ mission.displayTime }}</span>
         </CheckboxComponent>
       </div>
-      <ButtonComponent :icon="ShareArrow" class="mx-auto" template="primary" text="Share Today Ritual"
-                       @click="goToRouter({name:'share-clock'})"/>
+      <div class="pt-4">
+        <ButtonComponent :icon="ShareArrow" class="mx-auto" template="primary" text="Share Today Ritual"
+                         @click="goToRouter({name:'share-clock'})"/>
+      </div>
     </div>
   </ContentFrame>
 </template>

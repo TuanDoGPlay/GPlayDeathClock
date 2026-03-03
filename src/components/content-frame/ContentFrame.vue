@@ -26,7 +26,7 @@ const emit = defineEmits(['back'])
       <span v-if="props.showPaginationInTitle" class="font-bold"
             style="color: var(--secondary-text)">({{ (props.currentTab ?? 0) + 1 }}/{{ props.totalTab }})</span>
     </div>
-    <div class="flex-1">
+    <div class="flex-1 overflow-y-auto" >
       <slot/>
     </div>
     <div v-if="props.showPagination" class="flex justify-center items-center gap-2">

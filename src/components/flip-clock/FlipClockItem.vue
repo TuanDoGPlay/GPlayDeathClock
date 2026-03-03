@@ -76,11 +76,17 @@ function getItemHeightPx(fromEl: HTMLElement) {
   return remToPx(parseFloat(raw));
 }
 
-function forwardSteps(prev: number, next: number, min: number, max: number) {
+// Sửa hàm này để trả về số bước âm nếu muốn quay ngược
+function calculateSteps(prev: number, next: number, min: number, max: number) {
   const size = max - min + 1;
-  const a = prev - min;
-  const b = next - min;
-  return (b - a + size) % size;
+  let diff = next - prev;
+
+  // Xử lý vòng lặp (wrap-around) để luôn đi theo quãng đường ngắn nhất
+  // Ví dụ: từ 0 về 59 chỉ cần lùi 1 bước thay vì tiến 59 bước
+  if (diff > size / 2) diff -= size;
+  if (diff < -size / 2) diff += size;
+
+  return diff;
 }
 
 // index thực tế trong list numbers (0 .. 2*size-1) — ✅ có thể là float
@@ -135,19 +141,17 @@ async function goTo(val: number) {
     return;
   }
 
-  // ✅ tính steps theo phần nguyên (bánh răng)
   const nextIntValue = baseIntIdx + start.value;
-  const steps = forwardSteps(lastValue, nextIntValue, start.value, end.value);
 
-  // ✅ GỐC: dùng phần nguyên hiện tại của visualIndex (không mang frac cũ)
+  // ✅ Thay đổi ở đây: Gọi hàm tính bước ngắn nhất (có thể âm)
+  const steps = calculateSteps(lastValue, nextIntValue, start.value, end.value);
+
   const currentIntVisual = Math.floor(visualIndex.value);
 
-  // ✅ target int + frac mới
+  // ✅ Nếu steps âm, visualIndex sẽ giảm -> Bánh xe quay ngược
   visualIndex.value = (currentIntVisual + steps) + frac;
 
-  // apply transform
   setTransformByIndex(visualIndex.value, true);
-
   lastValue = nextIntValue;
 }
 
@@ -158,9 +162,15 @@ function onTransitionEnd(e: TransitionEvent) {
   const size = end.value - start.value + 1;
   if (size <= 0) return;
 
-  // nếu trôi quá xa xuống cycle 3, kéo về cycle 2 (không transition)
+  // Nếu trôi quá xa xuống dưới (Cycle 3), kéo lên giữa (Cycle 2)
   if (visualIndex.value >= 2 * size) {
-    visualIndex.value = visualIndex.value - size;
+    visualIndex.value -= size;
+    setTransformByIndex(visualIndex.value, false);
+  }
+
+  // ✅ THÊM: Nếu trôi quá xa lên trên (Cycle 1), kéo xuống giữa (Cycle 2)
+  if (visualIndex.value < size) {
+    visualIndex.value += size;
     setTransformByIndex(visualIndex.value, false);
   }
 }

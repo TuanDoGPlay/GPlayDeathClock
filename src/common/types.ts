@@ -19,6 +19,7 @@ export interface UserData {
     height: number
     weight: number
     sexualOrientation: string
+    remainTime: number
 }
 
 export interface MissionData {
@@ -78,13 +79,14 @@ interface RandomRangeAnswer {
     min: number
     max: number
 }
+
 interface SelectionRandomRangeAnswer {
     min: number
     max: number
 }
 
 export interface BucketItemData {
-    id: number
+    id: string
     label: string
     completed: boolean
 }

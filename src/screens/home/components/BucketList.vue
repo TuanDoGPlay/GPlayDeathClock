@@ -13,14 +13,22 @@ import AddBucketPopup from "@/screens/home/popups/AddBucketPopup.vue";
 const bucketList = ref<BucketItemData[]>([])
 const isShowAdd = ref(false)
 
-onMounted(async () => {
-  bucketList.value = await CommonController.getBucketList()
+onMounted(() => {
+  fetchData()
 })
+
+async function fetchData() {
+  bucketList.value = await CommonController.getBucketList()
+}
+
+async function toggleStatus(task: BucketItemData) {
+  await CommonController.editBucketItem(task)
+}
 </script>
 
 <template>
   <ContentFrame :current-tab="0" :icon="Star" title="Bucket List">
-    <div class="mt-2 flex flex-col justify-between h-full" style="font-size: 0.9rem">
+    <div class="pt-2 flex flex-col justify-between h-full" style="font-size: 0.9rem">
       <div>
         <CheckboxComponent
             v-for="task in bucketList"
@@ -28,6 +36,7 @@ onMounted(async () => {
             v-model="task.completed"
             :label="task.label"
             class="py-1"
+            @change="toggleStatus(task)"
         >
         </CheckboxComponent>
       </div>
@@ -39,6 +48,7 @@ onMounted(async () => {
     <AddBucketPopup
         :is-show="isShowAdd"
         @close="isShowAdd = false"
+        @submit="fetchData"
     />
   </ContentFrame>
 </template>

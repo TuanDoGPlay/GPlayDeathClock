@@ -10,6 +10,7 @@ import TabComponent from "@/components/tab/TabComponent.vue";
 import TabPane from "@/components/tab/TabPane.vue";
 import type {UserData} from "@/common/types.ts";
 import {CommonController} from "@/common/controller.ts";
+import DefaultQuestions from "@/screens/question/components/DefaultQuestions.vue";
 
 const userData = ref<UserData>({
   name: '',
@@ -17,14 +18,16 @@ const userData = ref<UserData>({
   sex: '',
   height: 0,
   weight: 0,
-  sexualOrientation: ''
+  sexualOrientation: '',
+  remainTime: 0
 })
 
+const isFirstTime = ref(true)
 const activeTabName = ref(questions[0]?.id.toString() || "more")
 
 const currentTabIndex = computed(() => {
   const idx = questions.findIndex(q => q.id.toString() === activeTabName.value);
-  return idx === -1 ? questions.length : idx; // Nếu là "more" thì trả về index cuối
+  return idx === -1 ? questions.length : idx;
 })
 
 function handleBack() {
@@ -33,14 +36,17 @@ function handleBack() {
 
 function changeQuestion(args: Record<string, any>) {
   userData.value = {...userData.value, ...args}
-  activeTabName.value = (currentTabIndex.value + 1).toString()
+  if (currentTabIndex.value === questions.length) activeTabName.value = 'more'
+  else activeTabName.value = (currentTabIndex.value + 1).toString()
   CommonController.saveUserData(userData.value)
 }
 </script>
 
 <template>
   <div class="h-full">
+    <DefaultQuestions v-if="isFirstTime"/>
     <ContentFrame
+        v-else
         :current-tab="currentTabIndex"
         :icon="Question"
         :total-tab="questions.length + 1"
