@@ -209,7 +209,11 @@
     "id": 35,
     "question": "Do you sleep before 11 PM?",
     "type": "select",
-    "options": ["Almost always", "Sometimes stay up late", "Usually stay up late"]
+    "options": [
+      "Almost always",
+      "Sometimes stay up late",
+      "Usually stay up late"
+    ]
   },
   {
     "id": 36,

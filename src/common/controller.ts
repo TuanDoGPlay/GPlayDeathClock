@@ -8,14 +8,13 @@ import {
   QuestionInstance,
   type UserData,
 } from "@/common/types.ts";
-import { ref } from "vue";
-import { Preferences } from "@capacitor/preferences";
 import { v4 as uuidv4 } from "uuid";
 import dailyMissions from "@/assets/data/daily-missions.json";
 
 const userTable = "user";
 const bucketTable = "buckets";
 const missionTable = "missions";
+const questionTable = "questions";
 
 export const CommonController = {
   async init() {
@@ -34,15 +33,17 @@ export const CommonController = {
       ],
       [bucketTable]: [],
       [missionTable]: [],
+      [questionTable]: [],
     };
     await Database.initDatabase(db);
   },
 
   async getQuestions(): Promise<QuestionInstance[]> {
-    const { value } = await Preferences.get({ key: "visited" });
-    if (value == "true")
-      return questions.slice(0, 10).map((q) => new QuestionInstance(q));
-    return requiredQuestions.map((q) => new QuestionInstance(q));
+    return questions.slice(0, 5).map((q) => new QuestionInstance(q));
+  },
+
+  async answerQuestion(question: QuestionInstance): Promise<void> {
+    await Database.insertTable(questionTable, question);
   },
 
   async getDailyMission(): Promise<MissionInstance[]> {
@@ -102,6 +103,21 @@ export const CommonController = {
       });
     }
     return Promise.resolve(res[0]);
+  },
+
+  async getRemainLiveTime(): Promise<number> {
+    const userData = await this.getUserData();
+    return Promise.resolve(userData.remainTime);
+  },
+
+  async editRemainLiveTime(
+    time: number,
+    isIncrement: boolean = true,
+  ): Promise<void> {
+    const userData = await this.getUserData();
+    const newTime = isIncrement ? userData.remainTime + time : time;
+    await this.saveUserData({ ...userData, remainTime: newTime });
+    return Promise.resolve();
   },
 
   async saveUserData(data: UserData) {

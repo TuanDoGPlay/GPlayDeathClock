@@ -2,7 +2,7 @@
 import { inject, onBeforeUnmount, onMounted, getCurrentInstance, computed } from "vue";
 import { TABS_KEY } from "./tabContext.ts";
 
-const props = defineProps<{ label: string; name: string }>();
+const props = defineProps<{  name: string }>();
 
 const ctx = inject(TABS_KEY);
 if (!ctx) throw new Error("TabPane must be used inside TabComponent");
@@ -10,7 +10,7 @@ if (!ctx) throw new Error("TabPane must be used inside TabComponent");
 const uid = getCurrentInstance()!.uid;
 
 onMounted(() => {
-  ctx.registerPane({ uid, name: props.name, label: props.label });
+  ctx.registerPane({ uid, name: props.name, });
 });
 onBeforeUnmount(() => {
   ctx.unregisterPane(uid);

@@ -10,7 +10,7 @@ import TabPane from "@/components/tab/TabPane.vue";
 import InputComponent from "@/components/input/InputComponent.vue";
 import ButtonComponent from "@/components/button/ButtonComponent.vue";
 import { EventEnum } from "@/constants/events.ts";
-import type { ChangeClockData, UserData } from "@/common/types.ts";
+import type { UserData } from "@/common/types.ts";
 import { MS_IN_MONTH, MS_IN_YEAR, Utils } from '@/common/utils';
 import { CommonController } from '@/common/controller';
 
@@ -109,10 +109,9 @@ function goNextDob() {
   const startDate = new Date('2000-01-01T00:00:00');
   const futureDate = new Date(startDate);
   futureDate.setFullYear(startDate.getFullYear() + 85 - yourAge);
-  const eventData: ChangeClockData = {
-    assign: futureDate.getTime()
-  }
-  document.dispatchEvent(new CustomEvent(EventEnum.ChangeTime, { detail: eventData }))
+  CommonController.editRemainLiveTime(futureDate.getTime(), false).then(() => {
+    document.dispatchEvent(new Event(EventEnum.ChangeTime))
+  })
   activeName.value = "2";
 }
 
@@ -129,10 +128,10 @@ function goNextHeight() {
   } else if (height >= 180) {
     randomTime -= (height - 180) * MS_IN_MONTH
   }
-  const eventData: ChangeClockData = {
-    increase: randomTime
-  }
-  document.dispatchEvent(new CustomEvent(EventEnum.ChangeTime, { detail: eventData }))
+
+  CommonController.editRemainLiveTime(randomTime).then(() => {
+    document.dispatchEvent(new Event(EventEnum.ChangeTime))
+  })
   activeName.value = "3";
 }
 
@@ -142,7 +141,6 @@ function goNextWeight() {
   saveUserData();
 
   const bmi = Utils.calculateBMI(userData.value.weight, userData.value.height);
-  console.log('bmi', bmi);
   let deductedYears = 0;
   if (bmi < 16) {
     // Gầy độ III
@@ -169,10 +167,10 @@ function goNextWeight() {
     // Béo phì độ III
     deductedYears = 15;
   }
-  const eventData: ChangeClockData = {
-    increase: -deductedYears * MS_IN_YEAR
-  }
-  document.dispatchEvent(new CustomEvent(EventEnum.ChangeTime, { detail: eventData }))
+
+  CommonController.editRemainLiveTime(-deductedYears * MS_IN_YEAR).then(() => {
+    document.dispatchEvent(new Event(EventEnum.ChangeTime))
+  })
   activeName.value = "4";
 }
 
@@ -180,12 +178,13 @@ function goNextWeight() {
 function onSelected(field: 'sex' | 'sexualOrientation', option: string) {
   userData.value[field] = option;
   saveUserData()
+
   const randomYear = Math.random() * 4 - 2;
   let randomTime = randomYear * MS_IN_YEAR; // Convert years to milliseconds
-  const eventData: ChangeClockData = {
-    increase: randomTime
-  }
-  document.dispatchEvent(new CustomEvent(EventEnum.ChangeTime, { detail: eventData }))
+  CommonController.editRemainLiveTime(randomTime).then(() => {
+    document.dispatchEvent(new Event(EventEnum.ChangeTime))
+  })
+
   activeName.value = field === 'sex' ? "5" : "more";
   if (field === 'sexualOrientation') {
     showToast({ text: "Thank you for sharing! Your data will be kept confidential." });

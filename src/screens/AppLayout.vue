@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { nextTick, onBeforeUnmount, onMounted, ref } from "vue";
-import { Preferences } from "@capacitor/preferences";
 import { goToRouter } from "gplay-app-sdk";
 import gsap from "gsap"; // Import GSAP
 import Question from '@/assets/icons/question.svg'
@@ -8,7 +7,6 @@ import Share from '@/assets/icons/share.svg'
 import FlipClock from "@/components/flip-clock/FlipClock.vue";
 import ButtonComponent from "@/components/button/ButtonComponent.vue";
 import { EventEnum } from "@/constants/events.ts";
-import type { ChangeClockData } from "@/common/types.ts";
 import { CommonController } from "@/common/controller";
 
 const clockWrapper = ref<HTMLElement | null>(null);
@@ -28,7 +26,6 @@ const lines = Array.from({ length: 20 });
 
 onMounted(async () => {
   await nextTick();
-
 
   const isFirstVisit = await CommonController.getIsFirstVisit();
   if (isFirstVisit) {
@@ -52,16 +49,17 @@ onMounted(async () => {
   });
 
   document.addEventListener(EventEnum.ChangeTime, (e) => {
-    const event = e as CustomEvent<ChangeClockData>;
-    console.log('event', event.detail)
-    if (event.detail.increase) time.value += event.detail.increase;
-    else if (event.detail.assign) time.value = event.detail.assign;
+    fetchRemainLiveTime();
   });
 });
 
 onBeforeUnmount(() => {
   if (timer) clearInterval(timer);
 });
+
+async function fetchRemainLiveTime() {
+  time.value = await CommonController.getRemainLiveTime();
+}
 
 function animate() {
   if (!clockWrapper.value || !textWrapper.value) return;
