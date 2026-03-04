@@ -1,116 +1,125 @@
 <script lang="ts" setup>
-import {onBeforeUnmount, onMounted, ref} from "vue";
-import {Preferences} from "@capacitor/preferences";
-import {goToRouter} from "gplay-app-sdk";
+import { nextTick, onBeforeUnmount, onMounted, ref } from "vue";
+import { Preferences } from "@capacitor/preferences";
+import { goToRouter } from "gplay-app-sdk";
 import gsap from "gsap"; // Import GSAP
 import Question from '@/assets/icons/question.svg'
 import Share from '@/assets/icons/share.svg'
 import FlipClock from "@/components/flip-clock/FlipClock.vue";
 import ButtonComponent from "@/components/button/ButtonComponent.vue";
-import {EventEnum} from "@/constants/events.ts";
+import { EventEnum } from "@/constants/events.ts";
+import type { ChangeClockData } from "@/common/types.ts";
+import { CommonController } from "@/common/controller";
 
-// --- GSAP Refs ---
-const clockWrapper = ref(null);
-const textWrapper = ref(null);
+const clockWrapper = ref<HTMLElement | null>(null);
+const textWrapper = ref<HTMLElement | null>(null);
 
-// --- Logic State ---
 const isShowClock = ref(true);
-const isFirstTime = ref(true); // Mặc định true để hiện Road Screen
+const isFirstTime = ref(true);
 
-const years = 85;
-const msInYear = 365.25 * 24 * 60 * 60 * 1000;
-const duration85Years = years * msInYear;
-const time = ref(duration85Years);
+const startDate = new Date('2000-01-01T00:00:00');
+const futureDate = new Date(startDate);
+futureDate.setFullYear(startDate.getFullYear() + 85);
+const time = ref(futureDate.getTime());
+
 let timer: number | undefined;
 
-// Road Screen Lines
-const lines = Array.from({length: 20});
+const lines = Array.from({ length: 20 });
 
 onMounted(async () => {
-  // --- 1. KỊCH BẢN GSAP ---
-  const tl = gsap.timeline();
-
-  // Bước 1: Đồng hồ mờ dần (1s)
-  tl.to(clockWrapper.value, {
-    opacity: 1,
-    duration: 1,
-    ease: "power2.inOut"
-  })
-      // Bước 2: Chữ hiện ra và bay lên vị trí gốc (0.8s), chạy ngay sau đồng hồ
-      .to(textWrapper.value, {
-        opacity: 1,
-        y: 0,
-        duration: 0.8,
-        ease: "power2.out"
-      }, "+=0");
+  await nextTick();
 
 
-  // --- 2. LẮNG NGHE SỰ KIỆN ---
+  const isFirstVisit = await CommonController.getIsFirstVisit();
+  if (isFirstVisit) {
+    animate();
+    setTimeout(() => {
+      isFirstTime.value = false;
+      goToQuestion()
+    }, 5000);
+  } else {
+    isFirstTime.value = false;
+
+  }
+
+  timer = window.setInterval(() => {
+    time.value -= 1000;
+  }, 1000);
+
   document.addEventListener(EventEnum.ToggleClock, (e) => {
     const event = e as CustomEvent<{ isShow: boolean }>;
     isShowClock.value = event.detail.isShow;
   });
 
   document.addEventListener(EventEnum.ChangeTime, (e) => {
-    const event = e as CustomEvent<{ time: number }>;
-    time.value += event.detail.time;
+    const event = e as CustomEvent<ChangeClockData>;
+    console.log('event', event.detail)
+    if (event.detail.increase) time.value += event.detail.increase;
+    else if (event.detail.assign) time.value = event.detail.assign;
   });
-
-  Preferences.get({key: 'visited'}).then(({value}) => {
-    const hasVisited = value === 'true';
-    if (!hasVisited) {
-      setTimeout(() => {
-        isFirstTime.value = false;
-        goToQuestion()
-      }, 5000);
-    } else {
-      isFirstTime.value = false;
-    }
-  });
-
-  // --- 4. ĐỒNG HỒ ĐẾM NGƯỢC ---
-  timer = window.setInterval(() => {
-    time.value -= 1000;
-  }, 1000);
 });
 
 onBeforeUnmount(() => {
   if (timer) clearInterval(timer);
 });
 
+function animate() {
+  if (!clockWrapper.value || !textWrapper.value) return;
+
+  const clockH = clockWrapper.value.getBoundingClientRect().height ?? 0;
+
+  // Set trạng thái ban đầu
+  gsap.set(clockWrapper.value, { opacity: 0 });
+  gsap.set(textWrapper.value, {
+    opacity: 0,
+    y: clockH / 2 + 60, // spawn dưới clock
+  });
+
+  const tl = gsap.timeline();
+
+  tl.to(clockWrapper.value, {
+    opacity: 1,
+    duration: 1,
+    ease: "power2.inOut",
+  }).to(
+    textWrapper.value,
+    {
+      opacity: 1,
+      y: 0,
+      duration: 0.8,
+      ease: "power2.out",
+    },
+    "+=0"
+  );
+}
+
 async function goToQuestion() {
-  await goToRouter({name: 'question'});
+  await goToRouter({ name: 'question' });
 }
 
 async function goToShareClock() {
-  await goToRouter({name: 'share-clock'});
+  await goToRouter({ name: 'share-clock' });
 }
 </script>
 
 <template>
   <div class="main-container flex flex-col items-center justify-center h-full px-2 pt-10 relative overflow-hidden">
 
-    <div
-        :class="[
-        isShowClock ? 'max-h-[50vh]' : 'max-h-0',
-        isFirstTime ? 'mt-60' : ''
-      ]"
-        class="w-full overflow-hidden z-[100]"
-        style="transition: all 1s ease"
-    >
+    <div :class="[
+      isShowClock ? 'max-h-[50vh]' : 'max-h-0',
+      isFirstTime ? 'mt-60' : ''
+    ]" class="w-full overflow-hidden z-[100]" style="transition: all 1s ease">
       <div class="flex flex-col items-center">
 
-        <div ref="clockWrapper" class="opacity-0">
-          <FlipClock :show-label="!isFirstTime" :value="time"/>
+        <div ref="clockWrapper" :class="{ 'opacity-0': isFirstTime, 'opacity-100': !isFirstTime }"
+          class="transition-opacity">
+          <FlipClock :show-label="!isFirstTime" :value="time" />
         </div>
 
-        <div
-            :class="{ 'opacity-0 pointer-events-none': isFirstTime, 'opacity-100': !isFirstTime }"
-            class="flex w-full justify-around my-5"
-            style="transition: opacity 0.5s ease"
-        >
-          <ButtonComponent :icon="Question" :text="'Questions'" @click="goToQuestion"/>
-          <ButtonComponent :icon="Share" :text="'Share Clock'" @click="goToShareClock"/>
+        <div :class="{ 'opacity-0 pointer-events-none': isFirstTime, 'opacity-100': !isFirstTime }"
+          class="flex w-full justify-around my-5" style="transition: opacity 0.5s ease">
+          <ButtonComponent :icon="Question" :text="'Questions'" @click="goToQuestion" />
+          <ButtonComponent :icon="Share" :text="'Share Clock'" @click="goToShareClock" />
         </div>
       </div>
     </div>
@@ -135,14 +144,12 @@ async function goToShareClock() {
       </div>
     </Transition>
 
-    <div
-        :class="{ 'opacity-0 pointer-events-none': isFirstTime, 'opacity-100': !isFirstTime }"
-        class="w-full flex-1 rounded-2xl overflow-hidden"
-        style="background-color: var(--panel-theme-1); transition: opacity 2s ease"
-    >
+    <div :class="{ 'opacity-0 pointer-events-none': isFirstTime, 'opacity-100': !isFirstTime }"
+      class="w-full flex-1 rounded-2xl overflow-hidden"
+      style="background-color: var(--panel-theme-1); transition: opacity 2s ease">
       <RouterView v-slot="{ Component }">
         <Transition mode="out-in" name="fade">
-          <component :is="Component" class="h-full w-full"/>
+          <component :is="Component" class="h-full w-full" />
         </Transition>
       </RouterView>
     </div>
@@ -161,11 +168,13 @@ async function goToShareClock() {
 }
 
 /* --- Router View Transition --- */
-.fade-enter-active, .fade-leave-active {
+.fade-enter-active,
+.fade-leave-active {
   transition: opacity 0.2s ease;
 }
 
-.fade-enter-from, .fade-leave-to {
+.fade-enter-from,
+.fade-leave-to {
   opacity: 0;
 }
 
@@ -195,6 +204,7 @@ async function goToShareClock() {
   0% {
     transform: translateY(-9rem);
   }
+
   100% {
     transform: translateY(0);
   }

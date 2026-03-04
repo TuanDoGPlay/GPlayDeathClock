@@ -1,6 +1,11 @@
 import {Utils} from "@/common/utils.ts";
 import {QuestionMethodEnum} from "@/constants/questionMethod.ts";
 
+export interface ChangeClockData{
+    increase?:number
+    assign?:number
+}
+
 export interface QuestionData {
     id: number
     question: string
