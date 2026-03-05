@@ -11,7 +11,6 @@ const props = defineProps<{
   showBack?: boolean
   hideSplitBar?: boolean
 }>()
-console.log(props);
 
 const emit = defineEmits(['back'])
 </script>

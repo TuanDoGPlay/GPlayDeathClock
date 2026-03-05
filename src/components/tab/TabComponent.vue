@@ -1,5 +1,14 @@
 <script lang="ts" setup>
-import { computed, onBeforeUnmount, onMounted, provide, reactive, ref, watch } from "vue";
+import {
+  computed,
+  onBeforeUnmount,
+  onMounted,
+  provide,
+  reactive,
+  ref,
+  watch,
+  nextTick,
+} from "vue";
 import { type Pane, TABS_KEY } from "./tabContext";
 
 const props = withDefaults(
@@ -13,6 +22,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   (e: "update:modelValue", v: string): void;
+  (e: "change", v: string): void;
 }>();
 
 const panes = reactive<Pane[]>([]);
@@ -20,81 +30,146 @@ const activeName = ref(props.modelValue);
 const scrollContainer = ref<HTMLElement | null>(null);
 const currentIndex = ref(0);
 
-let isManualScrolling = false;
-let scrollTimeout: any = null;
+const isReady = ref(false);
+const hasSyncedInitial = ref(false);
+const isEmitting = ref(false);
 
+let settleTimer: any = null;
+
+// ---------- helpers ----------
+const getIndexFromScroll = (el: HTMLElement) => {
+  const w = el.clientWidth || 1;
+  return Math.floor((el.scrollLeft + w * 0.5) / w);
+};
+
+const sortPanesByDOM = () => {
+  nextTick(() => {
+    panes.sort((a, b) => {
+      const elA = a.el as Node | null | undefined;
+      const elB = b.el as Node | null | undefined;
+      if (!elA || !elB) return 0;
+
+      const pos = elA.compareDocumentPosition(elB);
+      if (pos & Node.DOCUMENT_POSITION_FOLLOWING) return -1;
+      if (pos & Node.DOCUMENT_POSITION_PRECEDING) return 1;
+      return 0;
+    });
+
+    if (!hasSyncedInitial.value) syncInitial();
+  });
+};
+
+const syncInitial = async () => {
+  await nextTick();
+
+  const idxByModel = panes.findIndex((p) => p.name === props.modelValue);
+  const idxFallback = panes.findIndex((p) => p.name !== "more");
+  const idx =
+    idxByModel >= 0 ? idxByModel : idxFallback >= 0 ? idxFallback : 0;
+
+  currentIndex.value = Math.max(0, idx);
+
+  const pane = panes[currentIndex.value];
+  const el = scrollContainer.value;
+
+  if (pane) {
+    activeName.value = pane.name;
+
+    isEmitting.value = true;
+    emit("update:modelValue", pane.name);
+    emit("change", pane.name);
+    nextTick(() => (isEmitting.value = false));
+
+    if (el) el.scrollLeft = currentIndex.value * el.clientWidth;
+  }
+
+  hasSyncedInitial.value = true;
+  isReady.value = true;
+};
+
+// ✅ chỉ commit active khi scroll đã settle (snap xong)
+const commitActiveFromScroll = () => {
+  const el = scrollContainer.value;
+  if (!el) return;
+
+  const idx = getIndexFromScroll(el);
+  currentIndex.value = idx;
+
+  const pane = panes[idx];
+  if (pane && pane.name !== activeName.value) {
+    activeName.value = pane.name;
+
+    isEmitting.value = true;
+    emit("update:modelValue", pane.name);
+    nextTick(() => (isEmitting.value = false));
+  }
+};
+
+// ---------- provide ----------
 provide(TABS_KEY, {
   activeName,
   swipe: computed(() => props.swipe),
+
   registerPane(pane) {
     if (!panes.find((p) => p.uid === pane.uid)) panes.push(pane);
+    sortPanesByDOM();
   },
+
   unregisterPane(uid) {
     const idx = panes.findIndex((p) => p.uid === uid);
     if (idx >= 0) panes.splice(idx, 1);
+    sortPanesByDOM();
   },
 });
 
+// ---------- scroll (swipe) ----------
 const handleScroll = () => {
+  if (!isReady.value || !hasSyncedInitial.value) return;
   const el = scrollContainer.value;
-  if (!el || isManualScrolling) return;
+  if (!el) return;
 
-  const width = el.clientWidth;
-  if (width === 0) return;
+  // ✅ cập nhật dot theo realtime (KHÔNG emit, KHÔNG đổi activeName)
+  const idx = getIndexFromScroll(el);
+  if (idx !== currentIndex.value) currentIndex.value = idx;
 
-  const idx = Math.round(el.scrollLeft / width);
-  if (idx !== currentIndex.value) {
-    currentIndex.value = idx;
-    const pane = panes[idx];
-    if (pane && pane.name !== activeName.value) {
-      activeName.value = pane.name;
-      emit("update:modelValue", pane.name);
-    }
-  }
+  // ✅ debounce: chỉ khi dừng scroll mới commit activeName/modelValue
+  clearTimeout(settleTimer);
+  settleTimer = setTimeout(() => {
+    commitActiveFromScroll();
+  }, 90);
 };
 
 const scrollToTab = (index: number) => {
   const el = scrollContainer.value;
   if (!el || index < 0 || index >= panes.length) return;
 
-  isManualScrolling = true;
+  const targetLeft = index * el.clientWidth;
+
+  // dot update ngay
   currentIndex.value = index;
 
-  // Sử dụng scrollTo nhưng ép hiệu ứng mượt qua CSS class hoặc behavior
-  el.scrollTo({
-    left: index * el.clientWidth,
-    behavior: "smooth",
-  });
+  // smooth cho click dot
+  el.scrollTo({ left: targetLeft, behavior: "smooth" });
 
-  // Giảm thời gian chờ xuống 300ms để cảm giác phản hồi nhanh hơn
-  clearTimeout(scrollTimeout);
-  scrollTimeout = setTimeout(() => {
-    isManualScrolling = false;
-  }, 300);
-
-  const pane = panes[index];
-  if (pane && pane.name !== activeName.value) {
-    activeName.value = pane.name;
-    emit("update:modelValue", pane.name);
-  }
+  // sau khi settle sẽ commit chính xác (snap)
+  clearTimeout(settleTimer);
+  settleTimer = setTimeout(() => commitActiveFromScroll(), 200);
 };
 
+// ---------- external model change ----------
 watch(
   () => props.modelValue,
   (newVal) => {
-    if (newVal === activeName.value) return;
     activeName.value = newVal;
+    if (!hasSyncedInitial.value) return;
+    if (isEmitting.value) return;
+
     const idx = panes.findIndex((p) => p.name === newVal);
-    if (idx >= 0) {
-      const el = scrollContainer.value;
-      if (el) {
-        const currentPosIdx = Math.round(el.scrollLeft / el.clientWidth);
-        if (currentPosIdx !== idx) scrollToTab(idx);
-      }
-    }
+    if (idx >= 0) scrollToTab(idx);
   }
 );
 
+// ---------- resize ----------
 const onResize = () => {
   const el = scrollContainer.value;
   if (!el) return;
@@ -103,21 +178,24 @@ const onResize = () => {
 
 onMounted(() => {
   window.addEventListener("resize", onResize, { passive: true });
-  requestAnimationFrame(() => {
-    const el = scrollContainer.value;
-    if (el && activeName.value) {
-      const idx = panes.findIndex(p => p.name === activeName.value);
-      if (idx >= 0) {
-        el.scrollLeft = idx * el.clientWidth;
-        currentIndex.value = idx;
-      }
-    }
-  });
+
+  // nếu browser hỗ trợ scrollend -> commit chuẩn hơn
+  const el = scrollContainer.value as any;
+  if (el?.addEventListener) {
+    el.addEventListener("scrollend", commitActiveFromScroll, { passive: true });
+  }
+
+  syncInitial();
 });
 
 onBeforeUnmount(() => {
   window.removeEventListener("resize", onResize);
-  clearTimeout(scrollTimeout);
+  clearTimeout(settleTimer);
+
+  const el = scrollContainer.value as any;
+  if (el?.removeEventListener) {
+    el.removeEventListener("scrollend", commitActiveFromScroll);
+  }
 });
 
 defineExpose({ scrollToTab });
@@ -138,7 +216,7 @@ defineExpose({ scrollToTab });
     <div v-if="dots && panes.length > 1" class="flex justify-center items-center py-2">
       <div v-for="(_, idx) in panes" :key="idx" class="px-1.5 py-2 cursor-pointer" @click="scrollToTab(idx)">
         <div :class="idx === currentIndex ? 'bg-[#535353]' : 'bg-[#D9D9D9]'"
-          class="w-2 h-2 rounded-full transition-all duration-200"></div>
+          class="w-2 h-2 rounded-full transition-all duration-200" />
       </div>
     </div>
   </div>
@@ -154,9 +232,9 @@ defineExpose({ scrollToTab });
   scrollbar-width: none;
 }
 
+/* swipe thì để native, đừng ép smooth ở container */
 .custom-scroll {
-  /* Tăng tốc độ cuộn smooth trên một số trình duyệt */
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
   scroll-padding: 0;
 }
 
@@ -164,14 +242,6 @@ defineExpose({ scrollToTab });
   flex-shrink: 0;
   width: 100%;
   snap-align: start;
-  /* Luôn dừng đúng tab, không trượt lố */
   snap-stop: always;
-}
-
-/* Ép tốc độ scroll nhanh hơn nếu trình duyệt hỗ trợ */
-@media (prefers-reduced-motion: no-preference) {
-  .custom-scroll {
-    scroll-behavior: smooth;
-  }
 }
 </style>

@@ -1,6 +1,12 @@
 import type { Component } from "vue";
 import DeathStory from "@/screens/share-clock/templates/DeathStory.vue";
 import SaveADate from "@/screens/share-clock/templates/SaveADate.vue";
+import type {
+  QuestionInstance,
+  SelectRandomAnswerLogic,
+  TextRandomAnswerLogic,
+} from "./types";
+import { QuestionMethodEnum } from "@/constants/questionMethod";
 
 export const MS_IN_SECOND = 1000;
 export const MS_IN_MINUTE = 60 * MS_IN_SECOND;
@@ -108,5 +114,66 @@ export const Utils = {
     const bmi = weight / (heightInMeters * heightInMeters);
     const roundedBMI = Math.round(bmi * 10) / 10; // Làm tròn 1 chữ số thập phân
     return roundedBMI;
+  },
+  convertStringToMs(timeStr: string): number {
+    // Regex mới: ^([+-]?) cho phép có dấu + hoặc - ở đầu (không bắt buộc)
+    const match = timeStr.match(/^([+-]?)(\d+)([a-zA-Z]+)$/);
+
+    if (!match || !match[2] || !match[3]) return 0;
+
+    const sign = match && match[1] === "-" ? -1 : 1; // Xác định dấu
+    const value = parseInt(match[2]);
+    const unit = match[3].toLowerCase();
+
+    let ms = 0;
+
+    switch (unit) {
+      case "s":
+        ms = value * MS_IN_SECOND;
+        break;
+      case "m":
+        ms = value * MS_IN_MINUTE;
+        break;
+      case "h":
+        ms = value * MS_IN_HOUR;
+        break;
+      case "d":
+        ms = value * MS_IN_DAY;
+        break;
+      case "mo":
+        ms = value * MS_IN_MONTH;
+        break;
+      case "y":
+        ms = value * MS_IN_YEAR;
+        break;
+      default:
+        return 0;
+    }
+
+    return ms * sign; // Nhân với dấu để trả về số âm hoặc dương
+  },
+
+  calculateQuestionIncrementTime(
+    question: QuestionInstance,
+    answer: any,
+  ): number {
+    if (question.method === QuestionMethodEnum.TextRandom) {
+      const logic = question.logic as TextRandomAnswerLogic;
+      const fromNumber = Utils.convertStringToMs(logic.from);
+      const toNumber = Utils.convertStringToMs(logic.to);
+      return Math.random() * (toNumber - fromNumber) + fromNumber;
+    }
+    if (question.method === QuestionMethodEnum.SelectRandom) {
+      const logic = question.logic as SelectRandomAnswerLogic;
+      const index = question.options?.findIndex((option) => option === answer);
+      if (index !== undefined && index >= 0 && logic.random[index]) {
+        const randomLogic = logic.random[index];
+        const fromNumber = Utils.convertStringToMs(randomLogic.from);
+        const toNumber = Utils.convertStringToMs(randomLogic.to);
+        return Math.random() * (toNumber - fromNumber) + fromNumber;
+      }
+      return 0;
+    }
+    return 0;
   },
 };

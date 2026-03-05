@@ -1,4 +1,4 @@
 export enum QuestionMethodEnum {
-    RandomRange = 1,
-    SelectionRandomRange = 2,
+    TextRandom = 1,
+    SelectRandom = 2,
 }

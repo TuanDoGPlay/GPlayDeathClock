@@ -1,10 +1,10 @@
 import { Database } from "gplay-app-sdk";
-import requiredQuestions from "@/assets/data/required-questions.json";
 import questions from "@/assets/data/questions.json";
 import {
   type BucketItemData,
   type MissionData,
   MissionInstance,
+  type QuestionData,
   QuestionInstance,
   type UserData,
 } from "@/common/types.ts";
@@ -39,11 +39,18 @@ export const CommonController = {
   },
 
   async getQuestions(): Promise<QuestionInstance[]> {
-    return questions.slice(0, 5).map((q) => new QuestionInstance(q));
+    return questions
+      .slice(0, 5)
+      .map((q: QuestionData) => new QuestionInstance(q));
   },
 
   async answerQuestion(question: QuestionInstance): Promise<void> {
+    const exist = await Database.selectTable(questionTable, {
+      id: question.id,
+    });
+    if (exist) return Promise.resolve();
     await Database.insertTable(questionTable, question);
+    return Promise.resolve();
   },
 
   async getDailyMission(): Promise<MissionInstance[]> {
@@ -107,6 +114,12 @@ export const CommonController = {
 
   async getRemainLiveTime(): Promise<number> {
     const userData = await this.getUserData();
+    if (!userData.remainTime) {
+      const startDate = new Date("2000-01-01T00:00:00");
+      const futureDate = new Date(startDate);
+      futureDate.setFullYear(startDate.getFullYear() + 85);
+      return Promise.resolve(futureDate.getTime());
+    }
     return Promise.resolve(userData.remainTime);
   },
 
@@ -120,8 +133,10 @@ export const CommonController = {
     return Promise.resolve();
   },
 
-  async saveUserData(data: UserData) {
-    await Database.updateTable(userTable, { id: 1 }, data);
+  async saveUserData(data: UserData): Promise<void> {
+    console.log(data);
+
+    return await Database.updateTable(userTable, { id: 1 }, data);
   },
 
   async getBucketList() {
@@ -147,15 +162,15 @@ export const CommonController = {
   async getIsFirstVisit(): Promise<boolean> {
     const userData = await this.getUserData();
     if (
-      userData.name ||
-      userData.dob ||
-      userData.sex ||
-      userData.height ||
-      userData.weight ||
+      userData.name &&
+      userData.dob &&
+      userData.sex &&
+      userData.height &&
+      userData.weight &&
       userData.sexualOrientation
     ) {
-      return false;
+      return Promise.resolve(false);
     }
-    return true;
+    return Promise.resolve(true);
   },
 };

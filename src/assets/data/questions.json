@@ -3,31 +3,90 @@
     "id": 1,
     "question": "Does anyone in your family have a history of serious illness? (Cancer, heart disease, diabetes, genetic diseases)",
     "type": "text",
-    "method": 1
+    "method": 1,
+    "logic": {
+      "from": "-6y",
+      "to": "-12y"
+    }
   },
   {
     "id": 2,
     "question": "Do you currently have a serious illness? (Cancer, brain/neurological tumors, severe heart/liver/lung diseases)",
     "type": "text",
-    "method": 1
+    "method": 1,
+    "logic": {
+      "from": "15y",
+      "to": "30y"
+    }
   },
   {
     "id": 3,
     "question": "Do you have regular health check-ups?",
     "type": "select",
-    "options": ["Every 6 months", "Once a year", "Rarely/Never"]
+    "options": ["Every 6 months", "Once a year", "Rarely/Never"],
+    "method": 2,
+    "logic": {
+      "random": [
+        {
+          "from": "0",
+          "to": "0"
+        },
+        {
+          "from": "-6m",
+          "to": "-1y"
+        },
+        {
+          "from": "-1y",
+          "to": "-3y"
+        }
+      ]
+    }
   },
   {
     "id": 4,
     "question": "Do you smoke?",
     "type": "select",
-    "options": ["Often", "Occasionally", "No"]
+    "options": ["Often", "Occasionally", "No"],
+    "method": 2,
+    "logic": {
+      "random": [
+        {
+          "from": "-8y",
+          "to": "-20y"
+        },
+        {
+          "from": "-1y",
+          "to": "-3y"
+        },
+        {
+          "from": "0",
+          "to": "+1y"
+        }
+      ]
+    }
   },
   {
     "id": 5,
     "question": "Do you drink alcohol/beer?",
     "type": "select",
-    "options": ["Often", "Occasionally", "No"]
+    "options": ["Often", "Occasionally", "No"],
+    "method": 2,
+    "logic": {
+      "random": [
+        {
+          "from": "-3y",
+          "to": "-8y"
+        },
+        {
+          "from": "-1y",
+          "to": "-3y"
+        },
+        {
+          "from": "0",
+          "to": "+1y"
+        }
+      ]
+    }
   },
   {
     "id": 6,

@@ -1,6 +1,6 @@
 import type { InjectionKey, Ref, ComputedRef } from "vue";
 
-export type Pane = { uid: number; name: string };
+export type Pane = { uid: number; name: string; el?: HTMLElement | null };
 
 export type TabsContext = {
   registerPane: (pane: Pane) => void;

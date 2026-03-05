@@ -26,18 +26,8 @@ const lines = Array.from({ length: 20 });
 
 onMounted(async () => {
   await nextTick();
-
-  const isFirstVisit = await CommonController.getIsFirstVisit();
-  if (isFirstVisit) {
-    animate();
-    setTimeout(() => {
-      isFirstTime.value = false;
-      goToQuestion()
-    }, 5000);
-  } else {
-    isFirstTime.value = false;
-
-  }
+  await fetchIsFirstVisit();
+  await fetchRemainLiveTime();
 
   timer = window.setInterval(() => {
     time.value -= 1000;
@@ -56,6 +46,20 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   if (timer) clearInterval(timer);
 });
+
+async function fetchIsFirstVisit() {
+  const isFirstVisit = await CommonController.getIsFirstVisit();
+  if (isFirstVisit) {
+    animate();
+    setTimeout(() => {
+      isFirstTime.value = false;
+      goToQuestion()
+    }, 5000);
+  } else {
+    isFirstTime.value = false;
+
+  }
+}
 
 async function fetchRemainLiveTime() {
   time.value = await CommonController.getRemainLiveTime();

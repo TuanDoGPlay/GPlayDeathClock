@@ -101,7 +101,6 @@ function goNextName() {
 }
 
 function goNextDob() {
-  console.log(userData.value);
   if (!userData.value.dob) return;
   saveUserData();
 
@@ -116,7 +115,6 @@ function goNextDob() {
 }
 
 function goNextHeight() {
-  console.log(userData.value);
   if (!userData.value.height) return;
   saveUserData();
 
@@ -136,7 +134,6 @@ function goNextHeight() {
 }
 
 function goNextWeight() {
-  console.log(userData.value);
   if (!userData.value.weight || !userData.value.height) return;
   saveUserData();
 
