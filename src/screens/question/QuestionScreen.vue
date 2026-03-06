@@ -42,7 +42,7 @@ watch(activeName, async (newVal, oldVal) => {
     const question = questions.value.find(q => q.id.toString() === oldVal);
     const answer = answers.value[oldVal];
 
-    if (question && answer != null) {
+    if (question) {
       await answerQuestion(question, answer);
     }
   }
@@ -57,13 +57,8 @@ function handleBack() {
 }
 
 async function answerQuestion(question: QuestionInstance, answer: any) {
-  const incrementTime = Utils.calculateQuestionIncrementTime(question, answer);
-  console.log(incrementTime);
-
-  await CommonController.editRemainLiveTime(incrementTime);
-  await CommonController.answerQuestion(question);
+  await CommonController.answerQuestion(question, answer);
   document.dispatchEvent(new Event(EventEnum.ChangeTime))
-
 }
 
 function goNext(currentId: string) {
@@ -71,11 +66,16 @@ function goNext(currentId: string) {
   const next = questions.value[idx + 1]?.id.toString() ?? "more"
   activeName.value = next
 }
+
+function moreQuestions() {
+  isFirstVisit.value = false
+  fetchQuestions()
+}
 </script>
 
 <template>
   <div class="h-full">
-    <DefaultQuestions v-if="isFirstVisit" />
+    <DefaultQuestions v-if="isFirstVisit" @more="moreQuestions" />
 
     <ContentFrame v-else :current-tab="currentTabIndex" :icon="Question" :total-tab="questions.length + 1" show-back
       show-pagination-in-title title="Questions" @back="handleBack">
@@ -91,7 +91,7 @@ function goNext(currentId: string) {
         </TabPane>
 
         <TabPane label="More" name="more">
-          <MoreQuestion />
+          <MoreQuestion @more="fetchQuestions" />
         </TabPane>
 
       </TabComponent>

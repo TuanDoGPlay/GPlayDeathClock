@@ -1,18 +1,18 @@
 <script lang="ts" setup>
 import Question from '@/assets/icons/question.svg'
-import { computed, onMounted, ref } from "vue";
-import ContentFrame from "@/components/content-frame/ContentFrame.vue";
-import { goToRouter, showToast } from "gplay-app-sdk";
-import questions from "@/assets/data/required-questions.json";
-import MoreQuestion from "@/screens/question/components/MoreQuestion.vue";
-import TabComponent from "@/components/tab/TabComponent.vue";
-import TabPane from "@/components/tab/TabPane.vue";
-import InputComponent from "@/components/input/InputComponent.vue";
-import ButtonComponent from "@/components/button/ButtonComponent.vue";
-import { EventEnum } from "@/constants/events.ts";
-import type { UserData } from "@/common/types.ts";
-import { MS_IN_MONTH, MS_IN_YEAR, Utils } from '@/common/utils';
-import { CommonController } from '@/common/controller';
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import ContentFrame from '@/components/content-frame/ContentFrame.vue'
+import { goToRouter, showToast } from 'gplay-app-sdk'
+import questions from '@/assets/data/required-questions.json'
+import MoreQuestion from '@/screens/question/components/MoreQuestion.vue'
+import TabComponent from '@/components/tab/TabComponent.vue'
+import TabPane from '@/components/tab/TabPane.vue'
+import InputComponent from '@/components/input/InputComponent.vue'
+import ButtonComponent from '@/components/button/ButtonComponent.vue'
+import { EventEnum } from '@/constants/events.ts'
+import type { UserData } from '@/common/types.ts'
+import { MS_IN_MONTH, MS_IN_YEAR, Utils } from '@/common/utils'
+import { CommonController } from '@/common/controller'
 
 interface UserDataView {
   name: string
@@ -24,6 +24,8 @@ interface UserDataView {
   remainTime?: number
 }
 
+const emit = defineEmits(['more'])
+
 const userData = ref<UserDataView>({
   name: '',
   dob: '',
@@ -31,50 +33,58 @@ const userData = ref<UserDataView>({
   height: undefined,
   weight: undefined,
   sexualOrientation: '',
-  remainTime: undefined
+  remainTime: undefined,
 })
-const activeName = ref(questions[0]?.id.toString() || "0")
+
+const activeName = ref(questions[0]?.id.toString() || '0')
+
+const inputRefName = ref<any>(null)
+const inputRefDob = ref<any>(null)
+const inputRefHeight = ref<any>(null)
+const inputRefWeight = ref<any>(null)
 
 const currentTabIndex = computed(() => {
-  const idx = questions.findIndex(q => q.id.toString() === activeName.value);
-  return idx === -1 ? questions.length : idx;
+  const idx = questions.findIndex((q) => q.id.toString() === activeName.value)
+  return idx === -1 ? questions.length : idx
 })
 
+function focusCurrentTabInput() {
+  nextTick(() => {
+    const focusTargetMap: Record<string, any> = {
+      '0': inputRefName.value,
+      '1': inputRefDob.value,
+      '2': inputRefHeight.value,
+      '3': inputRefWeight.value,
+    }
+
+    const target = focusTargetMap[activeName.value]
+    if (!target) return
+
+    if (typeof target.focus === 'function') {
+      target.focus()
+      return
+    }
+
+    const el =
+      target?.$el?.querySelector?.('input, textarea') ||
+      target?.querySelector?.('input, textarea')
+
+    el?.focus?.()
+  })
+}
+
 onMounted(async () => {
-  await fetchUserData();
-  if (userData.value.name) {
-    activeName.value = "1";
-  }
-  if (userData.value.dob) {
-    activeName.value = "2";
-  }
-  if (userData.value.height) {
-    activeName.value = "3";
-  }
-  if (userData.value.weight) {
-    activeName.value = "4";
-  }
-  if (userData.value && userData.value.sex) {
-    activeName.value = "5";
-  }
-  if (userData.value && userData.value.sexualOrientation) {
-    activeName.value = "more";
-  }
+  focusCurrentTabInput()
 })
+
+watch(activeName, () => {
+  focusCurrentTabInput()
+})
+
+
 
 function handleBack() {
   goToRouter({ name: 'home' })
-}
-
-async function fetchUserData() {
-  const data = await CommonController.getUserData()
-  if (data.name) userData.value.name = data.name;
-  if (data.dob) userData.value.dob = data.dob;
-  if (data.height) userData.value.height = data.height;
-  if (data.weight) userData.value.weight = data.weight
-  if (data.sex) userData.value.sex = data.sex
-  if (data.sexualOrientation) userData.value.sexualOrientation = data.sexualOrientation
-  if (data.remainTime) userData.value.remainTime = data.remainTime;
 }
 
 async function saveUserData() {
@@ -83,108 +93,114 @@ async function saveUserData() {
     dob: userData.value.dob,
     height: userData.value.height || 0,
     weight: userData.value.weight || 0,
-    remainTime: userData.value.remainTime || 0,
     sex: userData.value.sex,
-    sexualOrientation: userData.value.sexualOrientation
+    sexualOrientation: userData.value.sexualOrientation,
   }
-  await CommonController.saveUserData(data);
+  await CommonController.saveUserData(data)
 }
 
 function goNextName() {
   if (!userData.value.name.trim()) {
-    showToast({ text: "Please enter your name" });
-    return;
+    showToast({ text: 'Please enter your name' })
+    return
   }
-  saveUserData();
 
-  activeName.value = "1";
+  saveUserData()
+  activeName.value = '1'
 }
 
 function goNextDob() {
-  if (!userData.value.dob) return;
-  saveUserData();
+  if (!userData.value.dob) return
 
-  const yourAge = new Date().getFullYear() - new Date(userData.value.dob).getFullYear();
-  const startDate = new Date('2000-01-01T00:00:00');
-  const futureDate = new Date(startDate);
-  futureDate.setFullYear(startDate.getFullYear() + 85 - yourAge);
+  saveUserData()
+
+  const yourAge =
+    new Date().getFullYear() - new Date(userData.value.dob).getFullYear()
+  const startDate = new Date('2000-01-01T00:00:00')
+  const futureDate = new Date(startDate)
+  futureDate.setFullYear(startDate.getFullYear() + 85 - yourAge)
+
   CommonController.editRemainLiveTime(futureDate.getTime(), false).then(() => {
     document.dispatchEvent(new Event(EventEnum.ChangeTime))
   })
-  activeName.value = "2";
+
+  activeName.value = '2'
 }
 
 function goNextHeight() {
-  if (!userData.value.height) return;
-  saveUserData();
+  if (!userData.value.height) return
 
-  const randomYear = Math.random() * 4 - 2;
-  let randomTime = randomYear * MS_IN_YEAR; // Convert years to milliseconds
-  const height = userData.value.height;
+  saveUserData()
+
+  const randomYear = Math.random() * 4 - 2
+  let randomTime = randomYear * MS_IN_YEAR
+  const height = userData.value.height
+
   if (height <= 155) {
     randomTime -= (155 - height) * MS_IN_MONTH
   } else if (height >= 180) {
     randomTime -= (height - 180) * MS_IN_MONTH
   }
+  console.log('randomTime', randomTime);
 
   CommonController.editRemainLiveTime(randomTime).then(() => {
     document.dispatchEvent(new Event(EventEnum.ChangeTime))
   })
-  activeName.value = "3";
+
+  activeName.value = '3'
 }
 
 function goNextWeight() {
-  if (!userData.value.weight || !userData.value.height) return;
-  saveUserData();
+  if (!userData.value.weight || !userData.value.height) return
 
-  const bmi = Utils.calculateBMI(userData.value.weight, userData.value.height);
-  let deductedYears = 0;
+  saveUserData()
+
+  const bmi = Utils.calculateBMI(userData.value.weight, userData.value.height)
+  let deductedYears = 0
+  console.log("bmi", bmi);
+
   if (bmi < 16) {
-    // Gầy độ III
-    deductedYears = 8;
+    deductedYears = 8
   } else if (bmi >= 16 && bmi < 17) {
-    // Gầy độ II
-    deductedYears = 4;
+    deductedYears = 4
   } else if (bmi >= 17 && bmi < 18.5) {
-    // Gầy độ I
-    deductedYears = 2;
+    deductedYears = 2
   } else if (bmi >= 18.5 && bmi < 25) {
-    // Bình thường
-    deductedYears = 0;
+    deductedYears = 0
   } else if (bmi >= 25 && bmi < 30) {
-    // Thừa cân
-    deductedYears = 2;
+    deductedYears = 2
   } else if (bmi >= 30 && bmi < 35) {
-    // Béo phì độ I
-    deductedYears = 4;
+    deductedYears = 4
   } else if (bmi >= 35 && bmi < 40) {
-    // Béo phì độ II
-    deductedYears = 8;
+    deductedYears = 8
   } else if (bmi >= 40) {
-    // Béo phì độ III
-    deductedYears = 15;
+    deductedYears = 15
   }
 
   CommonController.editRemainLiveTime(-deductedYears * MS_IN_YEAR).then(() => {
     document.dispatchEvent(new Event(EventEnum.ChangeTime))
   })
-  activeName.value = "4";
+
+  activeName.value = '4'
 }
 
-// Xử lý tự động next khi click vào các nút lựa chọn
 function onSelected(field: 'sex' | 'sexualOrientation', option: string) {
-  userData.value[field] = option;
+  userData.value[field] = option
   saveUserData()
 
-  const randomYear = Math.random() * 4 - 2;
-  let randomTime = randomYear * MS_IN_YEAR; // Convert years to milliseconds
+  const randomYear = Math.random() * 4 - 2
+  const randomTime = randomYear * MS_IN_YEAR
+
   CommonController.editRemainLiveTime(randomTime).then(() => {
     document.dispatchEvent(new Event(EventEnum.ChangeTime))
   })
 
-  activeName.value = field === 'sex' ? "5" : "more";
+  activeName.value = field === 'sex' ? '5' : 'more'
+
   if (field === 'sexualOrientation') {
-    showToast({ text: "Thank you for sharing! Your data will be kept confidential." });
+    showToast({
+      text: 'Thank you for sharing! Your data will be kept confidential.',
+    })
   }
 }
 </script>
@@ -254,9 +270,8 @@ function onSelected(field: 'sex' | 'sexualOrientation', option: string) {
         </TabPane>
 
         <TabPane label="More" name="more">
-          <MoreQuestion />
+          <MoreQuestion @more="emit('more')" />
         </TabPane>
-
       </TabComponent>
     </ContentFrame>
   </div>

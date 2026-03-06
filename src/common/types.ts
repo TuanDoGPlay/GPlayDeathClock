@@ -8,6 +8,7 @@ export interface QuestionData {
   options?: string[];
   method: number;
   logic: Record<string, any>;
+  time?: number;
 }
 
 export interface UserData {
@@ -17,7 +18,7 @@ export interface UserData {
   height: number;
   weight: number;
   sexualOrientation: string;
-  remainTime: number;
+  remainTime?: number;
 }
 
 export interface MissionData {
@@ -48,6 +49,7 @@ export class QuestionInstance implements QuestionData {
   options?: string[];
   method: QuestionMethodEnum;
   logic: Record<string, any>;
+  time?: number;
 
   constructor(data: QuestionData) {
     this.id = data.id;

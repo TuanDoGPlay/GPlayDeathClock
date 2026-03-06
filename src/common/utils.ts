@@ -81,13 +81,13 @@ export const Utils = {
     if (seconds <= 0) return "0s";
 
     const units = [
-      { label: "y", value: 31536000 }, // 365 * 24 * 60 * 60
-      { label: "mo", value: 2592000 }, // 30 * 24 * 60 * 60
-      { label: "w", value: 604800 }, // 7 * 24 * 60 * 60
-      { label: "d", value: 86400 }, // 24 * 60 * 60
-      { label: "h", value: 3600 },
-      { label: "m", value: 60 },
-      { label: "s", value: 1 },
+      { label: "y", value: MS_IN_YEAR }, // 365 * 24 * 60 * 60
+      { label: "mo", value: MS_IN_MONTH }, // 30 * 24 * 60 * 60
+      { label: "w", value: MS_IN_WEEK }, // 7 * 24 * 60 * 60
+      { label: "d", value: MS_IN_DAY }, // 24 * 60 * 60
+      { label: "h", value: MS_IN_HOUR },
+      { label: "m", value: MS_IN_MINUTE },
+      { label: "s", value: MS_IN_SECOND },
     ];
 
     const result: string[] = [];
@@ -107,8 +107,6 @@ export const Utils = {
     return result.join(" ");
   },
   calculateBMI(weight: number, height: number): number {
-    console.log("weight height", weight, height);
-
     // Nếu người dùng nhập chiều cao theo cm (ví dụ 170), tự động chuyển sang m (1.7)
     const heightInMeters = height > 3 ? height / 100 : height;
     const bmi = weight / (heightInMeters * heightInMeters);
@@ -157,6 +155,7 @@ export const Utils = {
     question: QuestionInstance,
     answer: any,
   ): number {
+    if (!answer) return 0;
     if (question.method === QuestionMethodEnum.TextRandom) {
       const logic = question.logic as TextRandomAnswerLogic;
       const fromNumber = Utils.convertStringToMs(logic.from);

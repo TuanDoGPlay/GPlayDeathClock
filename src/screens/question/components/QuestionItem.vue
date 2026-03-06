@@ -1,12 +1,12 @@
 <script lang="ts" setup>
 import ButtonComponent from "@/components/button/ButtonComponent.vue";
-import type { QuestionData } from "@/common/types.ts";
+import type { QuestionInstance } from "@/common/types.ts";
 import InputComponent from "@/components/input/InputComponent.vue";
 import { onMounted, ref, watch, nextTick } from "vue";
 import { showToast } from "gplay-app-sdk";
 
 const props = defineProps<{
-  question: QuestionData;
+  question: QuestionInstance;
   focus?: boolean;
 }>();
 const emit = defineEmits(["next", 'input']);
@@ -43,10 +43,6 @@ function onSelected(option: string) {
 }
 
 function goNext() {
-  if (!answer.value) {
-    showToast({ text: "Please answer this question" });
-    return;
-  }
   emit("next", answer.value);
 }
 

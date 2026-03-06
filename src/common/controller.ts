@@ -10,6 +10,7 @@ import {
 } from "@/common/types.ts";
 import { v4 as uuidv4 } from "uuid";
 import dailyMissions from "@/assets/data/daily-missions.json";
+import { Utils } from "./utils";
 
 const userTable = "user";
 const bucketTable = "buckets";
@@ -18,6 +19,9 @@ const questionTable = "questions";
 
 export const CommonController = {
   async init() {
+    const startDate = new Date("2000-01-01T00:00:00");
+    const futureDate = new Date(startDate);
+    futureDate.setFullYear(startDate.getFullYear() + 85);
     const db = {
       [userTable]: [
         {
@@ -28,7 +32,7 @@ export const CommonController = {
           height: 0,
           weight: 0,
           sexualOrientation: "",
-          remainTime: 0,
+          remainTime: futureDate.getTime(),
         },
       ],
       [bucketTable]: [],
@@ -38,17 +42,44 @@ export const CommonController = {
     await Database.initDatabase(db);
   },
 
+  async refreshDailyMission(): Promise<void> {
+    return await Database.deleteTable(missionTable, {});
+  },
+
   async getQuestions(): Promise<QuestionInstance[]> {
-    return questions
-      .slice(0, 5)
+    const answeredQuestions =
+      await Database.selectTable<QuestionData>(questionTable);
+    const notAnsweredQuestions: QuestionData[] = [];
+    questions.forEach((q) => {
+      if (!answeredQuestions.find((i) => i.id == q.id))
+        notAnsweredQuestions.push(q);
+    });
+    return notAnsweredQuestions
+      .slice(0, 10)
       .map((q: QuestionData) => new QuestionInstance(q));
   },
 
-  async answerQuestion(question: QuestionInstance): Promise<void> {
-    const exist = await Database.selectTable(questionTable, {
+  async answerQuestion(question: QuestionInstance, answer: any): Promise<void> {
+    console.log("answer", answer);
+
+    if (answer) {
+      const incrementTime = Utils.calculateQuestionIncrementTime(
+        question,
+        answer,
+      );
+      question.time = incrementTime;
+      await CommonController.editRemainLiveTime(incrementTime);
+    }
+    const exist = await Database.selectTable<QuestionInstance>(questionTable, {
       id: question.id,
     });
-    if (exist) return Promise.resolve();
+    console.log(exist.length);
+    
+    if (exist.length) {
+      await CommonController.editRemainLiveTime(-(exist[0]?.time ?? 0));
+      await Database.updateTable(questionTable, { id: question.id }, question);
+      return Promise.resolve();
+    }
     await Database.insertTable(questionTable, question);
     return Promise.resolve();
   },
@@ -64,10 +95,7 @@ export const CommonController = {
       const completedMissions = missions.filter((m) => m.completed);
       const uncompletedMissions = missions.filter((m) => !m.completed);
 
-      return Promise.resolve([
-        ...uncompletedMissions.slice(0, 5),
-        ...completedMissions,
-      ]);
+      return Promise.resolve([...uncompletedMissions, ...completedMissions]);
     } catch (e) {
       return Promise.reject(e);
     }
@@ -81,14 +109,14 @@ export const CommonController = {
         await Database.updateTable(
           userTable,
           { id: 1 },
-          { remainTime: userData.remainTime + mission.time },
+          { remainTime: userData.remainTime! + mission.time },
         );
       } else {
         await Database.deleteTable(missionTable, { id: mission.id });
         await Database.updateTable(
           userTable,
           { id: 1 },
-          { remainTime: userData.remainTime - mission.time },
+          { remainTime: userData.remainTime! - mission.time },
         );
       }
     } catch (e) {
@@ -114,13 +142,7 @@ export const CommonController = {
 
   async getRemainLiveTime(): Promise<number> {
     const userData = await this.getUserData();
-    if (!userData.remainTime) {
-      const startDate = new Date("2000-01-01T00:00:00");
-      const futureDate = new Date(startDate);
-      futureDate.setFullYear(startDate.getFullYear() + 85);
-      return Promise.resolve(futureDate.getTime());
-    }
-    return Promise.resolve(userData.remainTime);
+    return Promise.resolve(userData.remainTime!);
   },
 
   async editRemainLiveTime(
@@ -128,14 +150,13 @@ export const CommonController = {
     isIncrement: boolean = true,
   ): Promise<void> {
     const userData = await this.getUserData();
-    const newTime = isIncrement ? userData.remainTime + time : time;
+    const newTime = isIncrement ? userData.remainTime! + time : time;
+    console.log("live", time, new Date(newTime));
     await this.saveUserData({ ...userData, remainTime: newTime });
     return Promise.resolve();
   },
 
   async saveUserData(data: UserData): Promise<void> {
-    console.log(data);
-
     return await Database.updateTable(userTable, { id: 1 }, data);
   },
 
