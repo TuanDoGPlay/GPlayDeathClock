@@ -6,8 +6,9 @@ const props = defineProps<{
   icon?: string
   text?: string
   template?: 'primary'
-  showAdTag?:boolean
-  fontSize?:string
+  showAdTag?: boolean
+  fontSize?: string
+  iconRight?: boolean
 }>()
 
 const background = computed(() => {
@@ -31,8 +32,9 @@ const containerStyle = computed(() => ({
 <template>
   <div :style="containerStyle" class="custom">
     <AdTag v-if="props.showAdTag" class="ad"/>
-    <component v-if="props.icon" :is="props.icon" class="icon"/>
+    <component v-if="props.icon && !iconRight" :is="props.icon" class="icon"/>
     <span class="text">{{ props.text }}</span>
+    <component v-if="props.icon && iconRight" :is="props.icon" class="icon"/>
   </div>
 </template>
 

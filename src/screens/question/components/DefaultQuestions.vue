@@ -1,18 +1,19 @@
 <script lang="ts" setup>
 import Question from '@/assets/icons/question.svg'
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import Next from '@/assets/icons/next.svg'
+import {computed, nextTick, onMounted, ref, watch} from 'vue'
 import ContentFrame from '@/components/content-frame/ContentFrame.vue'
-import { goToRouter, showToast } from 'gplay-app-sdk'
+import {goToRouter, showToast} from 'gplay-app-sdk'
 import questions from '@/assets/data/required-questions.json'
 import MoreQuestion from '@/screens/question/components/MoreQuestion.vue'
 import TabComponent from '@/components/tab/TabComponent.vue'
 import TabPane from '@/components/tab/TabPane.vue'
 import InputComponent from '@/components/input/InputComponent.vue'
 import ButtonComponent from '@/components/button/ButtonComponent.vue'
-import { EventEnum } from '@/constants/events.ts'
-import type { UserData } from '@/common/types.ts'
-import { MS_IN_MONTH, MS_IN_YEAR, Utils } from '@/common/utils'
-import { CommonController } from '@/common/controller'
+import {EventEnum} from '@/constants/events.ts'
+import type {UserData} from '@/common/types.ts'
+import {MS_IN_MONTH, MS_IN_YEAR, Utils} from '@/common/utils'
+import {CommonController} from '@/common/controller'
 
 interface UserDataView {
   name: string
@@ -66,8 +67,8 @@ function focusCurrentTabInput() {
     }
 
     const el =
-      target?.$el?.querySelector?.('input, textarea') ||
-      target?.querySelector?.('input, textarea')
+        target?.$el?.querySelector?.('input, textarea') ||
+        target?.querySelector?.('input, textarea')
 
     el?.focus?.()
   })
@@ -82,9 +83,8 @@ watch(activeName, () => {
 })
 
 
-
 function handleBack() {
-  goToRouter({ name: 'home' })
+  goToRouter({name: 'home'})
 }
 
 async function saveUserData() {
@@ -101,7 +101,7 @@ async function saveUserData() {
 
 function goNextName() {
   if (!userData.value.name.trim()) {
-    showToast({ text: 'Please enter your name' })
+    showToast({text: 'Please enter your name'})
     return
   }
 
@@ -110,12 +110,15 @@ function goNextName() {
 }
 
 function goNextDob() {
-  if (!userData.value.dob) return
+  if (!userData.value.dob) {
+    showToast({text: 'Please enter your date of birth'})
+    return
+  }
 
   saveUserData()
 
   const yourAge =
-    new Date().getFullYear() - new Date(userData.value.dob).getFullYear()
+      new Date().getFullYear() - new Date(userData.value.dob).getFullYear()
   const startDate = new Date('2000-01-01T00:00:00')
   const futureDate = new Date(startDate)
   futureDate.setFullYear(startDate.getFullYear() + 85 - yourAge)
@@ -128,7 +131,10 @@ function goNextDob() {
 }
 
 function goNextHeight() {
-  if (!userData.value.height) return
+  if (!userData.value.height) {
+    showToast({text: 'Please enter your height'})
+    return
+  }
 
   saveUserData()
 
@@ -151,8 +157,11 @@ function goNextHeight() {
 }
 
 function goNextWeight() {
-  if (!userData.value.weight || !userData.value.height) return
-
+  if (!userData.value.weight) {
+    showToast({text: 'Please enter your weight'})
+    return
+  }
+  if (!userData.value.height) return
   saveUserData()
 
   const bmi = Utils.calculateBMI(userData.value.weight, userData.value.height)
@@ -208,14 +217,15 @@ function onSelected(field: 'sex' | 'sexualOrientation', option: string) {
 <template>
   <div class="h-full">
     <ContentFrame :current-tab="currentTabIndex" :icon="Question" :total-tab="questions.length + 1" show-back
-      show-pagination-in-title title="Questions" @back="handleBack">
-      <TabComponent v-model="activeName" :dots="true" :swipe="true">
+                  show-pagination-in-title title="Questions" @back="handleBack">
+      <TabComponent v-model="activeName" :dots="false">
         <TabPane label="Name" name="0">
           <div class="flex flex-col gap-3 items-center justify-center h-full pb-10">
             <p class="font-bold text-center mb-10">What is your name?</p>
             <div class="w-2/3">
-              <InputComponent ref="inputRefName" v-model="userData.name" @keydown.enter.prevent="goNextName" />
+              <InputComponent ref="inputRefName" v-model="userData.name" @keydown.enter.prevent="goNextName"/>
             </div>
+            <ButtonComponent text="Next" template="primary" :icon="Next" icon-right @click="goNextName"/>
           </div>
         </TabPane>
 
@@ -223,8 +233,9 @@ function onSelected(field: 'sex' | 'sexualOrientation', option: string) {
           <div class="flex flex-col gap-3 items-center justify-center h-full pb-10">
             <p class="font-bold text-center mb-10">Enter your date of birth</p>
             <div class="w-2/3">
-              <InputComponent ref="inputRefDob" v-model="userData.dob" type="date" @keydown.enter.prevent="goNextDob" />
+              <InputComponent ref="inputRefDob" v-model="userData.dob" type="date" @keydown.enter.prevent="goNextDob"/>
             </div>
+            <ButtonComponent text="Next" template="primary" :icon="Next" icon-right @click="goNextDob"/>
           </div>
         </TabPane>
 
@@ -233,8 +244,9 @@ function onSelected(field: 'sex' | 'sexualOrientation', option: string) {
             <p class="font-bold text-center mb-10">Enter your height (cm)</p>
             <div class="w-2/3">
               <InputComponent ref="inputRefHeight" v-model="userData.height" type="number"
-                @keydown.enter.prevent="goNextHeight" />
+                              @keydown.enter.prevent="goNextHeight"/>
             </div>
+              <ButtonComponent text="Next" template="primary" :icon="Next" icon-right @click="goNextHeight"/>
           </div>
         </TabPane>
 
@@ -243,8 +255,9 @@ function onSelected(field: 'sex' | 'sexualOrientation', option: string) {
             <p class="font-bold text-center mb-10">Enter your current weight (kg)</p>
             <div class="w-2/3">
               <InputComponent ref="inputRefWeight" v-model="userData.weight" type="number"
-                @keydown.enter.prevent="goNextWeight" />
+                              @keydown.enter.prevent="goNextWeight"/>
             </div>
+            <ButtonComponent text="Next" template="primary" :icon="Next" icon-right @click="goNextWeight"/>
           </div>
         </TabPane>
 
@@ -253,7 +266,8 @@ function onSelected(field: 'sex' | 'sexualOrientation', option: string) {
             <p class="font-bold text-center mb-10">What is your biological sex?</p>
             <div class="w-full">
               <ButtonComponent v-for="option in ['Male', 'Female', 'Other']" :key="option" :text="option"
-                class="mt-3 mx-auto" style="width: 80%" template="primary" @click="onSelected('sex', option)" />
+                               class="mt-3 mx-auto" style="width: 80%" template="primary"
+                               @click="onSelected('sex', option)"/>
             </div>
           </div>
         </TabPane>
@@ -263,14 +277,14 @@ function onSelected(field: 'sex' | 'sexualOrientation', option: string) {
             <p class="font-bold text-center mb-10">What is your sexual orientation?</p>
             <div class="w-full">
               <ButtonComponent v-for="option in ['Straight', 'Homosexual', 'Bisexual', 'Other']" :key="option"
-                :text="option" class="mt-3 mx-auto" style="width: 80%" template="primary"
-                @click="onSelected('sexualOrientation', option)" />
+                               :text="option" class="mt-3 mx-auto" style="width: 80%" template="primary"
+                               @click="onSelected('sexualOrientation', option)"/>
             </div>
           </div>
         </TabPane>
 
         <TabPane label="More" name="more">
-          <MoreQuestion @more="emit('more')" />
+          <MoreQuestion @more="emit('more')"/>
         </TabPane>
       </TabComponent>
     </ContentFrame>

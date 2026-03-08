@@ -1,19 +1,22 @@
 <script lang="ts" setup>
-import { nextTick, onBeforeUnmount, onMounted, ref } from "vue";
-import { goToRouter } from "gplay-app-sdk";
+import {nextTick, onBeforeUnmount, onMounted, ref} from "vue";
+import {goToRouter} from "gplay-app-sdk";
 import gsap from "gsap"; // Import GSAP
 import Question from '@/assets/icons/question.svg'
 import Share from '@/assets/icons/share.svg'
 import FlipClock from "@/components/flip-clock/FlipClock.vue";
 import ButtonComponent from "@/components/button/ButtonComponent.vue";
-import { EventEnum } from "@/constants/events.ts";
-import { CommonController } from "@/common/controller";
+import {EventEnum} from "@/constants/events.ts";
+import {CommonController} from "@/common/controller";
 
+const splashWrapper = ref<HTMLElement | null>(null);
 const clockWrapper = ref<HTMLElement | null>(null);
 const textWrapper = ref<HTMLElement | null>(null);
 
 const isShowClock = ref(true);
-const isFirstTime = ref(true);
+const isFirstVisit = ref(true);
+const isClockSpin = ref(false);
+
 
 const startDate = new Date('2000-01-01T00:00:00');
 const futureDate = new Date(startDate);
@@ -22,12 +25,12 @@ const time = ref(futureDate.getTime());
 
 let timer: number | undefined;
 
-const lines = Array.from({ length: 20 });
+const lines = Array.from({length: 20});
 
 onMounted(async () => {
   await nextTick();
-  await fetchIsFirstVisit();
   await fetchRemainLiveTime();
+  await fetchIsFirstVisit(); // Khởi chạy animation từ đây
 
   timer = window.setInterval(() => {
     time.value -= 1000;
@@ -38,7 +41,17 @@ onMounted(async () => {
     isShowClock.value = event.detail.isShow;
   });
 
-  document.addEventListener(EventEnum.ChangeTime, (e) => {
+  document.addEventListener(EventEnum.ChangeTime, () => {
+    isClockSpin.value = true
+    clearInterval(timer);
+    setTimeout(() => {
+      isClockSpin.value = false
+      setTimeout(() => {
+        timer = window.setInterval(() => {
+          time.value -= 1000;
+        }, 1000);
+      }, 2500)
+    }, 1000)
     fetchRemainLiveTime();
   });
 });
@@ -47,87 +60,96 @@ onBeforeUnmount(() => {
   if (timer) clearInterval(timer);
 });
 
-async function fetchIsFirstVisit() {
-  const isFirstVisit = await CommonController.getIsFirstVisit();
-  if (isFirstVisit) {
-    animate();
-    setTimeout(() => {
-      isFirstTime.value = false;
-      goToQuestion()
-    }, 5000);
-  } else {
-    isFirstTime.value = false;
-
-  }
-}
-
 async function fetchRemainLiveTime() {
   time.value = await CommonController.getRemainLiveTime();
 }
 
-function animate() {
-  if (!clockWrapper.value || !textWrapper.value) return;
+async function fetchIsFirstVisit() {
+  isFirstVisit.value = await CommonController.getIsFirstVisit();
+  playMasterAnimation(); // ✅ Gọi 1 hàm duy nhất để xử lý toàn bộ GSAP
+}
 
-  const clockH = clockWrapper.value.getBoundingClientRect().height ?? 0;
-
-  // Set trạng thái ban đầu
-  gsap.set(clockWrapper.value, { opacity: 0 });
-  gsap.set(textWrapper.value, {
-    opacity: 0,
-    y: clockH / 2 + 60, // spawn dưới clock
-  });
-
+function playMasterAnimation() {
   const tl = gsap.timeline();
 
-  tl.to(clockWrapper.value, {
-    opacity: 1,
-    duration: 1,
-    ease: "power2.inOut",
-  }).to(
-    textWrapper.value,
-    {
+  // 1. Tắt Splash Screen chung 1 timeline
+  if (splashWrapper.value) {
+    tl.to(splashWrapper.value, {
+      opacity: 0,
+      scale: 1,
+      filter: "blur(5px)",
+      duration: 1,
+      delay: 2,
+      ease: "power2.inOut",
+    });
+  }
+
+  // 2. Chạy tiếp hiệu ứng cho Clock và Text nếu là lần đầu
+  if (isFirstVisit.value) {
+    if (!clockWrapper.value || !textWrapper.value) return;
+
+    const clockH = clockWrapper.value.getBoundingClientRect().height ?? 0;
+
+    gsap.set(clockWrapper.value, {opacity: 0});
+    gsap.set(textWrapper.value, {opacity: 0, y: clockH / 2 + 60});
+
+    tl.to(clockWrapper.value, {
       opacity: 1,
-      y: 0,
-      duration: 0.8,
-      ease: "power2.out",
-    },
-    "+=0"
-  );
+      duration: 1,
+      ease: "power2.inOut",
+    }, "-=0.2") // Chạy đè lên khúc cuối của Splash 0.2s cho mượt
+        .to(textWrapper.value, {
+          opacity: 1,
+          y: 0,
+          duration: 0.8,
+          ease: "power2.out",
+        }, "+=0")
+        // Chờ 3s để User đọc chữ rồi chuyển màn
+        .add(() => {
+          setTimeout(() => {
+            isFirstVisit.value = false;
+            goToQuestion();
+          }, 3000);
+        });
+  }
 }
 
 async function goToQuestion() {
-  await goToRouter({ name: 'question' });
+  await goToRouter({name: 'question'});
 }
 
 async function goToShareClock() {
-  await goToRouter({ name: 'share-clock' });
+  await goToRouter({name: 'share-clock'});
 }
 </script>
 
 <template>
   <div class="main-container flex flex-col items-center justify-center h-full px-2 pt-10 relative overflow-hidden">
+    <Teleport to="body">
+      <img ref="splashWrapper" src="/splash.png" alt="splash" class="h-full w-full object-cover absolute inset-0 z-[200] pointer-events-none">
+    </Teleport>
 
     <div :class="[
       isShowClock ? 'max-h-[50vh]' : 'max-h-0',
-      isFirstTime ? 'mt-60' : ''
+      isFirstVisit ? 'mt-60' : ''
     ]" class="w-full overflow-hidden z-[100]" style="transition: all 1s ease">
       <div class="flex flex-col items-center">
 
-        <div ref="clockWrapper" :class="{ 'opacity-0': isFirstTime, 'opacity-100': !isFirstTime }"
-          class="transition-opacity">
-          <FlipClock :show-label="!isFirstTime" :value="time" />
+        <div ref="clockWrapper" :class="{ 'opacity-0': isFirstVisit, 'opacity-100': !isFirstVisit }"
+             class="transition-opacity">
+          <FlipClock :show-label="!isFirstVisit" :value="time" :spin="isClockSpin"/>
         </div>
 
-        <div :class="{ 'opacity-0 pointer-events-none': isFirstTime, 'opacity-100': !isFirstTime }"
-          class="flex w-full justify-around my-5" style="transition: opacity 0.5s ease">
-          <ButtonComponent :icon="Question" :text="'Questions'" @click="goToQuestion" />
-          <ButtonComponent :icon="Share" :text="'Share Clock'" @click="goToShareClock" />
+        <div :class="{ 'opacity-0 pointer-events-none': isFirstVisit, 'opacity-100': !isFirstVisit }"
+             class="flex w-full justify-around my-5" style="transition: opacity 0.5s ease">
+          <ButtonComponent :icon="Question" :text="'Questions'" @click="goToQuestion"/>
+          <ButtonComponent :icon="Share" :text="'Share Clock'" @click="goToShareClock"/>
         </div>
       </div>
     </div>
 
     <Transition name="fade-out">
-      <div v-if="isFirstTime" class="road-wrapper fixed inset-0 z-50 overflow-hidden bg-black">
+      <div v-if="isFirstVisit" class="road-wrapper fixed inset-0 z-50 overflow-hidden bg-black">
         <img alt="way" class="h-full w-full object-cover" src="/way.svg">
         <div class="white-line left-2"></div>
         <div class="white-line right-2"></div>
@@ -146,12 +168,12 @@ async function goToShareClock() {
       </div>
     </Transition>
 
-    <div :class="{ 'opacity-0 pointer-events-none': isFirstTime, 'opacity-100': !isFirstTime }"
-      class="w-full flex-1 rounded-2xl overflow-hidden"
-      style="background-color: var(--panel-theme-1); transition: opacity 2s ease">
+    <div :class="{ 'opacity-0 pointer-events-none': isFirstVisit, 'opacity-100': !isFirstVisit }"
+         class="w-full flex-1 rounded-2xl overflow-hidden"
+         style="background-color: var(--panel-theme-1); transition: opacity 2s ease">
       <RouterView v-slot="{ Component }">
         <Transition mode="out-in" name="fade">
-          <component :is="Component" class="h-full w-full" />
+          <component :is="Component" class="h-full w-full"/>
         </Transition>
       </RouterView>
     </div>
@@ -160,7 +182,8 @@ async function goToShareClock() {
 </template>
 
 <style scoped>
-/* --- Hiệu ứng biến mất màn hình Road Screen --- */
+/* Các style cũ được giữ nguyên... */
+
 .fade-out-leave-active {
   transition: opacity 1s ease;
 }
@@ -169,7 +192,6 @@ async function goToShareClock() {
   opacity: 0;
 }
 
-/* --- Router View Transition --- */
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.2s ease;
@@ -180,7 +202,6 @@ async function goToShareClock() {
   opacity: 0;
 }
 
-/* --- Road Screen Styles --- */
 .road-wrapper {
   height: 100vh;
   width: 100vw;
@@ -206,7 +227,6 @@ async function goToShareClock() {
   0% {
     transform: translateY(-9rem);
   }
-
   100% {
     transform: translateY(0);
   }
