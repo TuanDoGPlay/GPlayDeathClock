@@ -1,21 +1,32 @@
 <script lang="ts" setup>
-import { computed, ref, watch, onBeforeUnmount } from "vue";
+import { computed, ref, watch, onBeforeUnmount, onMounted } from "vue";
 import FlipClockItem from "@/components/flip-clock/FlipClockItem.vue";
+import { EventEnum } from "@/constants/events";
+import { CommonController } from "@/common/controller";
 
 const props = defineProps<{
   showLabel?: boolean;
   value: number;
-  spin?: boolean;
 }>();
 
-const dateInstance = ref(new Date(props.value));
+const isSpin = ref(false);
+const isShowChange = ref(false);
+const isCanTick = ref(true);
 
-watch(
-  () => props.value,
-  () => {
-    dateInstance.value = new Date(props.value);
-  }
-);
+// ✅ Tạo các biến trạng thái spin độc lập cho từng cột
+const spinYear = ref(isSpin.value);
+const spinMonth = ref(isSpin.value);
+const spinDay = ref(isSpin.value);
+const spinHour = ref(isSpin.value);
+const spinMinute = ref(isSpin.value);
+const spinSecond = ref(isSpin.value);
+
+
+const time = ref(props.value)
+const dateInstance = computed(() => {
+  return new Date(time.value)
+});
+const differenceTime = ref(0)
 
 const second = computed(() => {
   const s = dateInstance.value.getSeconds();
@@ -50,25 +61,34 @@ const year = computed(() => {
   return (dateInstance.value.getFullYear() % 100) + (month.value - 1) / 12;
 });
 
-// ✅ Tạo các biến trạng thái spin độc lập cho từng cột
-const spinYear = ref(props.spin || false);
-const spinMonth = ref(props.spin || false);
-const spinDay = ref(props.spin || false);
-const spinHour = ref(props.spin || false);
-const spinMinute = ref(props.spin || false);
-const spinSecond = ref(props.spin || false);
 
 // Biến lưu trữ các timeout để dọn dẹp nếu người dùng bật spin lại khi chưa dừng xong
 let stopTimeouts: ReturnType<typeof setTimeout>[] = [];
 
-function clearStaggeredTimeouts() {
-  stopTimeouts.forEach(clearTimeout);
-  stopTimeouts = [];
-}
+let timer: number | undefined;
 
-// ✅ Lắng nghe props.spin để kích hoạt hoặc dừng nối tiếp
+onMounted(() => {
+  timer = window.setInterval(() => {
+    if (isCanTick.value) time.value -= 1000;
+  }, 1000);
+
+  document.addEventListener(EventEnum.ChangeTime, async () => {
+    isSpin.value = true
+    await fetchRemainLiveTime();
+    isSpin.value = false
+  });
+})
+
 watch(
-  () => props.spin,
+  () => props.value,
+  (oldVal, newVal) => {
+    differenceTime.value = newVal - oldVal
+    time.value = newVal;
+  }
+);
+
+watch(
+  () => isSpin.value,
   (newSpin) => {
     clearStaggeredTimeouts();
 
@@ -80,6 +100,8 @@ watch(
       spinHour.value = true;
       spinMinute.value = true;
       spinSecond.value = true;
+
+      isCanTick.value = false
     } else {
       // Tắt quay: Tắt nối tiếp cách nhau 0.5s (từ phải qua trái)
       spinSecond.value = false; // Dừng giây ngay lập tức
@@ -89,21 +111,37 @@ watch(
       stopTimeouts.push(setTimeout(() => { spinDay.value = false; }, 1500));
       stopTimeouts.push(setTimeout(() => { spinMonth.value = false; }, 2000));
       stopTimeouts.push(setTimeout(() => { spinYear.value = false; }, 2500)); // Năm dừng cuối cùng
+
+      stopTimeouts.push(setTimeout(() => { isCanTick.value = true; }, 3000));
     }
   },
   { immediate: true }
 );
 
-// Dọn dẹp timeout khi component bị hủy
 onBeforeUnmount(() => {
+  if (timer) clearInterval(timer);
   clearStaggeredTimeouts();
+
 });
+
+
+
+
+async function fetchRemainLiveTime() {
+  time.value = await CommonController.getRemainLiveTime();
+}
+
+function clearStaggeredTimeouts() {
+  stopTimeouts.forEach(clearTimeout);
+  stopTimeouts = [];
+}
+
 </script>
 
 <template>
   <div class="flex rounded-md overflow-hidden w-full clock" style="gap:0.2rem">
     <div class="item">
-      <div :class="props.showLabel ? 'max-h-6 opacity-100' : 'max-h-0 opacity-0'"
+      <div :class="showLabel ? 'max-h-6 opacity-100' : 'max-h-0 opacity-0'"
         class="overflow-hidden transition-all duration-500">
         <span>year</span>
       </div>
@@ -111,7 +149,7 @@ onBeforeUnmount(() => {
     </div>
 
     <div class="item">
-      <div :class="props.showLabel ? 'max-h-6 opacity-100' : 'max-h-0 opacity-0'"
+      <div :class="showLabel ? 'max-h-6 opacity-100' : 'max-h-0 opacity-0'"
         class="overflow-hidden transition-all duration-500">
         <span>month</span>
       </div>
@@ -119,7 +157,7 @@ onBeforeUnmount(() => {
     </div>
 
     <div class="item">
-      <div :class="props.showLabel ? 'max-h-6 opacity-100' : 'max-h-0 opacity-0'"
+      <div :class="showLabel ? 'max-h-6 opacity-100' : 'max-h-0 opacity-0'"
         class="overflow-hidden transition-all duration-500">
         <span>day</span>
       </div>
@@ -127,7 +165,7 @@ onBeforeUnmount(() => {
     </div>
 
     <div class="item">
-      <div :class="props.showLabel ? 'max-h-6 opacity-100' : 'max-h-0 opacity-0'"
+      <div :class="showLabel ? 'max-h-6 opacity-100' : 'max-h-0 opacity-0'"
         class="overflow-hidden transition-all duration-500">
         <span>hour</span>
       </div>
@@ -135,7 +173,7 @@ onBeforeUnmount(() => {
     </div>
 
     <div class="item">
-      <div :class="props.showLabel ? 'max-h-6 opacity-100' : 'max-h-0 opacity-0'"
+      <div :class="showLabel ? 'max-h-6 opacity-100' : 'max-h-0 opacity-0'"
         class="overflow-hidden transition-all duration-500">
         <span>min</span>
       </div>
@@ -143,7 +181,7 @@ onBeforeUnmount(() => {
     </div>
 
     <div class="item">
-      <div :class="props.showLabel ? 'max-h-6 opacity-100' : 'max-h-0 opacity-0'"
+      <div :class="showLabel ? 'max-h-6 opacity-100' : 'max-h-0 opacity-0'"
         class="overflow-hidden transition-all duration-500">
         <span>sec</span>
       </div>

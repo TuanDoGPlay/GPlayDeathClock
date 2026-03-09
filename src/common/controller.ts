@@ -11,8 +11,12 @@ import {
 import { v4 as uuidv4 } from "uuid";
 import dailyMissions from "@/assets/data/daily-missions.json";
 import { Utils } from "./utils";
+import { Preferences } from "@capacitor/preferences";
+import { EventEnum } from "@/constants/events";
 
-const userTable = "user";
+const userKey = "user";
+const remainLiveKey = "remain";
+
 const bucketTable = "buckets";
 const missionTable = "missions";
 const questionTable = "questions";
@@ -23,18 +27,6 @@ export const CommonController = {
     const futureDate = new Date(startDate);
     futureDate.setFullYear(startDate.getFullYear() + 85);
     const db = {
-      [userTable]: [
-        {
-          id: 1,
-          name: "",
-          dob: "",
-          sex: "",
-          height: 0,
-          weight: 0,
-          sexualOrientation: "",
-          remainTime: futureDate.getTime(),
-        },
-      ],
       [bucketTable]: [],
       [missionTable]: [],
       [questionTable]: [],
@@ -74,7 +66,7 @@ export const CommonController = {
       id: question.id,
     });
     console.log(exist.length);
-    
+
     if (exist.length) {
       await CommonController.editRemainLiveTime(-(exist[0]?.time ?? 0));
       await Database.updateTable(questionTable, { id: question.id }, question);
@@ -103,61 +95,62 @@ export const CommonController = {
 
   async editMission(mission: MissionInstance) {
     try {
-      const userData = await this.getUserData();
       if (mission.completed) {
         await Database.insertTable(missionTable, mission);
-        await Database.updateTable(
-          userTable,
-          { id: 1 },
-          { remainTime: userData.remainTime! + mission.time },
-        );
+        await this.editRemainLiveTime(mission.time);
       } else {
         await Database.deleteTable(missionTable, { id: mission.id });
-        await Database.updateTable(
-          userTable,
-          { id: 1 },
-          { remainTime: userData.remainTime! - mission.time },
-        );
+        await this.editRemainLiveTime(-mission.time);
       }
+      document.dispatchEvent(new Event(EventEnum.ChangeTime));
     } catch (e) {
       return Promise.reject(e);
     }
   },
 
   async getUserData(): Promise<UserData> {
-    const res = await Database.selectTable<UserData>(userTable);
-    if (!res[0]) {
-      return Promise.resolve({
+    const { value } = await Preferences.get({ key: userKey });
+    if (!value) {
+      const newData = {
         name: "",
         dob: "",
         sex: "",
         height: 0,
         weight: 0,
         sexualOrientation: "",
-        remainTime: 0,
-      });
+      };
+      await Preferences.set({ key: userKey, value: JSON.stringify(newData) });
+      return Promise.resolve(newData);
     }
-    return Promise.resolve(res[0]);
+    return Promise.resolve(JSON.parse(value));
+  },
+
+  async saveUserData(data: UserData): Promise<void> {
+    await Preferences.set({ key: userKey, value: JSON.stringify(data) });
+    return Promise.resolve();
   },
 
   async getRemainLiveTime(): Promise<number> {
-    const userData = await this.getUserData();
-    return Promise.resolve(userData.remainTime!);
+    const { value } = await Preferences.get({ key: remainLiveKey });
+    if (!value) {
+      return Promise.resolve(0);
+    }
+    return Promise.resolve(JSON.parse(value));
   },
 
   async editRemainLiveTime(
     time: number,
     isIncrement: boolean = true,
   ): Promise<void> {
-    const userData = await this.getUserData();
-    const newTime = isIncrement ? userData.remainTime! + time : time;
-    console.log("live", time, new Date(newTime));
-    await this.saveUserData({ ...userData, remainTime: newTime });
+    const oldRemainLive = await this.getRemainLiveTime();
+    const newTime = isIncrement ? oldRemainLive + time : time;
+    console.log("live", time, newTime, new Date(newTime));
+    await Preferences.set({
+      key: remainLiveKey,
+      value: JSON.stringify(newTime),
+    });
+    document.dispatchEvent(new Event(EventEnum.ChangeTime));
     return Promise.resolve();
-  },
-
-  async saveUserData(data: UserData): Promise<void> {
-    return await Database.updateTable(userTable, { id: 1 }, data);
   },
 
   async getBucketList() {

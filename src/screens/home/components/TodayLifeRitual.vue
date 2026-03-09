@@ -19,9 +19,6 @@ onMounted(async () => {
 
 function changeClock(mission: MissionInstance) {
   CommonController.editMission(mission)
-  CommonController.editRemainLiveTime(mission.completed ? mission.time : -mission.time).then(() => {
-    document.dispatchEvent(new Event(EventEnum.ChangeTime))
-  })
 }
 </script>
 

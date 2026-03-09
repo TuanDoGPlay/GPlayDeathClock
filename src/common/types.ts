@@ -18,7 +18,6 @@ export interface UserData {
   height: number;
   weight: number;
   sexualOrientation: string;
-  remainTime?: number;
 }
 
 export interface MissionData {

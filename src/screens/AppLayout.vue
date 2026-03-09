@@ -1,13 +1,13 @@
 <script lang="ts" setup>
-import {nextTick, onBeforeUnmount, onMounted, ref} from "vue";
-import {goToRouter} from "gplay-app-sdk";
+import { nextTick, onBeforeUnmount, onMounted, ref } from "vue";
+import { goToRouter } from "gplay-app-sdk";
 import gsap from "gsap"; // Import GSAP
 import Question from '@/assets/icons/question.svg'
 import Share from '@/assets/icons/share.svg'
 import FlipClock from "@/components/flip-clock/FlipClock.vue";
 import ButtonComponent from "@/components/button/ButtonComponent.vue";
-import {EventEnum} from "@/constants/events.ts";
-import {CommonController} from "@/common/controller";
+import { EventEnum } from "@/constants/events.ts";
+import { CommonController } from "@/common/controller";
 
 const splashWrapper = ref<HTMLElement | null>(null);
 const clockWrapper = ref<HTMLElement | null>(null);
@@ -23,46 +23,21 @@ const futureDate = new Date(startDate);
 futureDate.setFullYear(startDate.getFullYear() + 85);
 const time = ref(futureDate.getTime());
 
-let timer: number | undefined;
 
-const lines = Array.from({length: 20});
+const lines = Array.from({ length: 20 });
 
 onMounted(async () => {
   await nextTick();
-  await fetchRemainLiveTime();
-  await fetchIsFirstVisit(); // Khởi chạy animation từ đây
-
-  timer = window.setInterval(() => {
-    time.value -= 1000;
-  }, 1000);
+  await fetchIsFirstVisit();
 
   document.addEventListener(EventEnum.ToggleClock, (e) => {
     const event = e as CustomEvent<{ isShow: boolean }>;
     isShowClock.value = event.detail.isShow;
   });
 
-  document.addEventListener(EventEnum.ChangeTime, () => {
-    isClockSpin.value = true
-    clearInterval(timer);
-    setTimeout(() => {
-      isClockSpin.value = false
-      setTimeout(() => {
-        timer = window.setInterval(() => {
-          time.value -= 1000;
-        }, 1000);
-      }, 2500)
-    }, 1000)
-    fetchRemainLiveTime();
-  });
+
 });
 
-onBeforeUnmount(() => {
-  if (timer) clearInterval(timer);
-});
-
-async function fetchRemainLiveTime() {
-  time.value = await CommonController.getRemainLiveTime();
-}
 
 async function fetchIsFirstVisit() {
   isFirstVisit.value = await CommonController.getIsFirstVisit();
@@ -90,43 +65,44 @@ function playMasterAnimation() {
 
     const clockH = clockWrapper.value.getBoundingClientRect().height ?? 0;
 
-    gsap.set(clockWrapper.value, {opacity: 0});
-    gsap.set(textWrapper.value, {opacity: 0, y: clockH / 2 + 60});
+    gsap.set(clockWrapper.value, { opacity: 0 });
+    gsap.set(textWrapper.value, { opacity: 0, y: clockH / 2 + 60 });
 
     tl.to(clockWrapper.value, {
       opacity: 1,
       duration: 1,
       ease: "power2.inOut",
     }, "-=0.2") // Chạy đè lên khúc cuối của Splash 0.2s cho mượt
-        .to(textWrapper.value, {
-          opacity: 1,
-          y: 0,
-          duration: 0.8,
-          ease: "power2.out",
-        }, "+=0")
-        // Chờ 3s để User đọc chữ rồi chuyển màn
-        .add(() => {
-          setTimeout(() => {
-            isFirstVisit.value = false;
-            goToQuestion();
-          }, 3000);
-        });
+      .to(textWrapper.value, {
+        opacity: 1,
+        y: 0,
+        duration: 0.8,
+        ease: "power2.out",
+      }, "+=0")
+      // Chờ 3s để User đọc chữ rồi chuyển màn
+      .add(() => {
+        setTimeout(() => {
+          isFirstVisit.value = false;
+          goToQuestion();
+        }, 3000);
+      });
   }
 }
 
 async function goToQuestion() {
-  await goToRouter({name: 'question'});
+  await goToRouter({ name: 'question' });
 }
 
 async function goToShareClock() {
-  await goToRouter({name: 'share-clock'});
+  await goToRouter({ name: 'share-clock' });
 }
 </script>
 
 <template>
   <div class="main-container flex flex-col items-center justify-center h-full px-2 pt-10 relative overflow-hidden">
     <Teleport to="body">
-      <img ref="splashWrapper" src="/splash.png" alt="splash" class="h-full w-full object-cover absolute inset-0 z-[200] pointer-events-none">
+      <img ref="splashWrapper" src="/splash.png" alt="splash"
+        class="h-full w-full object-cover absolute inset-0 z-[200] pointer-events-none">
     </Teleport>
 
     <div :class="[
@@ -136,14 +112,14 @@ async function goToShareClock() {
       <div class="flex flex-col items-center">
 
         <div ref="clockWrapper" :class="{ 'opacity-0': isFirstVisit, 'opacity-100': !isFirstVisit }"
-             class="transition-opacity">
-          <FlipClock :show-label="!isFirstVisit" :value="time" :spin="isClockSpin"/>
+          class="transition-opacity">
+          <FlipClock :show-label="!isFirstVisit" :value="time" :spin="isClockSpin" />
         </div>
 
         <div :class="{ 'opacity-0 pointer-events-none': isFirstVisit, 'opacity-100': !isFirstVisit }"
-             class="flex w-full justify-around my-5" style="transition: opacity 0.5s ease">
-          <ButtonComponent :icon="Question" :text="'Questions'" @click="goToQuestion"/>
-          <ButtonComponent :icon="Share" :text="'Share Clock'" @click="goToShareClock"/>
+          class="flex w-full justify-around my-5" style="transition: opacity 0.5s ease">
+          <ButtonComponent :icon="Question" :text="'Questions'" @click="goToQuestion" />
+          <ButtonComponent :icon="Share" :text="'Share Clock'" @click="goToShareClock" />
         </div>
       </div>
     </div>
@@ -169,11 +145,11 @@ async function goToShareClock() {
     </Transition>
 
     <div :class="{ 'opacity-0 pointer-events-none': isFirstVisit, 'opacity-100': !isFirstVisit }"
-         class="w-full flex-1 rounded-2xl overflow-hidden"
-         style="background-color: var(--panel-theme-1); transition: opacity 2s ease">
+      class="w-full flex-1 rounded-2xl overflow-hidden"
+      style="background-color: var(--panel-theme-1); transition: opacity 2s ease">
       <RouterView v-slot="{ Component }">
         <Transition mode="out-in" name="fade">
-          <component :is="Component" class="h-full w-full"/>
+          <component :is="Component" class="h-full w-full" />
         </Transition>
       </RouterView>
     </div>
@@ -227,6 +203,7 @@ async function goToShareClock() {
   0% {
     transform: translateY(-9rem);
   }
+
   100% {
     transform: translateY(0);
   }
