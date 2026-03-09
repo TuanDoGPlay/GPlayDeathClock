@@ -175,4 +175,8 @@ export const Utils = {
     }
     return 0;
   },
+  isNewDay(lastSavedDate: string): boolean {
+    const today = new Date().toISOString().split("T")[0]; // Lấy định dạng "2026-03-09"
+    return today !== lastSavedDate;
+  },
 };

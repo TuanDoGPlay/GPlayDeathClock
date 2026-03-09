@@ -18,24 +18,17 @@ const isFirstVisit = ref(true);
 const isClockSpin = ref(false);
 
 
-const startDate = new Date('2000-01-01T00:00:00');
-const futureDate = new Date(startDate);
-futureDate.setFullYear(startDate.getFullYear() + 85);
-const time = ref(futureDate.getTime());
-
-
 const lines = Array.from({ length: 20 });
 
 onMounted(async () => {
   await nextTick();
   await fetchIsFirstVisit();
+  await CommonController.checkAndRunNewDayTask()
 
   document.addEventListener(EventEnum.ToggleClock, (e) => {
     const event = e as CustomEvent<{ isShow: boolean }>;
     isShowClock.value = event.detail.isShow;
   });
-
-
 });
 
 
@@ -113,7 +106,7 @@ async function goToShareClock() {
 
         <div ref="clockWrapper" :class="{ 'opacity-0': isFirstVisit, 'opacity-100': !isFirstVisit }"
           class="transition-opacity">
-          <FlipClock :show-label="!isFirstVisit" :value="time" :spin="isClockSpin" />
+          <FlipClock :show-label="!isFirstVisit" :spin="isClockSpin" />
         </div>
 
         <div :class="{ 'opacity-0 pointer-events-none': isFirstVisit, 'opacity-100': !isFirstVisit }"

@@ -14,12 +14,13 @@ import { Utils } from "./utils";
 import { Preferences } from "@capacitor/preferences";
 import { EventEnum } from "@/constants/events";
 
-const userKey = "user";
-const remainLiveKey = "remain";
+const USER = "user";
+const REMAINLIVE = "remain";
+const LASTVISIT = "last_visited_date";
 
-const bucketTable = "buckets";
-const missionTable = "missions";
-const questionTable = "questions";
+const BUCKET = "buckets";
+const MISSION = "missions";
+const QUESTION = "questions";
 
 export const CommonController = {
   async init() {
@@ -27,20 +28,35 @@ export const CommonController = {
     const futureDate = new Date(startDate);
     futureDate.setFullYear(startDate.getFullYear() + 85);
     const db = {
-      [bucketTable]: [],
-      [missionTable]: [],
-      [questionTable]: [],
+      [BUCKET]: [],
+      [MISSION]: [],
+      [QUESTION]: [],
     };
     await Database.initDatabase(db);
   },
+  async checkAndRunNewDayTask() {
+    const today = new Date().toISOString().split("T")[0];
+    const lastDate = localStorage.getItem(LASTVISIT);
+
+    if (today && lastDate !== today) {
+      await this.refreshDailyMission();
+      Preferences.set({
+        key: LASTVISIT,
+        value: today,
+      });
+      return true;
+    }
+
+    return false;
+  },
 
   async refreshDailyMission(): Promise<void> {
-    return await Database.deleteTable(missionTable, {});
+    return await Database.deleteTable(MISSION, {});
   },
 
   async getQuestions(): Promise<QuestionInstance[]> {
     const answeredQuestions =
-      await Database.selectTable<QuestionData>(questionTable);
+      await Database.selectTable<QuestionData>(QUESTION);
     const notAnsweredQuestions: QuestionData[] = [];
     questions.forEach((q) => {
       if (!answeredQuestions.find((i) => i.id == q.id))
@@ -62,23 +78,23 @@ export const CommonController = {
       question.time = incrementTime;
       await CommonController.editRemainLiveTime(incrementTime);
     }
-    const exist = await Database.selectTable<QuestionInstance>(questionTable, {
+    const exist = await Database.selectTable<QuestionInstance>(QUESTION, {
       id: question.id,
     });
     console.log(exist.length);
 
     if (exist.length) {
       await CommonController.editRemainLiveTime(-(exist[0]?.time ?? 0));
-      await Database.updateTable(questionTable, { id: question.id }, question);
+      await Database.updateTable(QUESTION, { id: question.id }, question);
       return Promise.resolve();
     }
-    await Database.insertTable(questionTable, question);
+    await Database.insertTable(QUESTION, question);
     return Promise.resolve();
   },
 
   async getDailyMission(): Promise<MissionInstance[]> {
     try {
-      const raw = (await Database.selectTable<MissionData>(missionTable)) ?? [];
+      const raw = (await Database.selectTable<MissionData>(MISSION)) ?? [];
       const missions = dailyMissions.map((m) => new MissionInstance(m));
       missions.forEach((m) => {
         m.completed = raw.some((r) => r.id === m.id);
@@ -96,10 +112,10 @@ export const CommonController = {
   async editMission(mission: MissionInstance) {
     try {
       if (mission.completed) {
-        await Database.insertTable(missionTable, mission);
+        await Database.insertTable(MISSION, mission);
         await this.editRemainLiveTime(mission.time);
       } else {
-        await Database.deleteTable(missionTable, { id: mission.id });
+        await Database.deleteTable(MISSION, { id: mission.id });
         await this.editRemainLiveTime(-mission.time);
       }
       document.dispatchEvent(new Event(EventEnum.ChangeTime));
@@ -109,7 +125,7 @@ export const CommonController = {
   },
 
   async getUserData(): Promise<UserData> {
-    const { value } = await Preferences.get({ key: userKey });
+    const { value } = await Preferences.get({ key: USER });
     if (!value) {
       const newData = {
         name: "",
@@ -119,19 +135,19 @@ export const CommonController = {
         weight: 0,
         sexualOrientation: "",
       };
-      await Preferences.set({ key: userKey, value: JSON.stringify(newData) });
+      await Preferences.set({ key: USER, value: JSON.stringify(newData) });
       return Promise.resolve(newData);
     }
     return Promise.resolve(JSON.parse(value));
   },
 
   async saveUserData(data: UserData): Promise<void> {
-    await Preferences.set({ key: userKey, value: JSON.stringify(data) });
+    await Preferences.set({ key: USER, value: JSON.stringify(data) });
     return Promise.resolve();
   },
 
   async getRemainLiveTime(): Promise<number> {
-    const { value } = await Preferences.get({ key: remainLiveKey });
+    const { value } = await Preferences.get({ key: REMAINLIVE });
     if (!value) {
       return Promise.resolve(0);
     }
@@ -146,7 +162,7 @@ export const CommonController = {
     const newTime = isIncrement ? oldRemainLive + time : time;
     console.log("live", time, newTime, new Date(newTime));
     await Preferences.set({
-      key: remainLiveKey,
+      key: REMAINLIVE,
       value: JSON.stringify(newTime),
     });
     document.dispatchEvent(new Event(EventEnum.ChangeTime));
@@ -154,7 +170,7 @@ export const CommonController = {
   },
 
   async getBucketList() {
-    const res = (await Database.selectTable(bucketTable)) ?? [];
+    const res = (await Database.selectTable(BUCKET)) ?? [];
     return res as BucketItemData[];
   },
 
@@ -164,12 +180,12 @@ export const CommonController = {
       label: name,
       completed: false,
     };
-    await Database.insertTable(bucketTable, item);
+    await Database.insertTable(BUCKET, item);
     return Promise.resolve();
   },
 
   async editBucketItem(item: BucketItemData): Promise<void> {
-    await Database.updateTable(bucketTable, { id: item.id }, item);
+    await Database.updateTable(BUCKET, { id: item.id }, item);
     return Promise.resolve();
   },
 
