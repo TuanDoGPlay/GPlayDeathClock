@@ -6,11 +6,8 @@ import ContentFrame from '@/components/content-frame/ContentFrame.vue'
 import { goToRouter, showToast } from 'gplay-app-sdk'
 import questions from '@/assets/data/required-questions.json'
 import MoreQuestion from '@/screens/question/components/MoreQuestion.vue'
-import TabComponent from '@/components/tab/TabComponent.vue'
-import TabPane from '@/components/tab/TabPane.vue'
 import InputComponent from '@/components/input/InputComponent.vue'
 import ButtonComponent from '@/components/button/ButtonComponent.vue'
-import { EventEnum } from '@/constants/events.ts'
 import type { UserData } from '@/common/types.ts'
 import { MS_IN_MONTH, MS_IN_YEAR, Utils } from '@/common/utils'
 import { CommonController } from '@/common/controller'
@@ -25,7 +22,9 @@ interface UserDataView {
   remainTime?: number
 }
 
-const emit = defineEmits(['more'])
+const emit = defineEmits<{
+  (e: 'more'): void
+}>()
 
 const userData = ref<UserDataView>({
   name: '',
@@ -37,7 +36,7 @@ const userData = ref<UserDataView>({
   remainTime: undefined,
 })
 
-const activeName = ref(questions[0]?.id.toString() || '0')
+const activeName = ref('0')
 
 const inputRefName = ref<any>(null)
 const inputRefDob = ref<any>(null)
@@ -45,8 +44,17 @@ const inputRefHeight = ref<any>(null)
 const inputRefWeight = ref<any>(null)
 
 const currentTabIndex = computed(() => {
-  const idx = questions.findIndex((q) => q.id.toString() === activeName.value)
-  return idx === -1 ? questions.length : idx
+  const stepMap: Record<string, number> = {
+    '0': 0,
+    '1': 1,
+    '2': 2,
+    '3': 3,
+    '4': 4,
+    '5': 5,
+    more: 6,
+  }
+
+  return stepMap[activeName.value] ?? 0
 })
 
 function focusCurrentTabInput() {
@@ -74,7 +82,7 @@ function focusCurrentTabInput() {
   })
 }
 
-onMounted(async () => {
+onMounted(() => {
   focusCurrentTabInput()
 })
 
@@ -82,119 +90,131 @@ watch(activeName, () => {
   focusCurrentTabInput()
 })
 
-
 function handleBack() {
   goToRouter({ name: 'home' })
 }
 
 async function saveUserData() {
   const data: UserData = {
-    name: userData.value.name,
+    name: userData.value.name.trim(),
     dob: userData.value.dob,
-    height: userData.value.height || 0,
-    weight: userData.value.weight || 0,
+    height: Number(userData.value.height) || 0,
+    weight: Number(userData.value.weight) || 0,
     sex: userData.value.sex,
     sexualOrientation: userData.value.sexualOrientation,
   }
+
   await CommonController.saveUserData(data)
 }
 
-function goNextName() {
+async function goNextName() {
   if (!userData.value.name.trim()) {
     showToast({ text: 'Please enter your name' })
     return
   }
 
-  saveUserData()
+  await saveUserData()
   activeName.value = '1'
 }
 
-function goNextDob() {
+async function goNextDob() {
   if (!userData.value.dob) {
     showToast({ text: 'Please enter your date of birth' })
     return
   }
 
-  saveUserData()
+  const dobDate = new Date(userData.value.dob)
+  const now = new Date()
 
-  const yourAge =
-    new Date().getFullYear() - new Date(userData.value.dob).getFullYear()
+  if (Number.isNaN(dobDate.getTime())) {
+    showToast({ text: 'Invalid date of birth' })
+    return
+  }
+
+  if (dobDate > now) {
+    showToast({ text: 'Date of birth cannot be in the future' })
+    return
+  }
+
+  await saveUserData()
+
+  const yourAge = now.getFullYear() - dobDate.getFullYear()
   const startDate = new Date('2000-01-01T00:00:00')
   const futureDate = new Date(startDate)
   futureDate.setFullYear(startDate.getFullYear() + 85 - yourAge)
 
-  CommonController.editRemainLiveTime(futureDate.getTime(), false)
+  await CommonController.editRemainLiveTime(futureDate.getTime(), false)
 
   activeName.value = '2'
 }
 
-function goNextHeight() {
-  if (!userData.value.height) {
+async function goNextHeight() {
+  const height = Number(userData.value.height)
+
+  if (!height) {
     showToast({ text: 'Please enter your height' })
     return
   }
 
-  saveUserData()
+  userData.value.height = height
+  await saveUserData()
 
   const randomYear = Math.random() * 4 - 2
   let randomTime = randomYear * MS_IN_YEAR
-  const height = userData.value.height
 
   if (height <= 155) {
     randomTime -= (155 - height) * MS_IN_MONTH
   } else if (height >= 180) {
     randomTime -= (height - 180) * MS_IN_MONTH
   }
-  console.log('randomTime', randomTime);
 
-  CommonController.editRemainLiveTime(randomTime)
+  await CommonController.editRemainLiveTime(randomTime)
 
   activeName.value = '3'
 }
 
-function goNextWeight() {
-  if (!userData.value.weight) {
+async function goNextWeight() {
+  const weight = Number(userData.value.weight)
+  const height = Number(userData.value.height)
+
+  if (!weight) {
     showToast({ text: 'Please enter your weight' })
     return
   }
-  if (!userData.value.height) return
-  saveUserData()
 
-  const bmi = Utils.calculateBMI(userData.value.weight, userData.value.height)
-  let deductedYears = 0
-  console.log("bmi", bmi);
-
-  if (bmi < 16) {
-    deductedYears = 8
-  } else if (bmi >= 16 && bmi < 17) {
-    deductedYears = 4
-  } else if (bmi >= 17 && bmi < 18.5) {
-    deductedYears = 2
-  } else if (bmi >= 18.5 && bmi < 25) {
-    deductedYears = 0
-  } else if (bmi >= 25 && bmi < 30) {
-    deductedYears = 2
-  } else if (bmi >= 30 && bmi < 35) {
-    deductedYears = 4
-  } else if (bmi >= 35 && bmi < 40) {
-    deductedYears = 8
-  } else if (bmi >= 40) {
-    deductedYears = 15
+  if (!height) {
+    showToast({ text: 'Missing height' })
+    return
   }
 
-  CommonController.editRemainLiveTime(-deductedYears * MS_IN_YEAR)
+  userData.value.weight = weight
+  await saveUserData()
+
+  const bmi = Utils.calculateBMI(weight, height)
+  let deductedYears = 0
+
+  if (bmi < 16) deductedYears = 8
+  else if (bmi < 17) deductedYears = 4
+  else if (bmi < 18.5) deductedYears = 2
+  else if (bmi < 25) deductedYears = 0
+  else if (bmi < 30) deductedYears = 2
+  else if (bmi < 35) deductedYears = 4
+  else if (bmi < 40) deductedYears = 8
+  else deductedYears = 15
+
+  await CommonController.editRemainLiveTime(-deductedYears * MS_IN_YEAR)
 
   activeName.value = '4'
 }
 
-function onSelected(field: 'sex' | 'sexualOrientation', option: string) {
+async function onSelected(field: 'sex' | 'sexualOrientation', option: string) {
   userData.value[field] = option
-  saveUserData()
+  await saveUserData()
 
   const randomYear = Math.random() * 4 - 2
   const randomTime = randomYear * MS_IN_YEAR
 
-  CommonController.editRemainLiveTime(randomTime)
+  await CommonController.editRemainLiveTime(randomTime)
 
   activeName.value = field === 'sex' ? '5' : 'more'
 
@@ -207,77 +227,102 @@ function onSelected(field: 'sex' | 'sexualOrientation', option: string) {
 </script>
 
 <template>
-  <div class="h-full">
+  <div class="h-full overflow-hidden">
     <ContentFrame :current-tab="currentTabIndex" :icon="Question" :total-tab="questions.length + 1" show-back
       show-pagination-in-title title="Questions" @back="handleBack">
-      <TabComponent v-model="activeName" :dots="false">
-        <TabPane label="Name" name="0">
-          <div class="flex flex-col gap-3 items-center justify-center h-full pb-10">
-            <p class="font-bold text-center mb-10">What is your name?</p>
-            <div class="w-2/3">
-              <InputComponent ref="inputRefName" v-model="userData.name" @keydown.enter.prevent="goNextName" />
-            </div>
-            <ButtonComponent text="Next" template="primary" :icon="Next" icon-right @click="goNextName" />
-          </div>
-        </TabPane>
+      <div class="relative h-full w-full overflow-hidden">
+        <Transition name="question-slide" mode="out-in">
+          <div :key="activeName" class="step-section">
+            <template v-if="activeName === '0'">
+              <p class="mb-10 text-center font-bold">What is your name?</p>
+              <div class="mb-4 w-2/3">
+                <InputComponent ref="inputRefName" v-model="userData.name" @keydown.enter.prevent="goNextName" />
+              </div>
+              <ButtonComponent text="Next" template="primary" :icon="Next" icon-right @click="goNextName" />
+            </template>
 
-        <TabPane label="Date of Birth" name="1">
-          <div class="flex flex-col gap-3 items-center justify-center h-full pb-10">
-            <p class="font-bold text-center mb-10">Enter your date of birth</p>
-            <div class="w-2/3">
-              <InputComponent ref="inputRefDob" v-model="userData.dob" type="date" @keydown.enter.prevent="goNextDob" />
-            </div>
-            <ButtonComponent text="Next" template="primary" :icon="Next" icon-right @click="goNextDob" />
-          </div>
-        </TabPane>
+            <template v-else-if="activeName === '1'">
+              <p class="mb-10 text-center font-bold">Enter your date of birth</p>
+              <div class="mb-4 w-2/3">
+                <InputComponent ref="inputRefDob" v-model="userData.dob" type="date"
+                  @keydown.enter.prevent="goNextDob" />
+              </div>
+              <ButtonComponent text="Next" template="primary" :icon="Next" icon-right @click="goNextDob" />
+            </template>
 
-        <TabPane label="Height" name="2">
-          <div class="flex flex-col gap-3 items-center justify-center h-full pb-10">
-            <p class="font-bold text-center mb-10">Enter your height (cm)</p>
-            <div class="w-2/3">
-              <InputComponent ref="inputRefHeight" v-model="userData.height" type="number"
-                @keydown.enter.prevent="goNextHeight" />
-            </div>
-            <ButtonComponent text="Next" template="primary" :icon="Next" icon-right @click="goNextHeight" />
-          </div>
-        </TabPane>
+            <template v-else-if="activeName === '2'">
+              <p class="mb-10 text-center font-bold">Enter your height (cm)</p>
+              <div class="mb-4 w-2/3">
+                <InputComponent ref="inputRefHeight" v-model="userData.height" type="number"
+                  @keydown.enter.prevent="goNextHeight" />
+              </div>
+              <ButtonComponent text="Next" template="primary" :icon="Next" icon-right @click="goNextHeight" />
+            </template>
 
-        <TabPane label="Weight" name="3">
-          <div class="flex flex-col gap-3 items-center justify-center h-full pb-10">
-            <p class="font-bold text-center mb-10">Enter your current weight (kg)</p>
-            <div class="w-2/3">
-              <InputComponent ref="inputRefWeight" v-model="userData.weight" type="number"
-                @keydown.enter.prevent="goNextWeight" />
-            </div>
-            <ButtonComponent text="Next" template="primary" :icon="Next" icon-right @click="goNextWeight" />
-          </div>
-        </TabPane>
+            <template v-else-if="activeName === '3'">
+              <p class="mb-10 text-center font-bold">Enter your current weight (kg)</p>
+              <div class="mb-4 w-2/3">
+                <InputComponent ref="inputRefWeight" v-model="userData.weight" type="number"
+                  @keydown.enter.prevent="goNextWeight" />
+              </div>
+              <ButtonComponent text="Next" template="primary" :icon="Next" icon-right @click="goNextWeight" />
+            </template>
 
-        <TabPane label="Biological Sex" name="4">
-          <div class="flex flex-col gap-3 items-center justify-center h-full pb-10">
-            <p class="font-bold text-center mb-10">What is your biological sex?</p>
-            <div class="w-full">
-              <ButtonComponent v-for="option in ['Male', 'Female', 'Other']" :key="option" :text="option"
-                class="mt-3 mx-auto" style="width: 80%" template="primary" @click="onSelected('sex', option)" />
-            </div>
-          </div>
-        </TabPane>
+            <template v-else-if="activeName === '4'">
+              <p class="mb-10 text-center font-bold">What is your biological sex?</p>
+              <div class="flex w-full flex-col items-center">
+                <ButtonComponent v-for="option in ['Male', 'Female', 'Other']" :key="option" :text="option" class="mt-3"
+                  style="width: 80%" template="primary" @click="onSelected('sex', option)" />
+              </div>
+            </template>
 
-        <TabPane label="Sexual Orientation" name="5">
-          <div class="flex flex-col gap-3 items-center justify-center h-full pb-10">
-            <p class="font-bold text-center mb-10">What is your sexual orientation?</p>
-            <div class="w-full">
-              <ButtonComponent v-for="option in ['Straight', 'Homosexual', 'Bisexual', 'Other']" :key="option"
-                :text="option" class="mt-3 mx-auto" style="width: 80%" template="primary"
-                @click="onSelected('sexualOrientation', option)" />
-            </div>
-          </div>
-        </TabPane>
+            <template v-else-if="activeName === '5'">
+              <p class="mb-10 text-center font-bold">What is your sexual orientation?</p>
+              <div class="flex w-full flex-col items-center">
+                <ButtonComponent v-for="option in ['Straight', 'Homosexual', 'Bisexual', 'Other']" :key="option"
+                  :text="option" class="mt-3" style="width: 80%" template="primary"
+                  @click="onSelected('sexualOrientation', option)" />
+              </div>
+            </template>
 
-        <TabPane label="More" name="more">
-          <MoreQuestion @more="emit('more')" />
-        </TabPane>
-      </TabComponent>
+            <template v-else-if="activeName === 'more'">
+              <MoreQuestion @more="emit('more')" />
+            </template>
+          </div>
+        </Transition>
+      </div>
     </ContentFrame>
   </div>
 </template>
+<style scoped>
+.step-section {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 2.5rem;
+}
+
+/* slide */
+.question-slide-enter-active,
+.question-slide-leave-active {
+  transition: transform 0.2s ease;
+}
+
+.question-slide-enter-from {
+  transform: translateX(100%);
+}
+
+.question-slide-enter-to {
+  transform: translateX(0);
+}
+
+.question-slide-leave-from {
+  transform: translateX(0);
+}
+
+.question-slide-leave-to {
+  transform: translateX(-100%);
+}
+</style>

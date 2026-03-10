@@ -8,17 +8,15 @@ import { goToRouter } from "gplay-app-sdk";
 import { CommonController } from "@/common/controller.ts";
 import { onMounted, ref } from "vue";
 import type { MissionInstance } from "@/common/types.ts";
-import { EventEnum } from "@/constants/events.ts";
 
-
-const dailyMissions = ref()
+const dailyMissions = ref<MissionInstance[]>([])
 
 onMounted(async () => {
   dailyMissions.value = await CommonController.getDailyMission()
 })
 
-function changeClock(mission: MissionInstance) {
-  CommonController.editMission(mission)
+async function editMission(mission: MissionInstance) {
+  await CommonController.editMission(mission)
 }
 </script>
 
@@ -27,14 +25,14 @@ function changeClock(mission: MissionInstance) {
     <div class="pt-2 flex flex-col justify-between h-full" style="font-size: 0.9rem">
       <div class="flex-1 overflow-y-auto">
         <CheckboxComponent v-for="mission in dailyMissions" :key="mission.id" v-model="mission.completed"
-          :label="mission.label" class="py-1" @change="changeClock(mission)">
+          :label="mission.label" class="py-1" @change="editMission(mission)">
           <span :style="{ opacity: mission.completed ? 1 : 0 }" class="min-w-fit ml-1"
             style="color: var(--plus); transition: opacity 0.2s ease">+{{ mission.displayTime }}</span>
         </CheckboxComponent>
       </div>
       <div class="pt-4">
-        <ButtonComponent :icon="ShareArrow" class="mx-auto" template="primary" text="Share Today Ritual"
-          @click="goToRouter({ name: 'share-clock' })" />
+        <ButtonComponent :icon="ShareArrow" :disabled="dailyMissions.filter(i => i.completed).length == 0"
+          class="mx-auto" template="primary" text="Share Today Ritual" @click="goToRouter({ name: 'share-ritual' })" />
       </div>
     </div>
   </ContentFrame>

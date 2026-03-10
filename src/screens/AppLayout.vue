@@ -59,7 +59,7 @@ function playMasterAnimation() {
     const clockH = clockWrapper.value.getBoundingClientRect().height ?? 0;
 
     gsap.set(clockWrapper.value, { opacity: 0 });
-    gsap.set(textWrapper.value, { opacity: 0, y: clockH / 2 + 60 });
+    gsap.set(textWrapper.value, { opacity: 0, y: clockH / 2 + 100 });
 
     tl.to(clockWrapper.value, {
       opacity: 1,
@@ -128,7 +128,7 @@ async function goToShareClock() {
         </div>
 
         <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <div ref="textWrapper" class="text-center px-10 opacity-0 mt-20">
+          <div ref="textWrapper" class="text-center px-10 opacity-0 mt-32">
             <h2 class="road-text">
               How much time<br>do you have left?
             </h2>

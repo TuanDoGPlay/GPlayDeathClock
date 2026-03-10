@@ -106,7 +106,22 @@ export const CommonController = {
     }
   },
 
-  async editMission(mission: MissionInstance) {
+  async getCompletedMission(): Promise<MissionInstance[]> {
+    try {
+      const raw = await Database.selectTable<MissionData>(MISSION);
+      return Promise.resolve(
+        raw.map((i) => {
+          const ins = new MissionInstance(i);
+          ins.completed = true;
+          return ins;
+        }),
+      );
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  },
+
+  async editMission(mission: MissionInstance): Promise<void> {
     try {
       if (mission.completed) {
         await Database.insertTable(MISSION, mission);
@@ -115,7 +130,7 @@ export const CommonController = {
         await Database.deleteTable(MISSION, { id: mission.id });
         await this.editRemainLiveTime(-mission.time);
       }
-      document.dispatchEvent(new Event(EventEnum.ChangeTime));
+      return Promise.resolve();
     } catch (e) {
       return Promise.reject(e);
     }
@@ -183,7 +198,6 @@ export const CommonController = {
   ): Promise<void> {
     const oldRemainLive = await this.getRemainLiveTime();
     const newTime = isIncrement ? oldRemainLive + time : time;
-    console.log("live", time, newTime, new Date(newTime));
     await Preferences.set({
       key: REMAINLIVE,
       value: JSON.stringify(newTime),
@@ -192,7 +206,7 @@ export const CommonController = {
   },
 
   async getBucketList() {
-    const res = (await Database.selectTable(BUCKET)) ?? [];
+    const res = (await Database.selectTable<BucketItemData>(BUCKET)) ?? [];
     return res as BucketItemData[];
   },
 

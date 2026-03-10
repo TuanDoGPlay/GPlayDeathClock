@@ -24,6 +24,7 @@ export interface MissionData {
   id: number;
   label: string;
   time: number;
+  complete?: boolean;
 }
 
 export class MissionInstance implements MissionData {
@@ -37,6 +38,7 @@ export class MissionInstance implements MissionData {
     this.id = data.id;
     this.label = data.label;
     this.time = data.time;
+    if (data.complete) this.completed = data.complete;
     this.displayTime = Utils.formatShortDuration(data.time);
   }
 }

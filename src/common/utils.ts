@@ -75,7 +75,7 @@ export const Utils = {
       }
     });
 
-    return parts.join(", ");
+    return parts.join(" ");
   },
   formatShortDuration(seconds: number): string {
     if (seconds <= 0) return "0s";
