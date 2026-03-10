@@ -1,359 +1,210 @@
 <script lang="ts" setup>
-import { computed, ref, watch, onBeforeUnmount, onMounted } from "vue";
+import { computed, ref, onBeforeUnmount, onMounted } from "vue";
 import FlipClockItem from "@/components/flip-clock/FlipClockItem.vue";
 import { EventEnum } from "@/constants/events";
 import { CommonController } from "@/common/controller";
 
-const props = defineProps<{
-  showLabel?: boolean;
-}>();
-
-const isSpin = ref(false);
-const isCanTick = ref(true);
-
-// ✅ Tạo các biến trạng thái spin độc lập cho từng cột
-const spinYear = ref(isSpin.value);
-const spinMonth = ref(isSpin.value);
-const spinDay = ref(isSpin.value);
-const spinHour = ref(isSpin.value);
-const spinMinute = ref(isSpin.value);
-const spinSecond = ref(isSpin.value);
-
-const yearDiffText = ref("");
-const monthDiffText = ref("");
-const dayDiffText = ref("");
-const hourDiffText = ref("");
-const minuteDiffText = ref("");
-const secondDiffText = ref("");
-
-const showYearDiff = ref(false);
-const showMonthDiff = ref(false);
-const showDayDiff = ref(false);
-const showHourDiff = ref(false);
-const showMinuteDiff = ref(false);
-const showSecondDiff = ref(false);
-
-const spinFrom = ref<"year" | "month" | "day" | "hour" | "minute" | "second" | null>(null);
-
-const time = ref(0)
-const dateInstance = computed(() => {
-  return new Date(time.value)
-});
-const isShowChange = computed(() => {
-  return showYearDiff.value || showMonthDiff.value || showDayDiff.value || showDayDiff.value || showHourDiff.value || showMinuteDiff.value || showSecondDiff.value
-});
-
-const second = computed(() => {
-  const s = dateInstance.value.getSeconds();
-  const ms = dateInstance.value.getMilliseconds();
-  return parseFloat((s + ms / 1000).toFixed(0));
-});
-
-const minute = computed(() => {
-  return dateInstance.value.getMinutes() + second.value / 60;
-});
-
-const hour = computed(() => {
-  return (dateInstance.value.getHours() % 24) + minute.value / 60;
-});
-
-const day = computed(() => {
-  return dateInstance.value.getDate() + hour.value / 24;
-});
-
-function daysInMonth(year: number, month: number) {
-  return new Date(year, month + 1, 0).getDate();
+interface UnitConfig {
+  key: "year" | "month" | "day" | "hour" | "minute" | "second";
+  label: string;
+  short: string;
 }
 
-const month = computed(() => {
-  const m = dateInstance.value.getMonth(); // 0-11
-  const d = dateInstance.value.getDate() - 1 + hour.value / 24;
-  const dim = daysInMonth(dateInstance.value.getFullYear(), m);
+const UNITS: UnitConfig[] = [
+  { key: "year", label: "year", short: "y" },
+  { key: "month", label: "month", short: "m" },
+  { key: "day", label: "day", short: "d" },
+  { key: "hour", label: "hour", short: "h" },
+  { key: "minute", label: "min", short: "min" },
+  { key: "second", label: "sec", short: "s" },
+];
+
+const UNIT_ORDER = ["second", "minute", "hour", "day", "month", "year"];
+
+const props = defineProps<{ showLabel?: boolean }>();
+
+const isCanTick = ref(true);
+const time = ref(0);
+
+const hideLabels = ref(false);
+const spinStates = ref<Record<string, boolean>>({
+  year: false, month: false, day: false, hour: false, minute: false, second: false
+});
+const diffTexts = ref<Record<string, string>>({
+  year: "", month: "", day: "", hour: "", minute: "", second: ""
+});
+const pendingDiffTexts = ref<Record<string, string>>({
+  year: "", month: "", day: "", hour: "", minute: "", second: ""
+});
+
+const dateInstance = computed(() => new Date(time.value));
+const secondVal = computed(() => parseFloat((dateInstance.value.getSeconds() + dateInstance.value.getMilliseconds() / 1000).toFixed(0)));
+const minuteVal = computed(() => dateInstance.value.getMinutes() + secondVal.value / 60);
+const hourVal = computed(() => (dateInstance.value.getHours() % 24) + minuteVal.value / 60);
+const dayVal = computed(() => dateInstance.value.getDate() + hourVal.value / 24);
+const monthVal = computed(() => {
+  const m = dateInstance.value.getMonth();
+  const d = dateInstance.value.getDate() - 1 + hourVal.value / 24;
+  const dim = new Date(dateInstance.value.getFullYear(), m + 1, 0).getDate();
   return m + 1 + d / dim;
 });
+const yearVal = computed(() => (dateInstance.value.getFullYear() % 100) + (monthVal.value - 1) / 12);
 
-const year = computed(() => {
-  return (dateInstance.value.getFullYear() % 100) + (month.value - 1) / 12;
-});
+const unitValues = computed(() => ({
+  year: yearVal.value,
+  month: monthVal.value,
+  day: dayVal.value,
+  hour: hourVal.value,
+  minute: minuteVal.value,
+  second: secondVal.value
+}));
 
-// Biến lưu trữ các timeout để dọn dẹp nếu người dùng bật spin lại khi chưa dừng xong
-let stopTimeouts: ReturnType<typeof setTimeout>[] = [];
+let stopTimeouts: any[] = [];
+let restoreTimeout: any = null;
 
-let timer: number | undefined;
+function handleTimeChange(targetKey: string) {
+  stopTimeouts.forEach(clearTimeout);
+  stopTimeouts = [];
+
+  const targetIndex = UNIT_ORDER.indexOf(targetKey);
+
+  hideLabels.value = true;
+
+  // Reset trạng thái text và spin
+  UNITS.forEach(u => {
+    diffTexts.value[u.key] = "";
+    spinStates.value[u.key] = false;
+  });
+
+  // Bật xoay (spin = true) cho cột bị thay đổi và các cột nhỏ hơn
+  for (let i = 0; i <= targetIndex; i++) {
+    spinStates.value[UNIT_ORDER[i]] = true;
+  }
+
+  // Tắt xoay lần lượt từ second -> targetKey
+  for (let i = 0; i <= targetIndex; i++) {
+    const key = UNIT_ORDER[i];
+    const stopTime = i * 500;
+
+    stopTimeouts.push(setTimeout(() => {
+      spinStates.value[key] = false;
+
+      stopTimeouts.push(setTimeout(() => {
+        checkAndShowDiff(key);
+
+        // KHI CỘT CUỐI CÙNG XOAY XONG -> MỞ KHÓA TIME
+        if (i === targetIndex) {
+          startRestoreTimer();
+          stopTimeouts.push(setTimeout(() => {
+            isCanTick.value = true; // Cho phép đếm ngược trở lại
+          }, 500));
+        }
+      }, 400));
+
+    }, stopTime));
+  }
+}
+
+function checkAndShowDiff(key: string) {
+  if (pendingDiffTexts.value[key]) {
+    diffTexts.value[key] = pendingDiffTexts.value[key];
+    pendingDiffTexts.value[key] = "";
+  }
+}
+
+function startRestoreTimer() {
+  if (restoreTimeout) clearTimeout(restoreTimeout);
+  restoreTimeout = setTimeout(() => {
+    UNITS.forEach(u => diffTexts.value[u.key] = "");
+    setTimeout(() => {
+      hideLabels.value = false;
+    }, 400);
+  }, 1000);
+}
+
+function showChangedParts(diffMs: number): string {
+  if (!diffMs) return "second";
+  const abs = Math.abs(diffMs);
+  const sign = diffMs > 0 ? "+" : "-";
+  const thresholds = [
+    { key: "year", val: 31536000000 }, { key: "month", val: 2592000000 },
+    { key: "day", val: 864000000 }, { key: "hour", val: 3600000 },
+    { key: "minute", val: 60000 }, { key: "second", val: 1000 }
+  ];
+
+  const target = thresholds.find(t => abs >= t.val) || thresholds[5];
+  const diffVal = Math.round(abs / target.val);
+  const unitInfo = UNITS.find(u => u.key === target.key);
+
+  UNITS.forEach(u => pendingDiffTexts.value[u.key] = "");
+  if (diffVal !== 0) {
+    pendingDiffTexts.value[target.key] = `${sign}${diffVal}${unitInfo?.short}`;
+  }
+
+  return target.key;
+}
 
 onMounted(async () => {
   time.value = await CommonController.getRemainLiveTime();
-  timer = window.setInterval(() => {
-    if (isCanTick.value) time.value -= 1000;
+  const timer = setInterval(() => {
+    if (isCanTick.value) {
+      time.value -= 1000;
+      CommonController.editRemainLiveTimeBackground(-1000)
+    }
   }, 1000);
 
   document.addEventListener(EventEnum.ChangeTime, async () => {
-    isSpin.value = true
-    await fetchRemainLiveTime();
-    isSpin.value = false
+    // KHÓA TIME NGAY LẬP TỨC khi có lệnh đổi (không trừ time nữa)
+    isCanTick.value = false;
+
+    const prev = time.value;
+    const next = await CommonController.getRemainLiveTime();
+    time.value = next; // Update time mới cố định
+
+    const targetKey = showChangedParts(next - prev);
+    handleTimeChange(targetKey);
   });
-})
 
-watch(
-  () => isSpin.value,
-  (newSpin) => {
-    clearStaggeredTimeouts();
-
-    if (newSpin) {
-      // Bật quay: Tất cả quay cùng một lúc
-      spinYear.value = true;
-      spinMonth.value = true;
-      spinDay.value = true;
-      spinHour.value = true;
-      spinMinute.value = true;
-      spinSecond.value = true;
-
-      isCanTick.value = false
-    } else {
-      // Tắt quay: Tắt nối tiếp cách nhau 0.5s (từ phải qua trái)
-      spinSecond.value = false; // Dừng giây ngay lập tức
-
-      stopTimeouts.push(setTimeout(() => { spinMinute.value = false; }, 500));
-      stopTimeouts.push(setTimeout(() => { spinHour.value = false; }, 1000));
-      stopTimeouts.push(setTimeout(() => { spinDay.value = false; }, 1500));
-      stopTimeouts.push(setTimeout(() => { spinMonth.value = false; }, 2000));
-      stopTimeouts.push(setTimeout(() => { spinYear.value = false; }, 2500)); // Năm dừng cuối cùng
-
-      stopTimeouts.push(setTimeout(() => { isCanTick.value = true; }, 3000));
-    }
-  },
-  { immediate: true }
-);
-
-onBeforeUnmount(() => {
-  if (timer) clearInterval(timer);
-  clearStaggeredTimeouts();
-  clearDiffTimeouts()
+  onBeforeUnmount(() => clearInterval(timer));
 });
 
-async function fetchRemainLiveTime() {
-  const prev = time.value;
-  console.log('prev', time.value);
-
-  const next = await CommonController.getRemainLiveTime();
-
-  time.value = next;
-  console.log(prev, next);
-
-  showChangedParts(next - prev);
-}
-
-function clearStaggeredTimeouts() {
+onBeforeUnmount(() => {
   stopTimeouts.forEach(clearTimeout);
-  stopTimeouts = [];
-}
-
-function formatDiffText(diff: number, unit: string) {
-  if (diff === 0) return "";
-  const sign = diff > 0 ? "+" : "";
-  return `${sign}${diff} ${unit}`;
-}
-
-let diffTimeouts: ReturnType<typeof setTimeout>[] = [];
-
-function clearDiffTimeouts() {
-  diffTimeouts.forEach(clearTimeout);
-  diffTimeouts = [];
-}
-
-function showDiff(
-  target: "year" | "month" | "day" | "hour" | "minute" | "second",
-  diff: number
-) {
-  if (!diff) return;
-
-  if (target === "year") {
-    yearDiffText.value = formatDiffText(diff, "y");
-    showYearDiff.value = true;
-
-    const t = setTimeout(() => {
-      yearDiffText.value = ""
-      showYearDiff.value = false;
-    }, 3500);
-
-    diffTimeouts.push(t);
-  }
-
-  if (target === "month") {
-    monthDiffText.value = formatDiffText(diff, "m");
-    showMonthDiff.value = true;
-
-    const t = setTimeout(() => {
-      monthDiffText.value = ""
-      showMonthDiff.value = false;
-    }, 3500);
-
-    diffTimeouts.push(t);
-  }
-
-  if (target === "day") {
-    dayDiffText.value = formatDiffText(diff, "d");
-    showDayDiff.value = true;
-
-    const t = setTimeout(() => {
-      dayDiffText.value = ""
-      showDayDiff.value = false;
-    }, 3500);
-
-    diffTimeouts.push(t);
-  }
-
-  if (target === "hour") {
-    hourDiffText.value = formatDiffText(diff, "h");
-    showHourDiff.value = true;
-
-    const t = setTimeout(() => {
-      hourDiffText.value = ""
-      showHourDiff.value = false;
-    }, 3500);
-
-    diffTimeouts.push(t);
-  }
-
-  if (target === "minute") {
-    minuteDiffText.value = formatDiffText(diff, "min");
-    showMinuteDiff.value = true;
-
-    const t = setTimeout(() => {
-      minuteDiffText.value = ""
-      showMinuteDiff.value = false;
-    }, 3500);
-
-    diffTimeouts.push(t);
-  }
-
-  if (target === "second") {
-    secondDiffText.value = formatDiffText(diff, "s");
-    showSecondDiff.value = true;
-
-    const t = setTimeout(() => {
-      secondDiffText.value = ""
-      showSecondDiff.value = false;
-    }, 3500);
-
-    diffTimeouts.push(t);
-  }
-}
-
-function showChangedParts(diffMs: number) {
-  console.log('diffMs', diffMs);
-
-  if (!diffMs) return;
-
-  const abs = Math.abs(diffMs);
-  const sign = diffMs > 0 ? 1 : -1;
-
-  const SECOND = 1000;
-  const MINUTE = 60 * SECOND;
-  const HOUR = 60 * MINUTE;
-  const DAY = 24 * HOUR;
-  const MONTH = 30 * DAY;
-  const YEAR = 365 * DAY;
-
-  if (abs >= YEAR) {
-    showDiff("year", sign * Math.round(abs / YEAR));
-    return;
-  }
-
-  if (abs >= MONTH) {
-    showDiff("month", sign * Math.round(abs / MONTH));
-    return;
-  }
-
-  if (abs >= DAY) {
-    showDiff("day", sign * Math.round(abs / DAY));
-    return;
-  }
-
-  if (abs >= HOUR) {
-    showDiff("hour", sign * Math.round(abs / HOUR));
-    return;
-  }
-
-  if (abs >= MINUTE) {
-    showDiff("minute", sign * Math.round(abs / MINUTE));
-    return;
-  }
-
-  showDiff("second", sign * Math.round(abs / SECOND));
-}
+  clearTimeout(restoreTimeout);
+});
 </script>
 
 <template>
-  <div class="flex rounded-md overflow-hidden w-full clock" style="gap:0.2rem">
-    <div class="item">
-      <div :class="showLabel ? 'max-h-6 opacity-100' : 'max-h-0 opacity-0'"
-        class="label overflow-hidden transition-all duration-500">
-        <div v-if="isShowChange" class="diff-label" :style="{ visibility: yearDiffText ? 'visible' : 'hidden' }">{{
-          yearDiffText || 0 }}</div>
-        <span v-else>year</span>
-      </div>
-      <FlipClockItem :value="year" type="year" :spin="spinYear" />
-    </div>
+  <div class="clock-container">
+    <div v-for="u in UNITS" :key="u.key" class="item">
+      <div class="label-wrapper" :style="{ opacity: showLabel ? 1 : 0 }">
 
-    <div class="item">
-      <div :class="showLabel ? 'max-h-6 opacity-100' : 'max-h-0 opacity-0'"
-        class="label overflow-hidden transition-all duration-500">
-        <div v-if="isShowChange" class="diff-label" :style="{ visibility: monthDiffText ? 'visible' : 'hidden' }">{{
-          monthDiffText || 0 }}</div>
-        <span v-else>month</span>
-      </div>
-      <FlipClockItem :value="month" type="month" :spin="spinMonth" />
-    </div>
+        <Transition name="diff-float">
+          <div v-if="diffTexts[u.key]" :key="u.key + 'diff'" class="diff-label"
+            :style="{ color: diffTexts[u.key].startsWith('+') ? '#66BC32' : '#E32626' }">
+            {{ diffTexts[u.key] }}
+          </div>
 
-    <div class="item">
-      <div :class="showLabel ? 'max-h-6 opacity-100' : 'max-h-0 opacity-0'"
-        class="label overflow-hidden transition-all duration-500">
-        <div v-if="isShowChange" class="diff-label" :style="{ visibility: dayDiffText ? 'visible' : 'hidden' }">{{
-          dayDiffText || 0 }}</div>
-        <span v-else>day</span>
-      </div>
-      <FlipClockItem :value="day" type="day" :spin="spinDay" />
-    </div>
+          <span v-else-if="!hideLabels" :key="u.key + 'label'" class="unit-name">
+            {{ u.label }}
+          </span>
 
-    <div class="item">
-      <div :class="showLabel ? 'max-h-6 opacity-100' : 'max-h-0 opacity-0'"
-        class="label overflow-hidden transition-all duration-500">
-        <div v-if="isShowChange" class="diff-label" :style="{ visibility: hourDiffText ? 'visible' : 'hidden' }">{{
-          hourDiffText || 0 }}</div>
-        <span v-else>hour</span>
-      </div>
-      <FlipClockItem :value="hour" type="hour" :spin="spinHour" />
-    </div>
+          <div v-else :key="u.key + 'empty'" class="empty-holder"></div>
+        </Transition>
 
-    <div class="item">
-      <div :class="showLabel ? 'max-h-6 opacity-100' : 'max-h-0 opacity-0'"
-        class="label overflow-hidden transition-all duration-500">
-        <div v-if="isShowChange" class="diff-label" :style="{ visibility: minuteDiffText ? 'visible' : 'hidden' }">{{
-          minuteDiffText || 0 }}</div>
-        <span v-else>min</span>
       </div>
-      <FlipClockItem :value="minute" type="minute" :spin="spinMinute" />
-    </div>
 
-    <div class="item">
-      <div :class="showLabel ? 'max-h-6 opacity-100' : 'max-h-0 opacity-0'"
-        class="label overflow-hidden transition-all duration-500">
-        <div v-if="isShowChange" class="diff-label" :style="{ visibility: secondDiffText ? 'visible' : 'hidden' }">{{
-          secondDiffText || 0 }}</div>
-        <span v-else>sec</span>
-      </div>
-      <FlipClockItem :scale-near="1" :value="second" type="second" :spin="spinSecond" />
+      <FlipClockItem :value="unitValues[u.key]" :type="u.key" :spin="spinStates[u.key]" />
     </div>
   </div>
 </template>
 
 <style scoped>
-.clock {
-  font-family: "Big Shoulders", sans-serif;
-  font-size: 1.2rem;
+.clock-container {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.2rem;
+  font-family: "Big Shoulders", sans-serif;
 }
 
 .item {
@@ -361,17 +212,60 @@ function showChangedParts(diffMs: number) {
   flex-direction: column;
   align-items: center;
   gap: 0.75rem;
-  color: #4D4D4D;
-  font-weight: 700;
 }
 
-.label {
+.label-wrapper {
+  height: 1.5rem;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.unit-name,
+.diff-label,
+.empty-holder {
+  position: absolute;
+  left: 0;
+  right: 0;
+  margin: auto;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.unit-name {
+  color: #4D4D4D;
   font-weight: 500;
+  font-size: 1.2rem;
 }
 
 .diff-label {
-  font-weight: 500;
-  white-space: nowrap;
-  color: var(--decline, #E32626);
+  font-weight: 800;
+  font-size: 1rem;
+}
+
+.empty-holder {
+  height: 1px;
+  width: 1px;
+}
+
+/* ANIMATION */
+.diff-float-enter-active {
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.diff-float-leave-active {
+  transition: all 0.4s ease-in;
+}
+
+.diff-float-enter-from {
+  opacity: 0;
+  transform: translateY(15px);
+}
+
+.diff-float-leave-to {
+  opacity: 0;
+  transform: translateY(-15px);
 }
 </style>

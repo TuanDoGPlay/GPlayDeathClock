@@ -169,6 +169,20 @@ export const CommonController = {
     return Promise.resolve();
   },
 
+  async editRemainLiveTimeBackground(
+    time: number,
+    isIncrement: boolean = true,
+  ): Promise<void> {
+    const oldRemainLive = await this.getRemainLiveTime();
+    const newTime = isIncrement ? oldRemainLive + time : time;
+    console.log("live", time, newTime, new Date(newTime));
+    await Preferences.set({
+      key: REMAINLIVE,
+      value: JSON.stringify(newTime),
+    });
+    return Promise.resolve();
+  },
+
   async getBucketList() {
     const res = (await Database.selectTable(BUCKET)) ?? [];
     return res as BucketItemData[];

@@ -270,6 +270,8 @@ async function goTo(val: number) {
   const currentIntVisual = Math.floor(visualIndex.value);
 
   visualIndex.value = (currentIntVisual + steps) + frac;
+  console.log('visualIndex.value', visualIndex.value);
+
   setTransformByIndex(visualIndex.value, true); // ✅ Cuộn êm ái bằng CSS
   lastValue = nextIntValue;
 }
