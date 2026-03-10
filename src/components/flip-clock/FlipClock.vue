@@ -146,10 +146,11 @@ function showChangedParts(diffMs: number): string {
 
 onMounted(async () => {
   time.value = await CommonController.getRemainLiveTime();
+  console.log('time', time.value);
+
   const timer = setInterval(() => {
     if (isCanTick.value) {
       time.value -= 1000;
-      CommonController.editRemainLiveTimeBackground(-1000)
     }
   }, 1000);
 

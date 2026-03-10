@@ -24,9 +24,6 @@ const QUESTION = "questions";
 
 export const CommonController = {
   async init() {
-    const startDate = new Date("2000-01-01T00:00:00");
-    const futureDate = new Date(startDate);
-    futureDate.setFullYear(startDate.getFullYear() + 85);
     const db = {
       [BUCKET]: [],
       [MISSION]: [],
@@ -148,22 +145,33 @@ export const CommonController = {
 
   async getRemainLiveTime(): Promise<number> {
     const { value } = await Preferences.get({ key: REMAINLIVE });
+    const startDate = new Date("2000-01-01T00:00:00");
     if (!value) {
-      return Promise.resolve(0);
+      const futureDate = new Date(startDate);
+      futureDate.setFullYear(startDate.getFullYear() + 85);
+      await Preferences.set({
+        key: REMAINLIVE,
+        value: futureDate.toISOString(),
+      });
+      return Promise.resolve(futureDate.getTime());
     }
-    return Promise.resolve(JSON.parse(value));
+    return Promise.resolve(new Date(value).getTime() - startDate.getTime());
   },
 
   async editRemainLiveTime(
     time: number,
     isIncrement: boolean = true,
   ): Promise<void> {
-    const oldRemainLive = await this.getRemainLiveTime();
-    const newTime = isIncrement ? oldRemainLive + time : time;
-    console.log("live", time, newTime, new Date(newTime));
+    const { value } = await Preferences.get({ key: REMAINLIVE });
+    if (!value) return Promise.resolve();
+
+    const oldDate = new Date(value);
+    const newTime = isIncrement
+      ? new Date(oldDate.getTime() + time)
+      : new Date(time);
     await Preferences.set({
       key: REMAINLIVE,
-      value: JSON.stringify(newTime),
+      value: newTime.toString(),
     });
     document.dispatchEvent(new Event(EventEnum.ChangeTime));
     return Promise.resolve();
