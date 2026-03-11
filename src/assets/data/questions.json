@@ -4,6 +4,7 @@
     "question": "Does anyone in your family have a history of serious illness? (Cancer, heart disease, diabetes, genetic diseases)",
     "type": "text",
     "method": 1,
+    "label": "Family medical history",
     "logic": {
       "from": "-6y",
       "to": "-12y"
@@ -14,9 +15,10 @@
     "question": "Do you currently have a serious illness? (Cancer, brain/neurological tumors, severe heart/liver/lung diseases)",
     "type": "text",
     "method": 1,
+    "label": "Serious illness",
     "logic": {
-      "from": "15y",
-      "to": "30y"
+      "from": "-15y",
+      "to": "-30y"
     }
   },
   {
@@ -25,20 +27,12 @@
     "type": "select",
     "options": ["Every 6 months", "Once a year", "Rarely/Never"],
     "method": 2,
+    "label": "Skipping check-ups",
     "logic": {
       "random": [
-        {
-          "from": "0",
-          "to": "0"
-        },
-        {
-          "from": "-6m",
-          "to": "-1y"
-        },
-        {
-          "from": "-1y",
-          "to": "-3y"
-        }
+        { "from": "0", "to": "0" },
+        { "from": "-6m", "to": "-1y" },
+        { "from": "-1y", "to": "-3y" }
       ]
     }
   },
@@ -48,20 +42,12 @@
     "type": "select",
     "options": ["Often", "Occasionally", "No"],
     "method": 2,
+    "label": "Smoking",
     "logic": {
       "random": [
-        {
-          "from": "-8y",
-          "to": "-20y"
-        },
-        {
-          "from": "-1y",
-          "to": "-3y"
-        },
-        {
-          "from": "0",
-          "to": "+1y"
-        }
+        { "from": "-8y", "to": "-20y" },
+        { "from": "-1y", "to": "-3y" },
+        { "from": "0", "to": "+1y" }
       ]
     }
   },
@@ -71,20 +57,12 @@
     "type": "select",
     "options": ["Often", "Occasionally", "No"],
     "method": 2,
+    "label": "Drinking alcohol",
     "logic": {
       "random": [
-        {
-          "from": "-3y",
-          "to": "-8y"
-        },
-        {
-          "from": "-1y",
-          "to": "-3y"
-        },
-        {
-          "from": "0",
-          "to": "+1y"
-        }
+        { "from": "-3y", "to": "-8y" },
+        { "from": "-1y", "to": "-3y" },
+        { "from": "0", "to": "+1y" }
       ]
     }
   },
@@ -92,177 +70,206 @@
     "id": 6,
     "question": "Do you use addictive substances?",
     "type": "select",
-    "options": ["Often", "A few times", "No"]
+    "options": ["Often", "A few times", "No"],
+    "label": "Substance abuse"
   },
   {
     "id": 7,
     "question": "Average daily sleep hours",
     "type": "slider",
     "min": 0,
-    "max": 24
+    "max": 24,
+    "label": "Sleep deprivation"
   },
   {
     "id": 8,
     "question": "Do you drink enough 2L (≈ 8 glasses) of water daily?",
     "type": "select",
-    "options": ["Yes", "Around 1L", "Very little water"]
+    "options": ["Yes", "Around 1L", "Very little water"],
+    "label": "Dehydration"
   },
   {
     "id": 9,
     "question": "How many meals do you eat per day?",
     "type": "number",
     "min": 1,
-    "max": 5
+    "max": 5,
+    "label": "Irregular meals"
   },
   {
     "id": 10,
     "question": "How many hours do you sit continuously per day?",
     "type": "select",
-    "options": ["Over 5 hours", "2-5 hours", "Under 2 hours"]
+    "options": ["Over 5 hours", "2-5 hours", "Under 2 hours"],
+    "label": "Sedentary lifestyle"
   },
   {
     "id": 11,
     "question": "Do you eat breakfast?",
     "type": "select",
-    "options": ["Almost every day", "Sometimes", "No"]
+    "options": ["Almost every day", "Sometimes", "No"],
+    "label": "Skipping breakfast"
   },
   {
     "id": 12,
     "question": "Do you consume fast food or sugary/carbonated drinks?",
     "type": "select",
-    "options": ["Often", "Occasionally", "No"]
+    "options": ["Often", "Occasionally", "No"],
+    "label": "Junk food & sugary drinks"
   },
   {
     "id": 13,
     "question": "Do your daily meals include vegetables?",
     "type": "select",
-    "options": ["Often", "Occasionally", "No"]
+    "options": ["Often", "Occasionally", "No"],
+    "label": "Lack of vegetables"
   },
   {
     "id": 14,
     "question": "Does your diet include a lot of salt/fish sauce?",
     "type": "select",
-    "options": ["Often", "A little", "No"]
+    "options": ["Often", "A little", "No"],
+    "label": "High salt intake"
   },
   {
     "id": 15,
     "question": "Do you often eat canned or processed foods?",
     "type": "select",
-    "options": ["Often", "A little", "No"]
+    "options": ["Often", "A little", "No"],
+    "label": "Processed foods"
   },
   {
     "id": 16,
     "question": "Are you a vegetarian/vegan?",
     "type": "select",
-    "options": ["I am vegan", "Occasionally", "No"]
+    "options": ["I am vegan", "Occasionally", "No"],
+    "label": "Unbalanced diet"
   },
   {
     "id": 17,
     "question": "Do you often eat after 9 PM?",
     "type": "select",
-    "options": ["Yes", "No"]
+    "options": ["Yes", "No"],
+    "label": "Late-night eating"
   },
   {
     "id": 18,
     "question": "Do you eat until you are overfull?",
     "type": "select",
-    "options": ["Yes", "No"]
+    "options": ["Yes", "No"],
+    "label": "Overeating"
   },
   {
     "id": 19,
     "question": "Do you often skip meals?",
     "type": "select",
-    "options": ["Often", "Sometimes", "No"]
+    "options": ["Often", "Sometimes", "No"],
+    "label": "Skipping meals"
   },
   {
     "id": 20,
     "question": "Do you use electronic devices while eating?",
     "type": "select",
-    "options": ["Frequently", "Occasionally", "No"]
+    "options": ["Frequently", "Occasionally", "No"],
+    "label": "Distracted eating"
   },
   {
     "id": 21,
     "question": "Do you cook at home or eat out/order in?",
     "type": "select",
-    "options": ["Cook at home", "Eat out/Order in", "Balanced"]
+    "options": ["Cook at home", "Eat out/Order in", "Balanced"],
+    "label": "Eating out too much"
   },
   {
     "id": 22,
     "question": "Is your food often greasy/oily?",
     "type": "select",
-    "options": ["Often", "Sometimes", "No"]
+    "options": ["Often", "Sometimes", "No"],
+    "label": "Greasy food"
   },
   {
     "id": 23,
     "question": "Is your food often spicy or hot?",
     "type": "select",
-    "options": ["Often", "A little", "No"]
+    "options": ["Often", "A little", "No"],
+    "label": "Spicy food"
   },
   {
     "id": 24,
     "question": "Do you often eat fruit?",
     "type": "select",
-    "options": ["Often", "A little", "No"]
+    "options": ["Often", "A little", "No"],
+    "label": "Lack of fruits"
   },
   {
     "id": 25,
     "question": "Do you walk regularly?",
     "type": "select",
-    "options": ["At least 30 mins/day", "Less than 30 mins", "Hardly ever"]
+    "options": ["At least 30 mins/day", "Less than 30 mins", "Hardly ever"],
+    "label": "Lack of walking"
   },
   {
     "id": 26,
     "question": "Do you practice Yoga or stretching exercises?",
     "type": "select",
-    "options": ["Frequently", "Occasionally", "No"]
+    "options": ["Frequently", "Occasionally", "No"],
+    "label": "Lack of stretching"
   },
   {
     "id": 27,
     "question": "Do you go to the gym?",
     "type": "select",
-    "options": ["At least 3 sessions/week", "1-2 sessions", "No"]
+    "options": ["At least 3 sessions/week", "1-2 sessions", "No"],
+    "label": "Physical inactivity"
   },
   {
     "id": 28,
     "question": "Do you play sports?",
     "type": "select",
-    "options": ["At least 3 sessions/week", "1-2 sessions", "No"]
+    "options": ["At least 3 sessions/week", "1-2 sessions", "No"],
+    "label": "Lack of sports"
   },
   {
     "id": 29,
     "question": "Do you use health tracking devices (e.g., Smartwatch)?",
     "type": "select",
-    "options": ["Yes", "No"]
+    "options": ["Yes", "No"],
+    "label": "Ignoring health metrics"
   },
   {
     "id": 30,
     "question": "Do you experience shortness of breath or chest pain during heavy exercise?",
     "type": "select",
-    "options": ["Yes", "No"]
+    "options": ["Yes", "No"],
+    "label": "Cardiovascular issues"
   },
   {
     "id": 31,
     "question": "Do you use phones/computers frequently?",
     "type": "select",
-    "options": ["Over 8 hours", "4-7 hours", "2-3 hours", "Rarely"]
+    "options": ["Over 8 hours", "4-7 hours", "2-3 hours", "Rarely"],
+    "label": "Excessive screen time"
   },
   {
     "id": 32,
     "question": "Do you go swimming often?",
     "type": "select",
-    "options": ["Yes", "No"]
+    "options": ["Yes", "No"],
+    "label": "Lack of physical activity"
   },
   {
     "id": 33,
     "question": "Do you spend more time outdoors or indoors?",
     "type": "select",
-    "options": ["Outdoors", "Indoors"]
+    "options": ["Outdoors", "Indoors"],
+    "label": "Staying indoors too much"
   },
   {
     "id": 34,
     "question": "Do you often go traveling or on picnics?",
     "type": "select",
-    "options": ["Yes", "Not regularly"]
+    "options": ["Yes", "Not regularly"],
+    "label": "Lack of recreation"
   },
   {
     "id": 35,
@@ -272,101 +279,118 @@
       "Almost always",
       "Sometimes stay up late",
       "Usually stay up late"
-    ]
+    ],
+    "label": "Staying up late"
   },
   {
     "id": 36,
     "question": "Do you take afternoon naps?",
     "type": "select",
-    "options": ["Frequently", "Occasionally", "Rarely"]
+    "options": ["Frequently", "Occasionally", "Rarely"],
+    "label": "Poor rest habits"
   },
   {
     "id": 37,
     "question": "Do you snore while sleeping?",
     "type": "select",
-    "options": ["Frequently", "Occasionally", "Rarely"]
+    "options": ["Frequently", "Occasionally", "Rarely"],
+    "label": "Sleep apnea/Snoring"
   },
   {
     "id": 38,
     "question": "Do you feel tired when waking up?",
     "type": "select",
-    "options": ["Frequently", "Occasionally", "Rarely"]
+    "options": ["Frequently", "Occasionally", "Rarely"],
+    "label": "Poor sleep quality"
   },
   {
     "id": 39,
     "question": "Do you often have nightmares?",
     "type": "select",
-    "options": ["Frequently", "Occasionally", "Rarely"]
+    "options": ["Frequently", "Occasionally", "Rarely"],
+    "label": "Mental stress (Nightmares)"
   },
   {
     "id": 40,
     "question": "Do you travel frequently between countries?",
     "type": "select",
-    "options": ["Yes", "No"]
+    "options": ["Yes", "No"],
+    "label": "Frequent jet lag"
   },
   {
     "id": 41,
     "question": "Which country do you mainly live in?",
-    "type": "text"
+    "type": "text",
+    "label": "Environmental factors"
   },
   {
     "id": 42,
     "question": "Are you currently working at a company?",
     "type": "select",
-    "options": ["Yes", "No"]
+    "options": ["Yes", "No"],
+    "label": "Work-related stress"
   },
   {
     "id": 43,
     "question": "Is your work based at an office or at home?",
     "type": "select",
-    "options": ["Office", "Home/Remote", "Both"]
+    "options": ["Office", "Home/Remote", "Both"],
+    "label": "Sedentary work"
   },
   {
     "id": 44,
     "question": "Does school/work cause you significant pressure?",
     "type": "select",
-    "options": ["Very pressured", "Normal", "No pressure"]
+    "options": ["Very pressured", "Normal", "No pressure"],
+    "label": "High stress levels"
   },
   {
     "id": 45,
     "question": "Where do you live?",
     "type": "select",
-    "options": ["City", "Heavy industrial area", "Rural area"]
+    "options": ["City", "Heavy industrial area", "Rural area"],
+    "label": "Polluted living area"
   },
   {
     "id": 46,
     "question": "What is your main mode of transport?",
     "type": "select",
-    "options": ["Car", "Motorbike", "Bicycle", "Public Transport"]
+    "options": ["Car", "Motorbike", "Bicycle", "Public Transport"],
+    "label": "Traffic risks"
   },
   {
     "id": 47,
     "question": "Do you often wear a seatbelt in a car?",
     "type": "select",
-    "options": ["Always", "Sometimes", "Never"]
+    "options": ["Always", "Sometimes", "Never"],
+    "label": "Not wearing seatbelts"
   },
   {
     "id": 48,
     "question": "Do you wear a helmet on a motorbike?",
     "type": "select",
-    "options": ["Always", "Sometimes", "Never"]
+    "options": ["Always", "Sometimes", "Never"],
+    "label": "Not wearing helmets"
   },
   {
     "id": 49,
     "question": "Are there many factories/plants near your area?",
     "type": "select",
-    "options": ["Many", "Few", "None"]
+    "options": ["Many", "Few", "None"],
+    "label": "Industrial pollution"
   },
   {
     "id": 50,
     "question": "Is there a lot of noise around your home/workplace?",
     "type": "select",
-    "options": ["Very noisy", "Normal", "Quiet"]
+    "options": ["Very noisy", "Normal", "Quiet"],
+    "label": "Noise pollution"
   },
   {
     "id": 51,
     "question": "Do you often feel lonely?",
     "type": "select",
-    "options": ["Very frequently", "Occasionally", "Hardly ever"]
+    "options": ["Very frequently", "Occasionally", "Hardly ever"],
+    "label": "Loneliness & Depression"
   }
 ]

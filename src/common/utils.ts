@@ -179,4 +179,33 @@ export const Utils = {
     const today = new Date().toISOString().split("T")[0]; // Lấy định dạng "2026-03-09"
     return today !== lastSavedDate;
   },
+
+  formatShortenDuration(totalMs: number): string {
+    if (!totalMs || totalMs === 0) return "0 seconds";
+
+    // Đảm bảo xử lý đúng số âm nếu có (chỉ lấy độ lớn)
+    let remainingMs = Math.abs(totalMs);
+
+    // Sử dụng trực tiếp các hằng số ms đã khai báo ở đầu file
+    const units = [
+      { label: "year", value: MS_IN_YEAR },
+      { label: "month", value: MS_IN_MONTH },
+      { label: "week", value: MS_IN_WEEK },
+      { label: "day", value: MS_IN_DAY },
+      { label: "hour", value: MS_IN_HOUR },
+      { label: "minute", value: MS_IN_MINUTE },
+      { label: "second", value: MS_IN_SECOND },
+    ];
+
+    for (const unit of units) {
+      const amount = Math.floor(remainingMs / unit.value);
+      if (amount > 0) {
+        // Trả về ngay lập tức đơn vị lớn nhất tìm được
+        return `${amount} ${unit.label}${amount > 1 ? "s" : ""}`;
+      }
+    }
+
+    // Trường hợp số ms quá nhỏ (dưới 1 giây)
+    return "0 seconds";
+  },
 };

@@ -1,16 +1,6 @@
 import { Utils } from "@/common/utils.ts";
 import { QuestionMethodEnum } from "@/constants/questionMethod.ts";
 
-export interface QuestionData {
-  id: number;
-  question: string;
-  type: string;
-  options?: string[];
-  method: number;
-  logic: Record<string, any>;
-  time?: number;
-}
-
 export interface UserData {
   name: string;
   dob: string;
@@ -43,6 +33,16 @@ export class MissionInstance implements MissionData {
   }
 }
 
+export interface QuestionData {
+  id: number;
+  question: string;
+  type: string;
+  options?: string[];
+  method: number;
+  logic: Record<string, any>;
+  time: number;
+  label: string;
+}
 export class QuestionInstance implements QuestionData {
   id: number;
   question: string;
@@ -50,7 +50,8 @@ export class QuestionInstance implements QuestionData {
   options?: string[];
   method: QuestionMethodEnum;
   logic: Record<string, any>;
-  time?: number;
+  time: number;
+  label: string;
 
   constructor(data: QuestionData) {
     this.id = data.id;
@@ -59,6 +60,8 @@ export class QuestionInstance implements QuestionData {
     this.options = data.options;
     this.method = data.method;
     this.logic = data.logic;
+    this.time = data.time;
+    this.label = data.label;
   }
 }
 

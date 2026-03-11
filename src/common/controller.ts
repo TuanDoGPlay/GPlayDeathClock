@@ -64,6 +64,14 @@ export const CommonController = {
       .map((q: QuestionData) => new QuestionInstance(q));
   },
 
+  async getTopTimeDeductionQuestions(): Promise<QuestionInstance[]> {
+    const answeredQuestions =
+      await Database.selectTable<QuestionData>(QUESTION);
+    const data = answeredQuestions.filter((i) => (i.time ?? 0) < 0);
+    data.sort((a, b) => (a.time || 0) - (b.time || 0));
+    return Promise.resolve(data.slice(0, 5));
+  },
+
   async answerQuestion(question: QuestionInstance, answer: any): Promise<void> {
     console.log("answer", answer);
 

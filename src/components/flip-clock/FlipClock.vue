@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, ref, onBeforeUnmount, onMounted } from "vue";
+import { computed, ref, onBeforeUnmount, onMounted, watch } from "vue";
 import FlipClockItem from "@/components/flip-clock/FlipClockItem.vue";
 import { EventEnum } from "@/constants/events";
 import { CommonController } from "@/common/controller";
@@ -21,7 +21,11 @@ const UNITS: UnitConfig[] = [
 
 const UNIT_ORDER = ["second", "minute", "hour", "day", "month", "year"];
 
-const props = defineProps<{ showLabel?: boolean }>();
+const props = defineProps<{
+  showLabel?: boolean
+  value?: number
+  hideAnimation?: boolean
+}>();
 
 const isCanTick = ref(true);
 const time = ref(0);
@@ -145,43 +149,68 @@ function showChangedParts(diffMs: number): string {
 }
 
 onMounted(async () => {
-  time.value = await CommonController.getRemainLiveTime();
-  console.log('time', time.value);
+  if (props.value !== undefined && props.value !== null) {
+    time.value = props.value;
+  } else {
+    time.value = await CommonController.getRemainLiveTime();
+    const timer = setInterval(() => {
+      if (isCanTick.value) {
+        time.value -= 1000;
+      }
+    }, 1000);
+    onBeforeUnmount(() => clearInterval(timer));
 
-  const timer = setInterval(() => {
-    if (isCanTick.value) {
-      time.value -= 1000;
-    }
-  }, 1000);
+  }
 
   document.addEventListener(EventEnum.ChangeTime, async () => {
-    // KHÓA TIME NGAY LẬP TỨC khi có lệnh đổi (không trừ time nữa)
-    isCanTick.value = false;
-
     const prev = time.value;
     const next = await CommonController.getRemainLiveTime();
+    if (props.hideAnimation) {
+      time.value = next;
+      return;
+    }
+    isCanTick.value = false;
+
     time.value = next; // Update time mới cố định
 
     const targetKey = showChangedParts(next - prev);
     handleTimeChange(targetKey);
   });
 
-  onBeforeUnmount(() => clearInterval(timer));
+});
+
+watch(() => props.value, (newVal) => {
+  if (newVal !== undefined && newVal !== null) {
+    updateClockWithAnimation(newVal);
+  }
 });
 
 onBeforeUnmount(() => {
   stopTimeouts.forEach(clearTimeout);
   clearTimeout(restoreTimeout);
 });
+
+async function updateClockWithAnimation(newTime: number) {
+  if (props.hideAnimation) {
+    time.value = newTime;
+    return;
+  }
+  isCanTick.value = false; // Dừng đếm ngược để xoay
+  const prev = time.value;
+  time.value = newTime;
+
+  const targetKey = showChangedParts(newTime - prev); // Tính xem hiện + hay - bao nhiêu
+  handleTimeChange(targetKey); // Chạy hiệu ứng xoay các cột
+}
 </script>
 
 <template>
   <div class="clock-container">
     <div v-for="u in UNITS" :key="u.key" class="item">
-      <div class="label-wrapper" :style="{ opacity: showLabel ? 1 : 0 }">
+      <div v-if="props.showLabel" class="label-wrapper">
 
         <Transition name="diff-float">
-          <div v-if="diffTexts[u.key]" :key="u.key + 'diff'" class="diff-label"
+          <div v-if="diffTexts[u.key] && props.showLabel" :key="u.key + 'diff'" class="diff-label"
             :style="{ color: diffTexts[u.key].startsWith('+') ? '#66BC32' : '#E32626' }">
             {{ diffTexts[u.key] }}
           </div>
@@ -206,6 +235,8 @@ onBeforeUnmount(() => {
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 0.2rem;
   font-family: "Big Shoulders", sans-serif;
+  border-radius: 0.5rem;
+  overflow: hidden;
 }
 
 .item {
