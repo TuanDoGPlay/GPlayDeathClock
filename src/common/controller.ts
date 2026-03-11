@@ -192,6 +192,14 @@ export const CommonController = {
     return Promise.resolve();
   },
 
+  async getDeathMoment(): Promise<Date> {
+    const { value } = await Preferences.get({ key: REMAINLIVE });
+    if (!value) {
+      return Promise.resolve(new Date());
+    }
+    return Promise.resolve(new Date(value));
+  },
+
   async editRemainLiveTimeBackground(
     time: number,
     isIncrement: boolean = true,
@@ -200,7 +208,7 @@ export const CommonController = {
     const newTime = isIncrement ? oldRemainLive + time : time;
     await Preferences.set({
       key: REMAINLIVE,
-      value: JSON.stringify(newTime),
+      value: newTime.toString(),
     });
     return Promise.resolve();
   },
