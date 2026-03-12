@@ -1,17 +1,16 @@
 <script lang="ts" setup>
 import Question from '@/assets/icons/question.svg'
-import { computed, onBeforeMount, ref, watch } from "vue";
+import {computed, onBeforeMount, ref, watch} from "vue";
 import ContentFrame from "@/components/content-frame/ContentFrame.vue";
-import { goToRouter } from "gplay-app-sdk";
+import {goToRouter} from "gplay-app-sdk";
 import QuestionItem from "@/screens/question/components/QuestionItem.vue";
 import MoreQuestion from "@/screens/question/components/MoreQuestion.vue";
 import TabComponent from "@/components/tab/TabComponent.vue";
 import TabPane from "@/components/tab/TabPane.vue";
-import type { QuestionInstance } from "@/common/types.ts";
-import { CommonController } from "@/common/controller.ts";
+import type {QuestionInstance} from "@/common/types.ts";
+import {CommonController} from "@/common/controller.ts";
 import DefaultQuestions from "@/screens/question/components/DefaultQuestions.vue";
-import { Utils } from '@/common/utils';
-import { EventEnum } from '@/constants/events';
+import {EventEnum} from '@/constants/events';
 
 const questions = ref<QuestionInstance[]>([])
 const answers = ref<Record<string, any>>({}) // key: questionId (string)
@@ -32,7 +31,7 @@ onBeforeMount(async () => {
   await fetchQuestions();
 })
 
-watch(activeName, async (newVal, oldVal) => {
+watch(activeName, async (_newVal, oldVal) => {
   // oldVal là tab vừa rời đi
   // bỏ qua lần set initial hoặc oldVal rỗng
   if (!oldVal) return;
@@ -47,24 +46,23 @@ watch(activeName, async (newVal, oldVal) => {
     }
   }
 });
+
 async function fetchQuestions() {
   questions.value = await CommonController.getQuestions();
   activeName.value = questions.value[0]?.id.toString() || ""
 }
 
 function handleBack() {
-  goToRouter({ name: 'home' })
+  goToRouter({name: 'home'})
 }
 
 async function answerQuestion(question: QuestionInstance, answer: any) {
   await CommonController.answerQuestion(question, answer);
-  document.dispatchEvent(new Event(EventEnum.ChangeTime))
 }
 
 function goNext(currentId: string) {
   const idx = questions.value.findIndex(q => q.id.toString() === currentId)
-  const next = questions.value[idx + 1]?.id.toString() ?? "more"
-  activeName.value = next
+  activeName.value = questions.value[idx + 1]?.id.toString() ?? "more"
 }
 
 function moreQuestions() {
@@ -75,23 +73,23 @@ function moreQuestions() {
 
 <template>
   <div class="h-full">
-    <DefaultQuestions v-if="isFirstVisit" @more="moreQuestions" />
+    <DefaultQuestions v-if="isFirstVisit" @more="moreQuestions"/>
 
     <ContentFrame v-else :current-tab="currentTabIndex" :icon="Question" :total-tab="questions.length + 1" show-back
-      show-pagination-in-title title="Questions" @back="handleBack">
+                  show-pagination-in-title title="Questions" @back="handleBack">
       <TabComponent v-if="questions.length" v-model="activeName" :dots="true" :swipe="true">
 
         <TabPane v-for="question in questions" :key="question.id" :name="question.id.toString()">
-          <QuestionItem :question="question" :focus="activeName == question.id.toString()"
-            @input="val => { answers[question.id.toString()] = val; }" @next="val => {
+          <QuestionItem :question="question"
+                        @input="val => { answers[question.id.toString()] = val; }" @next="val => {
               const id = question.id.toString()
               answers[id] = val
               goNext(id)
-            }" />
+            }"/>
         </TabPane>
 
         <TabPane label="More" name="more">
-          <MoreQuestion @more="fetchQuestions" />
+          <MoreQuestion @more="fetchQuestions"/>
         </TabPane>
 
       </TabComponent>
