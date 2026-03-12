@@ -176,9 +176,9 @@ export const CommonController = {
         key: REMAINLIVE,
         value: futureDate.toISOString(),
       });
-      return Promise.resolve(futureDate.getTime());
+      return Promise.resolve(futureDate.getTime() );
     }
-    return Promise.resolve(new Date(value).getTime() - startDate.getTime());
+    return Promise.resolve(new Date(value).getTime());
   },
 
   async editRemainLiveTime(

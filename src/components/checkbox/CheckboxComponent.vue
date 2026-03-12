@@ -20,8 +20,8 @@ const toggle = () => {
     <div class="flex items-center gap-3">
       <div
           :class="modelValue ? 'bg-transparent' : 'bg-[#D9D9D9]'"
-          class="rounded-full flex items-center justify-center transition-all duration-200 border-4 flex-shrink-0"
-          style="border-color: #D9D9D9;height: 1.05rem; width: 1.05rem"
+          class="rounded-full flex items-center justify-center transition-all duration-200 flex-shrink-0"
+          style="border-color: #D9D9D9;height: 1.05rem; width: 1.05rem;border-width: 0.15rem;"
       >
         <svg
             v-if="modelValue"

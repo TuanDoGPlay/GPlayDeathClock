@@ -1,4 +1,4 @@
-package com.example.gplaydeathclock;
+package com.gcognify.deathclock;
 
 import com.getcapacitor.BridgeActivity;
 

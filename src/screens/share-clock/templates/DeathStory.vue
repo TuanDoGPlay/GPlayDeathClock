@@ -11,6 +11,7 @@ import { onMounted } from 'vue';
 import { CommonController } from '@/common/controller';
 import gsap from 'gsap';
 import { QuestionInstance } from '@/common/types';
+import { showRewardedVideo, captureImage } from 'gplay-app-sdk';
 
 const emit = defineEmits(['back'])
 
@@ -119,7 +120,11 @@ function playShootAnimation() {
 }
 
 function shareImage() {
-  alert('Coming soon!')
+  captureImage({
+    elementId: 'captureArea',
+  })
+  // showRewardedVideo(()=>{
+  // })
 }
 
 function shareVideo() {
@@ -130,7 +135,7 @@ function shareVideo() {
 <template>
   <ContentFrame :icon="Story" hide-split-bar show-back title="Death Story" @back="handleBack">
     <div class="h-full w-full flex flex-col">
-      <div class="flex-1 relative rounded-lg overflow-hidden bg p-2" @click="next()">
+      <div id="captureArea" class="flex-1 relative rounded-lg overflow-hidden bg p-2" @click="next()">
         <div class="flex gap-1 w-full mb-4">
           <span v-for="(bar, index) in questions" :key="bar.id" :class="{ active: index === currentIndex }" class="bar"
             @click.stop="goTo(index)"></span>

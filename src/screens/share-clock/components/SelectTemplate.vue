@@ -83,7 +83,7 @@ function handleBack() {
 }
 
 :deep(.share-swiper .swiper-slide.card-slide) {
-  width: 60%;
+  width: 35vw;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -92,7 +92,7 @@ function handleBack() {
 }
 
 .card {
-  width: 100%;
+  height: 30vh;
   will-change: transform, opacity;
   transition: transform 450ms ease,
   opacity 450ms ease;

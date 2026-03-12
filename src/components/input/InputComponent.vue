@@ -67,12 +67,6 @@ const model = defineModel();
   caret-color: var(--highlight-text);
 }
 
-/* --- NHÓM 2: DATE & TIME --- */
-.styled-input:is([type="date"], [type="time"], [type="datetime-local"], [type="month"], [type="week"]) {
-  text-align: center;
-  text-transform: none;
-  min-height: 3rem;
-}
 
 /* Chỉnh icon lịch/đồng hồ */
 .styled-input::-webkit-calendar-picker-indicator {
