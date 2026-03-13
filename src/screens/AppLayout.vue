@@ -92,7 +92,7 @@ async function goToShareClock() {
 </script>
 
 <template>
-  <div class="main-container flex flex-col items-center justify-center h-full px-2 pt-4 relative overflow-hidden">
+  <div class="main-container flex flex-col items-center justify-center h-full px-2 pt-10 pb-1 relative overflow-hidden">
     <Teleport to="body">
       <img ref="splashWrapper" src="/splash.svg" alt="splash"
         class="h-full w-full object-cover absolute inset-0 z-[200] pointer-events-none">

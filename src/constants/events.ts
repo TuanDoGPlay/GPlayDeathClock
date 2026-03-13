@@ -1,4 +1,5 @@
 export enum EventEnum {
     ToggleClock = 'toggleClock',
-    ChangeTime = 'changeTime'
+    ChangeTime = 'changeTime',
+    ShareDeathStory = 'shareDeathStory',
 }

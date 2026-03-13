@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "com.gcognify.deathclock"
+    namespace = "com.gcognify.tik.die.tok.death.clock"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.gcognify.deathclock"
+        applicationId "com.gcognify.tik.die.tok.death.clock"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

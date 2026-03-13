@@ -1,11 +1,17 @@
 <script lang="ts" setup>
-import {ref} from 'vue';
+import {onBeforeMount, ref} from 'vue';
 import SelectTemplate from "@/screens/share-clock/components/SelectTemplate.vue";
 import TemplateDisplay from "@/screens/share-clock/components/TemplateDisplay.vue";
 import {EventEnum} from "@/constants/events.ts";
 
 const selectedTemplate = ref(0);
 const transitionName = ref<'zoom-in' | 'zoom-out'>('zoom-in');
+
+onBeforeMount(()=>{
+  document.addEventListener(EventEnum.ShareDeathStory, () => {
+    onTemplateSelected(1)
+  });
+})
 
 const onTemplateSelected = (id: number) => {
   transitionName.value = 'zoom-in';

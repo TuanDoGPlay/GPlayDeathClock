@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "234296480480",
+    "project_id": "tik-die-tok-death-clock",
+    "storage_bucket": "tik-die-tok-death-clock.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:234296480480:android:1047cca421917a2b3af685",
+        "android_client_info": {
+          "package_name": "com.gcognify.tik.die.tok.death.clock"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAzuD6BKc0LitjkYxZBJhyjXKmSMIKCHuE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

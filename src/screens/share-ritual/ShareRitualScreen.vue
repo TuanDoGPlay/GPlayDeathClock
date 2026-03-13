@@ -1,17 +1,17 @@
 <script lang="ts" setup>
 import ShareIcon from '@/assets/icons/share.svg'
 import ShareArrow from '@/assets/icons/share-arrow.svg'
-import { CommonController } from '@/common/controller';
-import { type MissionInstance, type UserData } from '@/common/types';
-import { Utils } from '@/common/utils';
+import {CommonController} from '@/common/controller';
+import {type MissionInstance, type UserData} from '@/common/types';
+import {Utils} from '@/common/utils';
 import CheckboxComponent from '@/components/checkbox/CheckboxComponent.vue';
 import ContentFrame from '@/components/content-frame/ContentFrame.vue';
-import { EventEnum } from "@/constants/events.ts";
-import { captureImage, goToRouter, loadRewardedVideo } from 'gplay-app-sdk';
-import { computed, onBeforeMount, onBeforeUnmount, ref } from 'vue';
+import {EventEnum} from "@/constants/events.ts";
+import {captureImage, goToRouter, loadRewardedVideo, showRewardedVideo} from 'gplay-app-sdk';
+import {computed, onBeforeMount, onBeforeUnmount, ref} from 'vue';
 import ButtonComponent from '@/components/button/ButtonComponent.vue';
-import { Directory, Filesystem } from "@capacitor/filesystem";
-import { Share } from '@capacitor/share';
+import {Directory, Filesystem} from "@capacitor/filesystem";
+import {Share} from '@capacitor/share';
 
 const missions = ref<MissionInstance[]>([])
 const userData = ref<UserData>()
@@ -29,15 +29,21 @@ onBeforeMount(async () => {
   userData.value = await CommonController.getUserData()
   missions.value = await CommonController.getCompletedMission()
   loadRewardedVideo()
-  document.dispatchEvent(new CustomEvent(EventEnum.ToggleClock, { detail: { isShow: false } }))
+  document.dispatchEvent(new CustomEvent(EventEnum.ToggleClock, {detail: {isShow: false}}))
 })
 
 onBeforeUnmount(() => {
-  document.dispatchEvent(new CustomEvent(EventEnum.ToggleClock, { detail: { isShow: true } }))
+  document.dispatchEvent(new CustomEvent(EventEnum.ToggleClock, {detail: {isShow: true}}))
 })
 
 function handleBack() {
   goToRouter('home')
+}
+
+function handleShare() {
+  showRewardedVideo(() => {
+    shareRitual()
+  })
 }
 
 async function shareRitual() {
@@ -88,7 +94,7 @@ async function shareRitual() {
   <ContentFrame :icon="ShareIcon" hide-split-bar show-back title="Share Rituals" @back="handleBack">
     <div class="flex flex-col justify-between h-full pt-2">
       <div id="capture-area" class="p-1 rounded-xl flex flex-col min-h-0" style="background-color: #FBFFED;">
-        <img alt="Share Rituals" class="flex-shrink-0" src="/share-ritual.svg" />
+        <img alt="Share Rituals" class="flex-shrink-0" src="/share-ritual.svg"/>
         <div class="text flex-shrink-0">
           {{ userData?.name }} has done {{ missions.length }} {{
             missions.length > 1 ? 'rituals' : 'ritual'
@@ -107,7 +113,7 @@ async function shareRitual() {
       </div>
       <div class="pt-4 flex-shrink-0">
         <ButtonComponent :icon="ShareArrow" class="mx-auto" show-ad-tag template="primary" text="Share Now"
-                         @click="shareRitual" />
+                         @click="handleShare"/>
       </div>
     </div>
 
@@ -119,7 +125,7 @@ async function shareRitual() {
             <span>{{ progress }}%</span>
           </div>
           <div class="progress-bar-bg">
-            <div class="progress-bar-fill" :style="{ width: progress + '%' }"></div>
+            <div :style="{ width: progress + '%' }" class="progress-bar-fill"></div>
           </div>
         </div>
       </div>
@@ -156,7 +162,7 @@ async function shareRitual() {
   max-width: 300px;
   padding: 1.5rem;
   border-radius: 1rem;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
   border: 2px solid #533F36;
 }
 
@@ -188,6 +194,7 @@ async function shareRitual() {
 .fade-enter-active, .fade-leave-active {
   transition: opacity 0.3s;
 }
+
 .fade-enter-from, .fade-leave-to {
   opacity: 0;
 }

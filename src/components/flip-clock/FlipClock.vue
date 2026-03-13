@@ -1,8 +1,8 @@
 <script lang="ts" setup>
-import { computed, ref, onBeforeUnmount, onMounted, watch } from "vue";
+import {computed, onBeforeUnmount, onMounted, ref, watch} from "vue";
 import FlipClockItem from "@/components/flip-clock/FlipClockItem.vue";
-import { EventEnum } from "@/constants/events";
-import { CommonController } from "@/common/controller";
+import {EventEnum} from "@/constants/events";
+import {CommonController} from "@/common/controller";
 
 interface UnitConfig {
   key: "year" | "month" | "day" | "hour" | "minute" | "second";
@@ -11,12 +11,12 @@ interface UnitConfig {
 }
 
 const UNITS: UnitConfig[] = [
-  { key: "year", label: "year", short: "y" },
-  { key: "month", label: "month", short: "m" },
-  { key: "day", label: "day", short: "d" },
-  { key: "hour", label: "hour", short: "h" },
-  { key: "minute", label: "min", short: "min" },
-  { key: "second", label: "sec", short: "s" },
+  {key: "year", label: "year", short: "y"},
+  {key: "month", label: "month", short: "m"},
+  {key: "day", label: "day", short: "d"},
+  {key: "hour", label: "hour", short: "h"},
+  {key: "minute", label: "min", short: "min"},
+  {key: "second", label: "sec", short: "s"},
 ];
 
 const UNIT_ORDER = ["second", "minute", "hour", "day", "month", "year"];
@@ -25,8 +25,10 @@ const props = defineProps<{
   showLabel?: boolean
   value?: number
   hideAnimation?: boolean
+  animationDuration?: number
 }>();
 
+const totalAnimTime = computed(() => props.animationDuration ?? 3000);
 const isCanTick = ref(true);
 const time = ref(0);
 
@@ -70,25 +72,28 @@ function handleTimeChange(targetKey: string) {
   stopTimeouts.forEach(clearTimeout);
   stopTimeouts = [];
 
-  const targetIndex = UNIT_ORDER.indexOf(targetKey);
+  const targetIndex = UNIT_ORDER.indexOf(targetKey); // Số lượng cột sẽ xoay (từ 0 đến targetIndex)
+  const numUnitsToSpin = targetIndex + 1;
+
+  // Chia đều tổng thời gian cho số lượng cột cần xoay
+  const stepDuration = totalAnimTime.value / numUnitsToSpin;
 
   hideLabels.value = true;
 
-  // Reset trạng thái text và spin
   UNITS.forEach(u => {
     diffTexts.value[u.key] = "";
     spinStates.value[u.key] = false;
   });
 
-  // Bật xoay (spin = true) cho cột bị thay đổi và các cột nhỏ hơn
   for (let i = 0; i <= targetIndex; i++) {
     spinStates.value[UNIT_ORDER[i]] = true;
   }
 
-  // Tắt xoay lần lượt từ second -> targetKey
   for (let i = 0; i <= targetIndex; i++) {
     const key = UNIT_ORDER[i];
-    const stopTime = i * 500;
+
+    // stopTime sẽ trải dài từ 0 cho đến totalAnimTime
+    const stopTime = i * stepDuration;
 
     stopTimeouts.push(setTimeout(() => {
       spinStates.value[key] = false;
@@ -96,14 +101,13 @@ function handleTimeChange(targetKey: string) {
       stopTimeouts.push(setTimeout(() => {
         checkAndShowDiff(key);
 
-        // KHI CỘT CUỐI CÙNG XOAY XONG -> MỞ KHÓA TIME
         if (i === targetIndex) {
           startRestoreTimer();
           stopTimeouts.push(setTimeout(() => {
-            isCanTick.value = true; // Cho phép đếm ngược trở lại
+            isCanTick.value = true;
           }, 500));
         }
-      }, 400));
+      }, 400)); // Thời gian chờ để số ổn định sau khi ngừng quay
 
     }, stopTime));
   }
@@ -131,9 +135,9 @@ function showChangedParts(diffMs: number): string {
   const abs = Math.abs(diffMs);
   const sign = diffMs > 0 ? "+" : "-";
   const thresholds = [
-    { key: "year", val: 31536000000 }, { key: "month", val: 2592000000 },
-    { key: "day", val: 864000000 }, { key: "hour", val: 3600000 },
-    { key: "minute", val: 60000 }, { key: "second", val: 1000 }
+    {key: "year", val: 31536000000}, {key: "month", val: 2592000000},
+    {key: "day", val: 864000000}, {key: "hour", val: 3600000},
+    {key: "minute", val: 60000}, {key: "second", val: 1000}
   ];
 
   const target = thresholds.find(t => abs >= t.val) || thresholds[5];
@@ -210,8 +214,8 @@ async function updateClockWithAnimation(newTime: number) {
       <div v-if="props.showLabel" class="label-wrapper">
 
         <Transition name="diff-float">
-          <div v-if="diffTexts[u.key] && props.showLabel" :key="u.key + 'diff'" class="diff-label"
-            :style="{ color: diffTexts[u.key].startsWith('+') ? '#66BC32' : '#E32626' }">
+          <div v-if="diffTexts[u.key] && props.showLabel" :key="u.key + 'diff'" :style="{ color: diffTexts[u.key].startsWith('+') ? '#66BC32' : '#E32626' }"
+               class="diff-label">
             {{ diffTexts[u.key] }}
           </div>
 
@@ -224,7 +228,7 @@ async function updateClockWithAnimation(newTime: number) {
 
       </div>
 
-      <FlipClockItem :value="unitValues[u.key]" :type="u.key" :spin="spinStates[u.key]" />
+      <FlipClockItem :spin="spinStates[u.key]" :type="u.key" :value="unitValues[u.key]"/>
     </div>
   </div>
 </template>
