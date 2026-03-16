@@ -9,12 +9,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@capacitor-community/date-picker": "^7.1.0",
     "@capacitor/android": "^8.0.2",
     "@capacitor/core": "^8.0.2",
     "@capacitor/filesystem": "^8.1.2",
     "@capacitor/preferences": "^8.0.0",
     "@capacitor/share": "^8.0.1",
     "@capacitor/status-bar": "^8.0.1",
+    "@capacitor/toast": "^8.0.1",
     "appsflyer-capacitor-plugin": "^6.17.8",
     "cordova-plugin-applovin-max": "^2.1.0",
     "gplay-app-sdk": "file:../gplay-app-sdk/gplay-app-sdk-0.0.0.tgz",

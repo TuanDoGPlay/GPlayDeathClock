@@ -28,6 +28,8 @@ const bulletRef = ref<HTMLElement | null>(null)
 const manSurpriseRef = ref<HTMLElement | null>(null)
 const manPainRef = ref<HTMLElement | null>(null)
 
+const gunshotAudio = new Audio('/sounds/gunshot.mp3');
+
 // Trạng thái Loading & Progress
 const isSharing = ref(false);
 const progress = ref(0);
@@ -82,14 +84,32 @@ function changeDisplayTime() {
 }
 
 function playShootAnimation() {
+  // 1. Nếu người chơi "trong sạch" (không bị trừ thời gian), bỏ qua hiệu ứng bắn
+  if (questions.value.length === 0) return;
+
+  // 2. Đảm bảo các DOM elements đã sẵn sàng
   if (!gunRef.value || !bulletRef.value || !manSurpriseRef.value || !manPainRef.value) return;
+
+  // 3. Phát tiếng súng (Reset về 0 để hỗ trợ việc click bắn liên thanh)
+  gunshotAudio.currentTime = 0;
+  gunshotAudio.play().catch((e) => {
+    // Catch lỗi Autoplay Policy của trình duyệt nếu người dùng chưa tương tác đủ
+    console.warn('Audio play failed:', e);
+  });
+
+  // 4. Bắt đầu xử lý hoạt ảnh GSAP
+  // Dừng mọi hoạt ảnh cũ nếu người dùng bấm quá nhanh
   gsap.killTweensOf([gunRef.value, bulletRef.value, manSurpriseRef.value, manPainRef.value]);
+
   const tl = gsap.timeline();
+
+  // Trả tất cả các phần tử về trạng thái gốc trước khi bắn
   gsap.set(gunRef.value, {x: 0, y: 0, rotation: 0, yPercent: -50, transformOrigin: "80% 50%"});
   gsap.set(bulletRef.value, {x: 0, y: 0, opacity: 1, yPercent: -50});
   gsap.set(manSurpriseRef.value, {opacity: 1, x: 0, y: 0, yPercent: -50});
   gsap.set(manPainRef.value, {opacity: 0, x: 0, y: 0, yPercent: -50});
 
+  // Hoạt ảnh 1: Khẩu súng giật lùi và nảy lên
   tl.to(gunRef.value, {
     x: -15,
     rotation: -15,
@@ -100,14 +120,18 @@ function playShootAnimation() {
     ease: "power1.out"
   }, 0);
 
+  // Hoạt ảnh 2: Viên đạn bay ngang màn hình
   tl.to(bulletRef.value, {
-    x: "50vw",
+    x: "50vw", // Cự ly bay của đạn
     duration: 0.15,
     ease: "power2.in"
   }, 0)
+      // Khi đạn chạm mục tiêu
       .to(bulletRef.value, {opacity: 0, duration: 0})
       .to(manSurpriseRef.value, {opacity: 0, duration: 0}, "<")
       .to(manPainRef.value, {opacity: 1, duration: 0}, "<")
+
+      // Hoạt ảnh 3: Người bị giật tung lên vì đau
       .to(manPainRef.value, {
         x: 4,
         y: -4,

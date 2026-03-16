@@ -11,6 +11,7 @@ import ButtonComponent from '@/components/button/ButtonComponent.vue'
 import type {UserData} from '@/common/types.ts'
 import {MS_IN_MONTH, MS_IN_YEAR, Utils} from '@/common/utils'
 import {CommonController} from '@/common/controller'
+import {DatePicker} from '@capacitor-community/date-picker';
 
 interface UserDataView {
   name: string
@@ -80,7 +81,6 @@ async function goNextName() {
     return
   }
 
-  await saveUserData()
   activeName.value = '1'
 }
 
@@ -103,8 +103,6 @@ async function goNextDob() {
     return
   }
 
-  await saveUserData()
-
   const yourAge = now.getFullYear() - dobDate.getFullYear()
   const startDate = new Date('2000-01-01T00:00:00')
   const futureDate = new Date(startDate)
@@ -124,7 +122,6 @@ async function goNextHeight() {
   }
 
   userData.value.height = height
-  await saveUserData()
 
   const randomYear = Math.random() * 4 - 2
   let randomTime = randomYear * MS_IN_YEAR
@@ -155,7 +152,6 @@ async function goNextWeight() {
   }
 
   userData.value.weight = weight
-  await saveUserData()
 
   const bmi = Utils.calculateBMI(weight, height)
   let deductedYears = 0
@@ -191,6 +187,16 @@ async function onSelected(field: 'sex' | 'sexualOrientation', option: string) {
     })
   }
 }
+
+async function openDatePicker() {
+  const {value} = await  DatePicker.present({
+    mode: 'date',
+    format: 'dd/MM/yyyy',
+  })
+  if (value) {
+    userData.value.dob = value
+  }
+}
 </script>
 
 <template>
@@ -210,8 +216,9 @@ async function onSelected(field: 'sex' | 'sexualOrientation', option: string) {
 
             <template v-else-if="activeName === '1'">
               <p class="mb-10 text-center font-bold">Enter your date of birth</p>
-              <div class="mb-4 w-2/3">
-                <InputComponent ref="inputRefDob" v-model="userData.dob" type="date"
+              <div class="mb-4 w-2/3"
+                   @click="openDatePicker">
+                <InputComponent ref="inputRefDob" readonly v-model="userData.dob"
                                 @keydown.enter.prevent="goNextDob"/>
               </div>
               <ButtonComponent :icon="Next" icon-right template="primary" text="Next" @click="goNextDob"/>
@@ -221,6 +228,7 @@ async function onSelected(field: 'sex' | 'sexualOrientation', option: string) {
               <p class="mb-10 text-center font-bold">Enter your height (cm)</p>
               <div class="mb-4 w-2/3">
                 <InputComponent ref="inputRefHeight" v-model="userData.height" type="number"
+
                                 @keydown.enter.prevent="goNextHeight"/>
               </div>
               <ButtonComponent :icon="Next" icon-right template="primary" text="Next" @click="goNextHeight"/>

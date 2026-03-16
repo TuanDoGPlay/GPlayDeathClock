@@ -27,8 +27,6 @@ const currentTabIndex = computed(() => {
 onBeforeMount(async () => {
   isFirstVisit.value = await CommonController.getIsFirstVisit();
   console.log("first visit:", isFirstVisit.value);
-
-  await fetchQuestions();
 })
 
 watch(activeName, async (_newVal, oldVal) => {
@@ -77,7 +75,7 @@ function moreQuestions() {
 
     <ContentFrame v-else :current-tab="currentTabIndex" :icon="Question" :total-tab="questions.length + 1" show-back
                   show-pagination-in-title title="Questions" @back="handleBack">
-      <TabComponent v-if="questions.length" v-model="activeName" :dots="true" :swipe="true">
+      <TabComponent  v-model="activeName" :dots="true" :swipe="true">
 
         <TabPane v-for="question in questions" :key="question.id" :name="question.id.toString()">
           <QuestionItem :question="question"
