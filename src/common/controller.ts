@@ -6,6 +6,7 @@ import {
     MissionInstance,
     type QuestionData,
     QuestionInstance,
+    type ReverseClockView,
     type UserData,
 } from "@/common/types.ts";
 import {v4 as uuidv4} from "uuid";
@@ -168,19 +169,29 @@ export const CommonController = {
         return Promise.resolve();
     },
 
-    async getRemainLiveTime(): Promise<number> {
+    async getRemainLiveTime(): Promise<ReverseClockView> {
         const {value} = await Preferences.get({key: REMAINLIVE});
-        const startDate = new Date("2000-01-01T00:00:00");
         if (!value) {
-            const futureDate = new Date(startDate);
-            futureDate.setFullYear(startDate.getFullYear() + 85);
-            await Preferences.set({
-                key: REMAINLIVE,
-                value: futureDate.toISOString(),
+            return Promise.resolve({
+                year: 0,
+                month: 0,
+                day: 0,
+                hour: 0,
+                minute: 0,
+                second: 0,
             });
-            return Promise.resolve(futureDate.getTime());
         }
-        return Promise.resolve(new Date(value).getTime());
+        const deathMoment = new Date(value);
+        const now = new Date();
+
+        return Promise.resolve({
+            year: deathMoment.getFullYear() - now.getFullYear(),
+            month: deathMoment.getMonth() - now.getMonth(),
+            day: deathMoment.getDate() - now.getDate(),
+            hour: deathMoment.getHours() - now.getHours(),
+            minute: deathMoment.getMinutes() - now.getMinutes(),
+            second: deathMoment.getSeconds() - now.getSeconds(),
+        });
     },
 
     async editRemainLiveTime(
@@ -208,19 +219,6 @@ export const CommonController = {
             return Promise.resolve(new Date());
         }
         return Promise.resolve(new Date(value));
-    },
-
-    async editRemainLiveTimeBackground(
-        time: number,
-        isIncrement: boolean = true,
-    ): Promise<void> {
-        const oldRemainLive = await this.getRemainLiveTime();
-        const newTime = isIncrement ? oldRemainLive + time : time;
-        await Preferences.set({
-            key: REMAINLIVE,
-            value: newTime.toString(),
-        });
-        return Promise.resolve();
     },
 
     async getBucketList() {

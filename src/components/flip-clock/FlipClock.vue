@@ -3,6 +3,7 @@ import {computed, onBeforeUnmount, onMounted, ref, watch} from "vue";
 import FlipClockItem from "@/components/flip-clock/FlipClockItem.vue";
 import {EventEnum} from "@/constants/events";
 import {CommonController} from "@/common/controller";
+import type {ReverseClockView} from "@/common/types.ts";
 
 interface UnitConfig {
   key: "year" | "month" | "day" | "hour" | "minute" | "second";
@@ -23,14 +24,16 @@ const UNIT_ORDER = ["second", "minute", "hour", "day", "month", "year"];
 
 const props = defineProps<{
   showLabel?: boolean
-  value?: number
+  value?: ReverseClockView
   hideAnimation?: boolean
   animationDuration?: number
 }>();
 
 const totalAnimTime = computed(() => props.animationDuration ?? 3000);
 const isCanTick = ref(true);
-const time = ref(0);
+const time = ref<ReverseClockView>({
+  year: 0, month: 0, day: 0, hour: 0, minute: 0, second: 0
+});
 
 const hideLabels = ref(false);
 const spinStates = ref<Record<string, boolean>>({
@@ -157,6 +160,7 @@ onMounted(async () => {
     time.value = props.value;
   } else {
     time.value = await CommonController.getRemainLiveTime();
+    console.log(time.value, 'time.value')
     const timer = setInterval(() => {
       if (isCanTick.value) {
         time.value -= 1000;
@@ -214,7 +218,8 @@ async function updateClockWithAnimation(newTime: number) {
       <div v-if="props.showLabel" class="label-wrapper">
 
         <Transition name="diff-float">
-          <div v-if="diffTexts[u.key] && props.showLabel" :key="u.key + 'diff'" :style="{ color: diffTexts[u.key].startsWith('+') ? '#66BC32' : '#E32626' }"
+          <div v-if="diffTexts[u.key] && props.showLabel" :key="u.key + 'diff'"
+               :style="{ color: diffTexts[u.key].startsWith('+') ? '#66BC32' : '#E32626' }"
                class="diff-label">
             {{ diffTexts[u.key] }}
           </div>

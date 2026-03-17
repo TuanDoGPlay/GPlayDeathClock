@@ -89,8 +89,9 @@ async function goNextDob() {
     await showToast({text: 'Please enter your date of birth'})
     return
   }
+  const [day, month, year] = userData.value.dob.split('/');
 
-  const dobDate = new Date(userData.value.dob)
+  const dobDate = new Date(Number(year), Number(month) - 1, Number(day));
   const now = new Date()
 
   if (Number.isNaN(dobDate.getTime())) {
@@ -99,7 +100,7 @@ async function goNextDob() {
   }
 
   if (dobDate > now) {
-    showToast({text: 'Date of birth cannot be in the future'})
+    await showToast({text: 'Date of birth cannot be in the future'})
     return
   }
 

@@ -40,9 +40,8 @@ async function toggleStatus(task: BucketItemData) {
         >
         </CheckboxComponent>
       </div>
-      <div class="flex justify-between w-full">
+      <div class="flex justify-center w-full">
         <ButtonComponent :icon="Add" template="primary" text="Add New" @click="isShowAdd = true"/>
-        <ButtonComponent :icon="ShareArrow" template="primary" text="Share List"/>
       </div>
     </div>
     <AddBucketPopup

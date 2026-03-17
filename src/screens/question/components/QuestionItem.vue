@@ -4,6 +4,7 @@ import type {QuestionInstance} from "@/common/types.ts";
 import InputComponent from "@/components/input/InputComponent.vue";
 import {ref,} from "vue";
 import SliderComponent from "@/components/slider/SliderComponent.vue";
+import Next from "@/assets/icons/next.svg";
 
 const props = defineProps<{
   question: QuestionInstance;
@@ -41,6 +42,8 @@ function handleInput() {
     <div v-else class="w-2/3">
       <InputComponent ref="inputRef" v-model="answer" :type="props.question.type" @input="handleInput"
                       @keydown.enter.prevent="goNext"/>
+      <ButtonComponent :icon="Next" icon-right template="primary" text="Skip" @click="goNext"/>
+
     </div>
   </div>
 </template>
