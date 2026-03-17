@@ -76,11 +76,7 @@ function handleBack() {
 </template>
 
 <style scoped>
-:deep(.share-swiper),
-:deep(.share-swiper .swiper-wrapper),
-:deep(.share-swiper .swiper-slide) {
-  overflow: visible !important;
-}
+
 
 :deep(.share-swiper .swiper-slide.card-slide) {
   width: 35vw;
@@ -92,7 +88,7 @@ function handleBack() {
 }
 
 .card {
-  height: 30vh;
+  height: 90%;
   will-change: transform, opacity;
   transition: transform 450ms ease,
   opacity 450ms ease;
