@@ -93,12 +93,15 @@ async function shareImage() {
         <img alt="" class="absolute w-full h-full object-cover inset-0" src="/templates/save-a-date/bg.png">
         <img alt="" class="absolute  bottom-0 right-0" src="/templates/save-a-date/death.png" style="width: 65%">
         <img alt="" class="absolute bottom-0 left-0" src="/templates/save-a-date/flower.png" style="width: 30%">
-        <div class="text ">
-          <p class="title">SAVE A DATE</p>
-          <p class="date">{{ deathTimeDisplay }}</p>
-        </div>
-        <div class="name ">
-          <p class="">{{ username }} <span style="color: #DB3A3A;">❤</span> Death</p>
+        <div class="text absolute inset-0 flex justify-between flex-col h-full w-full p-2">
+          <div >
+            <p class="title">SAVE A DATE</p>
+            <p class="date">{{ deathTimeDisplay }}</p>
+          </div>
+          <p class="name">{{ username }} <span style="color: #DB3A3A;">❤</span> Death</p>
+          <span class=""></span>
+          <span class=""></span>
+          <span class=""></span>
         </div>
       </div>
       <div class="flex justify-center mt-5">
@@ -125,9 +128,6 @@ async function shareImage() {
 <style scoped>
 .text {
   font-family: "Wittgenstein", serif;
-  position: absolute;
-  top: 1rem;
-  left: 1rem;
   font-weight: bold;
 }
 
@@ -143,9 +143,6 @@ async function shareImage() {
 
 .name {
   font-family: "Wittgenstein", serif;
-  position: absolute;
-  top: 30%;
-  left: 1rem;
   color: white;
   font-size: 1.5rem;
   font-weight: bold;

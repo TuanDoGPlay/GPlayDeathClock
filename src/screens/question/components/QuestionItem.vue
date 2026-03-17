@@ -42,7 +42,7 @@ function handleInput() {
     <div v-else class="w-2/3">
       <InputComponent ref="inputRef" v-model="answer" :type="props.question.type" @input="handleInput"
                       @keydown.enter.prevent="goNext"/>
-      <ButtonComponent :icon="Next" icon-right template="primary" text="Skip" @click="goNext"/>
+      <ButtonComponent :icon="Next" icon-right template="primary" text="Skip" class="mx-auto mt-2" @click="goNext"/>
 
     </div>
   </div>
