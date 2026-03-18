@@ -1,24 +1,25 @@
 <script lang="ts" setup>
 import Question from '@/assets/icons/question.svg'
 import Next from '@/assets/icons/next.svg'
-import {computed, ref} from 'vue'
+import { computed, ref } from 'vue'
 import ContentFrame from '@/components/content-frame/ContentFrame.vue'
-import {goToRouter, showToast} from 'gplay-app-sdk'
+import { goToRouter, showToast } from 'gplay-app-sdk'
 import questions from '@/assets/data/required-questions.json'
 import MoreQuestion from '@/screens/question/components/MoreQuestion.vue'
 import InputComponent from '@/components/input/InputComponent.vue'
 import ButtonComponent from '@/components/button/ButtonComponent.vue'
-import type {UserData} from '@/common/types.ts'
-import {MS_IN_MONTH, MS_IN_YEAR, Utils} from '@/common/utils'
-import {CommonController} from '@/common/controller'
-import {DatePicker} from '@capacitor-community/date-picker';
+import type { UserData } from '@/common/types.ts'
+import { MS_IN_MONTH, MS_IN_YEAR, Utils } from '@/common/utils'
+import { CommonController } from '@/common/controller'
+import { DatePicker } from '@capacitor-community/date-picker';
+import SliderCarouselComponent from '@/components/carousel/SliderCarouselComponent.vue'
 
 interface UserDataView {
   name: string
   dob: string
   sex: string
-  height?: number
-  weight?: number
+  height: number
+  weight: number
   sexualOrientation: string
   remainTime?: number
 }
@@ -31,8 +32,8 @@ const userData = ref<UserDataView>({
   name: '',
   dob: '',
   sex: '',
-  height: undefined,
-  weight: undefined,
+  height: 160,
+  weight: 50,
   sexualOrientation: '',
   remainTime: undefined,
 })
@@ -59,7 +60,7 @@ const currentTabIndex = computed(() => {
 })
 
 function handleBack() {
-  goToRouter({name: 'home'})
+  goToRouter({ name: 'home' })
 }
 
 async function saveUserData() {
@@ -77,7 +78,7 @@ async function saveUserData() {
 
 async function goNextName() {
   if (!userData.value.name.trim()) {
-    await showToast({text: 'Please enter your name'})
+    await showToast({ text: 'Please enter your name' })
     return
   }
 
@@ -85,22 +86,22 @@ async function goNextName() {
 }
 
 async function goNextDob() {
-  if (!userData.value.dob) {
-    await showToast({text: 'Please enter your date of birth'})
-    return
-  }
+  // if (!userData.value.dob) {
+  //   await showToast({ text: 'Please enter your date of birth' })
+  //   return
+  // }
   const [day, month, year] = userData.value.dob.split('/');
 
   const dobDate = new Date(Number(year), Number(month) - 1, Number(day));
   const now = new Date()
 
   if (Number.isNaN(dobDate.getTime())) {
-    await showToast({text: 'Invalid date of birth'})
+    await showToast({ text: 'Invalid date of birth' })
     return
   }
 
   if (dobDate > now) {
-    await showToast({text: 'Date of birth cannot be in the future'})
+    await showToast({ text: 'Date of birth cannot be in the future' })
     return
   }
 
@@ -118,7 +119,7 @@ async function goNextHeight() {
   const height = Number(userData.value.height)
 
   if (!height) {
-    await showToast({text: 'Please enter your height'})
+    await showToast({ text: 'Please enter your height' })
     return
   }
 
@@ -143,12 +144,12 @@ async function goNextWeight() {
   const height = Number(userData.value.height)
 
   if (!weight) {
-    await showToast({text: 'Please enter your weight'})
+    await showToast({ text: 'Please enter your weight' })
     return
   }
 
   if (!height) {
-    await showToast({text: 'Missing height'})
+    await showToast({ text: 'Missing height' })
     return
   }
 
@@ -190,7 +191,7 @@ async function onSelected(field: 'sex' | 'sexualOrientation', option: string) {
 }
 
 async function openDatePicker() {
-  const {value} = await  DatePicker.present({
+  const { value } = await DatePicker.present({
     mode: 'date',
     format: 'dd/MM/yyyy',
   })
@@ -203,52 +204,49 @@ async function openDatePicker() {
 <template>
   <div class="h-full overflow-hidden">
     <ContentFrame :current-tab="currentTabIndex" :icon="Question" :total-tab="questions.length + 1" show-back
-                  show-pagination-in-title title="Questions" @back="handleBack">
+      show-pagination-in-title title="Questions" @back="handleBack">
       <div class="relative h-full w-full overflow-hidden">
         <Transition mode="out-in" name="question-slide">
           <div :key="activeName" class="step-section">
             <template v-if="activeName === '0'">
               <p class="mb-10 text-center font-bold">What is your name?</p>
               <div class="mb-4 w-2/3">
-                <InputComponent ref="inputRefName" v-model="userData.name" @keydown.enter.prevent="goNextName"/>
+                <InputComponent ref="inputRefName" v-model="userData.name" @keydown.enter.prevent="goNextName" />
               </div>
-              <ButtonComponent :icon="Next" icon-right template="primary" text="Next" @click="goNextName"/>
+              <ButtonComponent :icon="Next" icon-right template="primary" text="Next" @click="goNextName" />
             </template>
 
             <template v-else-if="activeName === '1'">
               <p class="mb-10 text-center font-bold">Enter your date of birth</p>
-              <div class="mb-4 w-2/3"
-                   @click="openDatePicker">
-                <InputComponent ref="inputRefDob" readonly v-model="userData.dob"
-                                @keydown.enter.prevent="goNextDob"/>
+              <div class="mb-4 w-2/3" @click="openDatePicker">
+                <InputComponent ref="inputRefDob" readonly v-model="userData.dob" @keydown.enter.prevent="goNextDob" />
               </div>
-              <ButtonComponent :icon="Next" icon-right template="primary" text="Next" @click="goNextDob"/>
+              <ButtonComponent :icon="Next" icon-right template="primary" text="Next" @click="goNextDob" />
             </template>
 
             <template v-else-if="activeName === '2'">
               <p class="mb-10 text-center font-bold">Enter your height (cm)</p>
               <div class="mb-4 w-2/3">
-                <InputComponent ref="inputRefHeight" v-model="userData.height" type="number"
-
-                                @keydown.enter.prevent="goNextHeight"/>
+                <SliderCarouselComponent ref="inputRefHeight" v-model="userData.height" :min="120" :max="200"
+                  :step="1" />
               </div>
-              <ButtonComponent :icon="Next" icon-right template="primary" text="Next" @click="goNextHeight"/>
+              <ButtonComponent :icon="Next" icon-right template="primary" text="Next" @click="goNextHeight" />
             </template>
 
             <template v-else-if="activeName === '3'">
               <p class="mb-10 text-center font-bold">Enter your current weight (kg)</p>
               <div class="mb-4 w-2/3">
-                <InputComponent ref="inputRefWeight" v-model="userData.weight" type="number"
-                                @keydown.enter.prevent="goNextWeight"/>
+                <SliderCarouselComponent ref="inputRefWeight" v-model="userData.weight" :min="40" :max="200"
+                  :step="1" />
               </div>
-              <ButtonComponent :icon="Next" icon-right template="primary" text="Next" @click="goNextWeight"/>
+              <ButtonComponent :icon="Next" icon-right template="primary" text="Next" @click="goNextWeight" />
             </template>
 
             <template v-else-if="activeName === '4'">
               <p class="mb-10 text-center font-bold">What is your biological sex?</p>
               <div class="flex w-full flex-col items-center">
                 <ButtonComponent v-for="option in ['Male', 'Female', 'Other']" :key="option" :text="option" class="mt-3"
-                                 style="width: 80%" template="primary" @click="onSelected('sex', option)"/>
+                  style="width: 80%" template="primary" @click="onSelected('sex', option)" />
               </div>
             </template>
 
@@ -256,13 +254,13 @@ async function openDatePicker() {
               <p class="mb-10 text-center font-bold">What is your sexual orientation?</p>
               <div class="flex w-full flex-col items-center">
                 <ButtonComponent v-for="option in ['Straight', 'Homosexual', 'Bisexual', 'Other']" :key="option"
-                                 :text="option" class="mt-3" style="width: 80%" template="primary"
-                                 @click="onSelected('sexualOrientation', option)"/>
+                  :text="option" class="mt-3" style="width: 80%" template="primary"
+                  @click="onSelected('sexualOrientation', option)" />
               </div>
             </template>
 
             <template v-else-if="activeName === 'more'">
-              <MoreQuestion @more="emit('more')"/>
+              <MoreQuestion @more="emit('more')" />
             </template>
           </div>
         </Transition>
