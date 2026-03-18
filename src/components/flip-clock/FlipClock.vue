@@ -30,7 +30,7 @@ const props = defineProps<{
   animationDuration?: number
 }>();
 
-const totalAnimTime = computed(() => props.animationDuration ?? 0);
+const totalAnimTime = computed(() => props.animationDuration ?? 1000);
 const isCanTick = ref(true);
 const time = ref(0);
 
@@ -44,17 +44,19 @@ const spinStates = ref<Record<string, boolean>>({
 });
 const diffTexts = ref<Record<any, string>>({
   year: "", month: "", day: "", hour: "", minute: "", second: ""
+
+
 });
 const pendingDiffTexts = ref<Record<string, string>>({
   year: "", month: "", day: "", hour: "", minute: "", second: ""
 });
 
 const unitValues = computed((): ReverseClockView => {
-  const year = Utils.formatNumber(time.value / MS_IN_YEAR, 2);
-  const month = Utils.formatNumber((time.value % MS_IN_YEAR) / MS_IN_MONTH, 2);
-  const day = Utils.formatNumber((time.value % MS_IN_MONTH) / MS_IN_DAY, 2);
-  const hour = Utils.formatNumber((time.value % MS_IN_DAY) / MS_IN_HOUR, 2);
-  const minute = Utils.formatNumber((time.value % MS_IN_HOUR) / MS_IN_MINUTE, 2);
+  const year = Utils.formatNumber(time.value / MS_IN_YEAR, 0);
+  const month = Utils.formatNumber((time.value % MS_IN_YEAR) / MS_IN_MONTH, 0);
+  const day = Utils.formatNumber((time.value % MS_IN_MONTH) / MS_IN_DAY, 0);
+  const hour = Utils.formatNumber((time.value % MS_IN_DAY) / MS_IN_HOUR, 0);
+  const minute = Utils.formatNumber((time.value % MS_IN_HOUR) / MS_IN_MINUTE, 0);
   const second = Utils.formatNumber((time.value % MS_IN_MINUTE) / MS_IN_SECOND, 0);
   return {
     second,
@@ -68,52 +70,55 @@ const unitValues = computed((): ReverseClockView => {
 
 let stopTimeouts: any[] = [];
 let restoreTimeout: any = null;
-
-function handleTimeChange(targetKey: string) {
+function handleTimeChange(
+  targetKey: string,
+) {
   stopTimeouts.forEach(clearTimeout);
   stopTimeouts = [];
 
-  const targetIndex = UNIT_ORDER.indexOf(targetKey);
   hideLabels.value = true;
+
+  const changedIndex = UNIT_ORDER.indexOf(targetKey);
 
   UNITS.forEach(u => {
     diffTexts.value[u.key] = "";
     spinStates.value[u.key] = false;
-
-    // Tính toán tốc độ dựa trên vị trí cột
-    // Cột đơn vị càng lớn (Year) quay càng nhanh để tạo hiệu ứng thị giác mạnh
-    const idx = UNIT_ORDER.indexOf(u.key);
-    spinSpeeds.value[u.key] = 20 + (idx * 100); // Ví dụ: second=20, year=95
+    spinSpeeds.value[u.key] = 0;
   });
 
-  // 1. Kích hoạt spin đồng loạt
-  for (let i = 0; i <= targetIndex; i++) {
-    spinStates.value[UNIT_ORDER[i]!] = true;
-  }
+  if (changedIndex === -1) return;
 
-  // 2. Thiết lập mốc dừng duy nhất
+  UNITS.forEach(u => {
+    const idx = UNIT_ORDER.indexOf(u.key);
+
+    if (idx <= changedIndex) {
+      spinStates.value[u.key] = false;
+      spinSpeeds.value[u.key] = 0;
+    } else {
+      const level = idx - changedIndex;
+      spinStates.value[u.key] = true;
+      spinSpeeds.value[u.key] = 20 * level;
+    }
+  });
+
   const stopTime = totalAnimTime.value;
 
-  for (let i = 0; i <= targetIndex; i++) {
-    const key = UNIT_ORDER[i];
+  for (let i = changedIndex + 1; i < UNIT_ORDER.length; i++) {
+    const key = UNIT_ORDER[i]!;
 
-    // Tất cả setTimeout dừng đều sử dụng chung biến 'stopTime'
     stopTimeouts.push(setTimeout(() => {
-      spinStates.value[key!] = false;
+      spinStates.value[key] = false;
 
-      // Đợi hiệu ứng settle (rung khực) của component con hoàn tất
       stopTimeouts.push(setTimeout(() => {
-        checkAndShowDiff(key!);
+        checkAndShowDiff(key);
 
-        // Chỉ chạy logic dọn dẹp ở cột cuối cùng (targetKey)
-        if (key === targetKey) {
+        if (i === UNIT_ORDER.length - 1) {
           startRestoreTimer();
           stopTimeouts.push(setTimeout(() => {
             isCanTick.value = true;
           }, 500));
         }
-      }, 550)); // Tăng lên 550ms để khớp với duration phanh 500ms của con
-
+      }, 550));
     }, stopTime));
   }
 }

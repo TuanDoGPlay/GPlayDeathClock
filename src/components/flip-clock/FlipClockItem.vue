@@ -155,7 +155,7 @@ function startInfiniteSpin() {
     lastTime = time;
 
     const currentSpeed = props.spinSpeed ?? 30;
-    console.log('spinSpeed', props.spinSpeed);
+    console.log('spinSpeed', props.type, props.spinSpeed);
 
     visualIndex.value += currentSpeed * dt;
 
