@@ -6,7 +6,6 @@ import {
     MissionInstance,
     type QuestionData,
     QuestionInstance,
-    type ReverseClockView,
     type UserData,
 } from "@/common/types.ts";
 import {v4 as uuidv4} from "uuid";
@@ -169,29 +168,15 @@ export const CommonController = {
         return Promise.resolve();
     },
 
-    async getRemainLiveTime(): Promise<ReverseClockView> {
+    async getRemainLiveTime(): Promise<number> {
         const {value} = await Preferences.get({key: REMAINLIVE});
         if (!value) {
-            return Promise.resolve({
-                year: 0,
-                month: 0,
-                day: 0,
-                hour: 0,
-                minute: 0,
-                second: 0,
-            });
+            return Promise.resolve(0);
         }
         const deathMoment = new Date(value);
         const now = new Date();
-
-        return Promise.resolve({
-            year: deathMoment.getFullYear() - now.getFullYear(),
-            month: deathMoment.getMonth() - now.getMonth(),
-            day: deathMoment.getDate() - now.getDate(),
-            hour: deathMoment.getHours() - now.getHours(),
-            minute: deathMoment.getMinutes() - now.getMinutes(),
-            second: deathMoment.getSeconds() - now.getSeconds(),
-        });
+        const diff = deathMoment.getTime() - now.getTime();
+        return Promise.resolve(diff);
     },
 
     async editRemainLiveTime(

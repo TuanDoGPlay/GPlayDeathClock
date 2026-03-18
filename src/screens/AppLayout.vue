@@ -112,11 +112,11 @@ async function goToShareClock() {
       isShowClock ? 'max-h-[50vh]' : 'max-h-0',
       isFirstVisit ? 'mt-60' : ''
     ]" class="w-full overflow-hidden z-[100]" style="transition: all 1s ease">
-      <div class="flex flex-col items-center">
+      <div class="flex flex-col items-center w-full">
 
         <div ref="clockWrapper" :class="{ 'opacity-0': isFirstVisit, 'opacity-100': !isFirstVisit }"
-             class="transition-opacity">
-          <FlipClock :show-label="!isFirstVisit" :spin="isClockSpin" :value="initIntroValue"/>
+             class="transition-opacity w-full">
+          <FlipClock :show-label="!isFirstVisit" :spin="isClockSpin" class="w-full"/>
         </div>
 
         <div :class="{ 'opacity-0 pointer-events-none': isFirstVisit, 'opacity-100': !isFirstVisit }"

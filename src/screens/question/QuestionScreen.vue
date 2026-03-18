@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import Question from '@/assets/icons/question.svg'
-import {computed, onBeforeMount, ref, watch} from "vue";
+import {computed, nextTick, onBeforeMount, ref, watch} from "vue";
 import ContentFrame from "@/components/content-frame/ContentFrame.vue";
 import {goToRouter} from "gplay-app-sdk";
 import QuestionItem from "@/screens/question/components/QuestionItem.vue";
@@ -10,7 +10,6 @@ import TabPane from "@/components/tab/TabPane.vue";
 import type {QuestionInstance} from "@/common/types.ts";
 import {CommonController} from "@/common/controller.ts";
 import DefaultQuestions from "@/screens/question/components/DefaultQuestions.vue";
-import {EventEnum} from '@/constants/events';
 
 const questions = ref<QuestionInstance[]>([])
 const answers = ref<Record<string, any>>({}) // key: questionId (string)
@@ -47,6 +46,7 @@ watch(activeName, async (_newVal, oldVal) => {
 
 async function fetchQuestions() {
   questions.value = await CommonController.getQuestions();
+  await nextTick();
   activeName.value = questions.value[0]?.id.toString() || ""
 }
 
@@ -75,7 +75,7 @@ function moreQuestions() {
 
     <ContentFrame v-else :current-tab="currentTabIndex" :icon="Question" :total-tab="questions.length + 1" show-back
                   show-pagination-in-title title="Questions" @back="handleBack">
-      <TabComponent  v-model="activeName" :dots="true" :swipe="true">
+      <TabComponent v-model="activeName" :dots="true" :swipe="true">
 
         <TabPane v-for="question in questions" :key="question.id" :name="question.id.toString()">
           <QuestionItem :question="question"

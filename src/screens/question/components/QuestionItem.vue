@@ -29,8 +29,8 @@ function handleInput() {
 </script>
 
 <template>
-  <div class="flex flex-col gap-3 items-center justify-center h-full pb-10 overflow-y-auto">
-    <p class="font-bold text-center mb-10 mx-3">{{ props.question.question }}</p>
+  <div class="flex flex-col items-center justify-around h-full overflow-y-auto py-5">
+    <p class="font-bold text-center mx-3">{{ props.question.question }}</p>
     <div v-if="props.question.type == 'select'" class="w-full">
       <ButtonComponent v-for="option in props.question.options" :text="option" class="mt-3 mx-auto" style="width: 80%"
                        template="primary" @click="onSelected(option)"/>

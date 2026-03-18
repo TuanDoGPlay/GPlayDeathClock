@@ -8,6 +8,7 @@ const props = defineProps<{
   scaleMid?: number;
   scaleFar?: number;
   spin?: boolean;
+  spinSpeed?: number
 }>();
 
 const start = ref(0);
@@ -15,18 +16,18 @@ const end = ref(99);
 
 function fetchStartEnd() {
   if (props.type === "year") {
-    start.value = 1;
+    start.value = 0;
     end.value = 99;
     return;
   }
   if (props.type === "month") {
-    start.value = 1;
-    end.value = 12;
+    start.value = 0;
+    end.value = 11;
     return;
   }
   if (props.type === "day") {
-    start.value = 1;
-    end.value = 31;
+    start.value = 0;
+    end.value = 30;
     return;
   }
   if (props.type === "hour") {
@@ -80,32 +81,19 @@ function getItemHeightPx(fromEl: HTMLElement) {
   return remToPx(parseFloat(raw));
 }
 
-function calculateSteps(prev: number, next: number, min: number, max: number) {
-  const size = max - min + 1;
-  let diff = next - prev;
-
-  if (diff > size / 2) diff -= size;
-  if (diff < -size / 2) diff += size;
-
-  return diff;
-}
-
 const visualIndex = ref(0);
 let lastValue: number | null = null;
 
 const isSpinningClass = ref(false);
 let isInfiniteSpinning = false;
 let animationFrameId: number | null = null;
-const SPIN_SPEED = 30; // Tốc độ quay liên tục
-
-// ✅ Biến điều khiển rung "khực" khi dừng lại
 const isImpact = ref(false);
 
 function triggerHeavyImpact() {
   isImpact.value = true;
   setTimeout(() => {
     isImpact.value = false;
-  }, 400); // Rung trong 400ms
+  }, 400);
 }
 
 function computeYByIndex(idx: number, windowEl: HTMLElement) {
@@ -128,8 +116,6 @@ function setTransformByIndex(idx: number, withTransition: boolean) {
     track.style.transition = "";
     return;
   }
-
-  // Chuyển động bình thường êm ái
   track.style.transform = `translateY(${y}px)`;
 }
 
@@ -157,8 +143,6 @@ function onTransitionEnd(e: TransitionEvent) {
   checkWrapAround();
 }
 
-/** * QUAY VÔ TẬN: Chạy liên tục khi spin = true 
- */
 function startInfiniteSpin() {
   if (isInfiniteSpinning) return;
   isInfiniteSpinning = true;
@@ -170,7 +154,10 @@ function startInfiniteSpin() {
     const dt = (time - lastTime) / 1000;
     lastTime = time;
 
-    visualIndex.value += SPIN_SPEED * dt;
+    const currentSpeed = props.spinSpeed ?? 30;
+    console.log('spinSpeed', props.spinSpeed);
+
+    visualIndex.value += currentSpeed * dt;
 
     const size = end.value - start.value + 1;
     while (visualIndex.value >= 2 * size) {
@@ -185,26 +172,25 @@ function startInfiniteSpin() {
   animationFrameId = requestAnimationFrame(loop);
 }
 
-/** * DỪNG QUAY VÀ ĐÓNG KHỰC: Gọi khi spin = false
- */
 function stopSpinAndSettle(targetVal: number | undefined) {
   isInfiniteSpinning = false;
-  if (targetVal == null) targetVal = start.value;
+
+  if (targetVal == null) {
+    targetVal = start.value;
+  }
 
   const size = end.value - start.value + 1;
   const v = clamp(targetVal, start.value, end.value);
   const baseIdx = v - start.value;
 
   let targetLog = Math.floor(visualIndex.value / size) * size + baseIdx;
+
   while (targetLog <= visualIndex.value) {
     targetLog += size;
   }
-  targetLog += size; // 1 vòng đà phanh
 
   const startLog = visualIndex.value;
   const startTime = performance.now();
-
-  // Rút ngắn thời gian để lực phanh mạnh hơn
   const duration = 500;
 
   function step(time: number) {
@@ -212,18 +198,15 @@ function stopSpinAndSettle(targetVal: number | undefined) {
     let progress = elapsed / duration;
     if (progress >= 1) progress = 1;
 
-    // ✅ Gia tốc cơ học bạo lực (Ease-Out-Back mạnh)
-    // Nó sẽ trượt qua điểm đích một chút rồi nảy giật ngược lại cái cạch
     const c1 = 2.5;
     const ease = 1 + (c1 + 1) * Math.pow(progress - 1, 3) + c1 * Math.pow(progress - 1, 2);
-
     const currentLogical = startLog + (targetLog - startLog) * ease;
 
     let vIndex = currentLogical;
     while (vIndex >= 2 * size) vIndex -= size;
-    while (vIndex < 0) vIndex += size; // Đề phòng overshoot lùi quá sâu
-    visualIndex.value = vIndex;
+    while (vIndex < 0) vIndex += size;
 
+    visualIndex.value = vIndex;
     setTransformByIndex(visualIndex.value, false);
 
     if (progress < 1) {
@@ -233,11 +216,14 @@ function stopSpinAndSettle(targetVal: number | undefined) {
       isSpinningClass.value = false;
       lastValue = v;
       checkWrapAround();
-      triggerHeavyImpact(); // ✅ Bắn class CSS tạo hiệu ứng rung "khực"
+      triggerHeavyImpact();
     }
   }
 
-  if (animationFrameId !== null) cancelAnimationFrame(animationFrameId);
+  if (animationFrameId !== null) {
+    cancelAnimationFrame(animationFrameId);
+  }
+
   animationFrameId = requestAnimationFrame(step);
 }
 
@@ -255,24 +241,34 @@ async function goTo(val: number) {
 
   const v = clamp(val, start.value, end.value);
   const baseIdx = v - start.value;
-  const baseIntIdx = Math.floor(baseIdx);
-  const frac = baseIdx - baseIntIdx;
 
   if (lastValue == null) {
-    visualIndex.value = baseIntIdx + size + frac;
+    visualIndex.value = baseIdx + size;
     setTransformByIndex(visualIndex.value, false);
-    lastValue = baseIntIdx + start.value;
+    lastValue = v;
     return;
   }
 
-  const nextIntValue = baseIntIdx + start.value;
-  const steps = calculateSteps(lastValue, nextIntValue, start.value, end.value);
-  const currentIntVisual = Math.floor(visualIndex.value);
+  const candidates = [
+    baseIdx,
+    baseIdx + size,
+    baseIdx + size * 2,
+  ];
 
-  visualIndex.value = (currentIntVisual + steps) + frac;
+  let best = candidates[0];
+  let bestDist = Math.abs(candidates[0]! - visualIndex.value);
 
-  setTransformByIndex(visualIndex.value, true); // ✅ Cuộn êm ái bằng CSS
-  lastValue = nextIntValue;
+  for (let i = 1; i < candidates.length; i++) {
+    const dist = Math.abs(candidates[i]! - visualIndex.value);
+    if (dist < bestDist) {
+      best = candidates[i];
+      bestDist = dist;
+    }
+  }
+
+  visualIndex.value = best!;
+  setTransformByIndex(visualIndex.value, true);
+  lastValue = v;
 }
 
 const sizeC = computed(() => end.value - start.value + 1);
@@ -292,7 +288,7 @@ function itemStyle(i: number) {
   const s = sizeC.value;
   if (s <= 0) return {};
 
-  const center = normIndex(Math.round(visualIndex.value));
+  const center = normIndex(Math.floor(visualIndex.value));
   const cur = normIndex(i);
   const dist = circularDist(cur, center, s);
 
@@ -303,14 +299,14 @@ function itemStyle(i: number) {
     scale = 1;
     opacity = 1;
   } else if (dist === 1) {
-    scale = props.scaleNear ?? 0.8;
-    opacity = 0.8;
+    scale = props.scaleNear ?? 0.6;
+    opacity = 0.6;
   } else if (dist === 2) {
-    scale = props.scaleMid ?? 0.6;
+    scale = props.scaleMid ?? 0.5;
     opacity = 0.5;
   } else {
-    scale = props.scaleFar ?? 0.4;
-    opacity = 0.2;
+    scale = props.scaleFar ?? 0.3;
+    opacity = 0;
   }
 
   return {
@@ -371,9 +367,6 @@ watch(
         <p v-for="(n, i) in numbers" :key="`${n}-copy1-${i}`" :style="itemStyle(i)">
           {{ n }}
         </p>
-        <p v-for="(n, i) in numbers" :key="`${n}-copy1-${i}`" :style="itemStyle(i)">
-          {{ n }}
-        </p>
       </div>
     </div>
   </div>
@@ -398,7 +391,6 @@ watch(
     inset 0 -0.8rem 0.6rem rgba(0, 0, 0, 0.4);
 }
 
-/* ✅ Hiệu ứng đóng "khực" cực mạnh giống ngàm đá sập vào */
 @keyframes stone-impact {
   0% {
     transform: translateY(0);
@@ -433,16 +425,12 @@ watch(
   display: flex;
   flex-direction: column;
   align-items: center;
-
   font-weight: bold;
   font-size: 2.2rem;
   color: white;
-
-  /* CHUYỂN ĐỘNG BÌNH THƯỜNG (GoTo): Êm ái, mượt mà */
   transition: transform 520ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Tắt CSS khi Spin để chạy JS 60FPS */
 .clock-track.is-spinning {
   transition: none !important;
 }
@@ -452,7 +440,6 @@ watch(
   line-height: var(--item-h);
   margin: 0;
   padding: 0 1rem;
-
   transform-origin: center;
   transition: transform 520ms cubic-bezier(0.16, 1, 0.3, 1),
     opacity 520ms cubic-bezier(0.16, 1, 0.3, 1);

@@ -30,9 +30,11 @@ function handleShareClock() {
 </script>
 
 <template>
-  <div class="flex flex-col gap-3 items-center w-full h-full py-10">
-    <p class="font-bold text-center ">Do you want more questions?</p>
-    <p class="text-center mb-10 mx-3">More questions give better accuracy clock</p>
+  <div class="flex flex-col items-center justify-around w-full h-full overflow-y-auto" style="max-height: 30vh">
+    <div>
+      <p class="font-bold text-center ">Do you want more questions?</p>
+      <p class="text-center mx-3">More questions give better accuracy clock</p>
+    </div>
     <div class="flex justify-center gap-1.5">
       <ButtonComponent :icon="Add" show-ad-tag template="primary" text="Ten more" @click="handleAddMore"/>
       <ButtonComponent :icon="Share" template="primary" text="Share Clock" @click="handleShareClock"/>
