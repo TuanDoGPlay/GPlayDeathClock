@@ -7,13 +7,13 @@ const props = defineProps<{
   scaleNear?: number;
   scaleMid?: number;
   scaleFar?: number;
-  spin?: boolean;
   spinSpeed?: number
+  spin?: boolean
 }>();
 
 const start = ref(0);
 const end = ref(99);
-
+const animDuration = computed(() => (props.spin ? '1000ms' : '520ms'));
 function fetchStartEnd() {
   if (props.type === "year") {
     start.value = 0;
@@ -84,18 +84,6 @@ function getItemHeightPx(fromEl: HTMLElement) {
 const visualIndex = ref(0);
 let lastValue: number | null = null;
 
-const isSpinningClass = ref(false);
-let isInfiniteSpinning = false;
-let animationFrameId: number | null = null;
-const isImpact = ref(false);
-
-function triggerHeavyImpact() {
-  isImpact.value = true;
-  setTimeout(() => {
-    isImpact.value = false;
-  }, 400);
-}
-
 function computeYByIndex(idx: number, windowEl: HTMLElement) {
   const itemH = getItemHeightPx(windowEl);
   const windowH = windowEl.getBoundingClientRect().height;
@@ -142,94 +130,7 @@ function onTransitionEnd(e: TransitionEvent) {
   if (e.propertyName !== "transform") return;
   checkWrapAround();
 }
-
-function startInfiniteSpin() {
-  if (isInfiniteSpinning) return;
-  isInfiniteSpinning = true;
-  isSpinningClass.value = true;
-  let lastTime = performance.now();
-
-  function loop(time: number) {
-    if (!isInfiniteSpinning) return;
-    const dt = (time - lastTime) / 1000;
-    lastTime = time;
-
-    const currentSpeed = props.spinSpeed ?? 30;
-    console.log('spinSpeed', props.type, props.spinSpeed);
-
-    visualIndex.value += currentSpeed * dt;
-
-    const size = end.value - start.value + 1;
-    while (visualIndex.value >= 2 * size) {
-      visualIndex.value -= size;
-    }
-
-    setTransformByIndex(visualIndex.value, false);
-    animationFrameId = requestAnimationFrame(loop);
-  }
-
-  if (animationFrameId !== null) cancelAnimationFrame(animationFrameId);
-  animationFrameId = requestAnimationFrame(loop);
-}
-
-function stopSpinAndSettle(targetVal: number | undefined) {
-  isInfiniteSpinning = false;
-
-  if (targetVal == null) {
-    targetVal = start.value;
-  }
-
-  const size = end.value - start.value + 1;
-  const v = clamp(targetVal, start.value, end.value);
-  const baseIdx = v - start.value;
-
-  let targetLog = Math.floor(visualIndex.value / size) * size + baseIdx;
-
-  while (targetLog <= visualIndex.value) {
-    targetLog += size;
-  }
-
-  const startLog = visualIndex.value;
-  const startTime = performance.now();
-  const duration = 500;
-
-  function step(time: number) {
-    const elapsed = time - startTime;
-    let progress = elapsed / duration;
-    if (progress >= 1) progress = 1;
-
-    const c1 = 2.5;
-    const ease = 1 + (c1 + 1) * Math.pow(progress - 1, 3) + c1 * Math.pow(progress - 1, 2);
-    const currentLogical = startLog + (targetLog - startLog) * ease;
-
-    let vIndex = currentLogical;
-    while (vIndex >= 2 * size) vIndex -= size;
-    while (vIndex < 0) vIndex += size;
-
-    visualIndex.value = vIndex;
-    setTransformByIndex(visualIndex.value, false);
-
-    if (progress < 1) {
-      animationFrameId = requestAnimationFrame(step);
-    } else {
-      animationFrameId = null;
-      isSpinningClass.value = false;
-      lastValue = v;
-      checkWrapAround();
-      triggerHeavyImpact();
-    }
-  }
-
-  if (animationFrameId !== null) {
-    cancelAnimationFrame(animationFrameId);
-  }
-
-  animationFrameId = requestAnimationFrame(step);
-}
-
 async function goTo(val: number) {
-  if (props.spin || isInfiniteSpinning) return;
-
   await nextTick();
 
   const size = end.value - start.value + 1;
@@ -248,29 +149,45 @@ async function goTo(val: number) {
     lastValue = v;
     return;
   }
+  const currentVis = visualIndex.value;
+  const cycle = Math.floor(currentVis / size);
 
   const candidates = [
-    baseIdx,
-    baseIdx + size,
-    baseIdx + size * 2,
+    (cycle - 1) * size + baseIdx,
+    cycle * size + baseIdx,
+    (cycle + 1) * size + baseIdx,
   ];
 
-  let best = candidates[0];
-  let bestDist = Math.abs(candidates[0]! - visualIndex.value);
+  let best;
 
-  for (let i = 1; i < candidates.length; i++) {
-    const dist = Math.abs(candidates[i]! - visualIndex.value);
-    if (dist < bestDist) {
-      best = candidates[i];
-      bestDist = dist;
+  // ---> BẮT ĐẦU VIẾT LOGIC SPIN Ở ĐÂY <---
+  if (props.spin && props.spinSpeed && props.spinSpeed > 0) {
+
+    // 1. Tìm vị trí bến đỗ gần nhất nhưng bắt buộc phải ở phía trước (lớn hơn hoặc bằng vị trí hiện tại)
+    // Dùng mảng candidates có sẵn để tìm
+    const forwardBase = candidates.find(c => c >= currentVis) ?? candidates[1];
+
+    // 2. Cộng dồn số vòng quay mong muốn (mỗi vòng = size)
+    best = forwardBase + (props.spinSpeed * size);
+
+  } else {
+    // --- LOGIC TÌM QUÃNG ĐƯỜNG NGẮN NHẤT CŨ SẼ NẰM TRONG CÂU LỆNH ELSE ---
+    best = candidates[0];
+    let bestDist = Math.abs(candidates[0] - currentVis);
+
+    for (let i = 1; i < candidates.length; i++) {
+      const dist = Math.abs(candidates[i] - currentVis);
+      if (dist < bestDist) {
+        best = candidates[i];
+        bestDist = dist;
+      }
     }
   }
 
-  visualIndex.value = best!;
+  visualIndex.value = best;
   setTransformByIndex(visualIndex.value, true);
   lastValue = v;
 }
-
 const sizeC = computed(() => end.value - start.value + 1);
 
 function normIndex(i: number) {
@@ -299,14 +216,14 @@ function itemStyle(i: number) {
     scale = 1;
     opacity = 1;
   } else if (dist === 1) {
-    scale = props.scaleNear ?? 0.6;
+    scale = 0.6
     opacity = 0.6;
   } else if (dist === 2) {
-    scale = props.scaleMid ?? 0.5;
-    opacity = 0.5;
+    scale = 0.6;
+    opacity = 0.6;
   } else {
-    scale = props.scaleFar ?? 0.3;
-    opacity = 0;
+    scale = 0.6
+    opacity = 0.6;
   }
 
   return {
@@ -318,36 +235,19 @@ function itemStyle(i: number) {
 onMounted(async () => {
   fetchStartEnd();
   trackRef.value?.addEventListener("transitionend", onTransitionEnd);
-
-  if (props.spin) {
-    startInfiniteSpin();
-  } else {
-    await goTo(props.value ?? start.value);
-  }
+  await goTo(props.value ?? start.value);
 });
 
 onBeforeUnmount(() => {
   trackRef.value?.removeEventListener("transitionend", onTransitionEnd);
-  if (animationFrameId !== null) cancelAnimationFrame(animationFrameId);
 });
-
-watch(
-  () => props.spin,
-  (isSpinningNow) => {
-    if (isSpinningNow) {
-      startInfiniteSpin();
-    } else {
-      stopSpinAndSettle(props.value);
-    }
-  }
-);
 
 watch(
   () => props.type,
   async () => {
     fetchStartEnd();
     lastValue = null;
-    if (!props.spin) await goTo(props.value ?? start.value);
+    await goTo(props.value ?? start.value);
   }
 );
 
@@ -361,9 +261,9 @@ watch(
 </script>
 
 <template>
-  <div class="clock-wrapper" :class="{ 'is-impact': isImpact }">
+  <div class="clock-wrapper">
     <div ref="windowRef" class="clock-window">
-      <div ref="trackRef" class="clock-track" :class="{ 'is-spinning': isSpinningClass }">
+      <div ref="trackRef" class="clock-track">
         <p v-for="(n, i) in numbers" :key="`${n}-copy1-${i}`" :style="itemStyle(i)">
           {{ n }}
         </p>
@@ -391,28 +291,6 @@ watch(
     inset 0 -0.8rem 0.6rem rgba(0, 0, 0, 0.4);
 }
 
-@keyframes stone-impact {
-  0% {
-    transform: translateY(0);
-  }
-
-  15% {
-    transform: translateY(10px);
-  }
-
-  60% {
-    transform: translateY(2px);
-  }
-
-  100% {
-    transform: translateY(0);
-  }
-}
-
-.clock-wrapper.is-impact {
-  animation: stone-impact 0.4s cubic-bezier(0.25, 1, 0.5, 1) both;
-}
-
 .clock-window {
   height: var(--window-h);
   overflow: hidden;
@@ -428,11 +306,8 @@ watch(
   font-weight: bold;
   font-size: 2.2rem;
   color: white;
-  transition: transform 520ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.clock-track.is-spinning {
-  transition: none !important;
+  /* Thay 520ms bằng v-bind */
+  transition: transform v-bind(animDuration) cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .clock-track p {
@@ -441,11 +316,8 @@ watch(
   margin: 0;
   padding: 0 1rem;
   transform-origin: center;
-  transition: transform 520ms cubic-bezier(0.16, 1, 0.3, 1),
-    opacity 520ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.clock-track.is-spinning p {
-  transition: none !important;
+  /* Thay 520ms bằng v-bind cho cả 2 thuộc tính */
+  transition: transform v-bind(animDuration) cubic-bezier(0.16, 1, 0.3, 1),
+    opacity v-bind(animDuration) cubic-bezier(0.16, 1, 0.3, 1);
 }
 </style>

@@ -31,7 +31,7 @@ const props = defineProps<{
   animationDuration?: number;
 }>();
 
-const totalAnimTime = computed(() => props.animationDuration ?? 1000);
+const totalAnimTime = computed(() => props.animationDuration ?? 1500);
 const isCanTick = ref(true);
 const time = ref(0);
 
@@ -73,37 +73,46 @@ function handleTimeChange(targetKey: keyof ReverseClockView) {
   if (restoreTimeout) clearTimeout(restoreTimeout);
 
   hideLabels.value = true;
+
+  // Lấy vị trí của cột bị thay đổi (VD: hour là 2)
   const targetIdx = UNIT_ORDER.indexOf(targetKey);
 
-  // 1. Phân bổ Spin: Cột chính 0 spin, cột sau càng nhỏ spin càng nhanh
   UNITS.forEach((u) => {
     const unitIdx = UNIT_ORDER.indexOf(u.key);
     diffTexts.value[u.key] = ""; // Reset diff cũ
 
     if (unitIdx < targetIdx) {
-      // CỘT NHỎ HƠN: Cho xoay tít
+      // 1. CÁC CỘT NHỎ HƠN (Phút, Giây): Cho xoay tít nhiều vòng
       spinStates.value[u.key] = true;
-      // Công thức: Càng xa cột chính (về phía Second) càng nhanh
-      spinSpeeds.value[u.key] = 20 + (targetIdx - unitIdx) * 60;
-    } else if (unitIdx == targetIdx) {
+      spinSpeeds.value[u.key] = 0 + (targetIdx - unitIdx) * 20;
+
+    } else if (unitIdx === targetIdx) {
+      // 2. CỘT CHÍNH (VD: Giờ): 
       spinStates.value[u.key] = true;
-      spinSpeeds.value[u.key] = 1;
+
+      // Nếu để = 0: Nó chỉ cuộn quãng đường ngắn nhất (1 nhịp) tới số mới.
+      // Nếu bạn muốn cột chính CŨNG QUAY vài vòng cho đẹp mắt, hãy đổi số 0 thành 2, 3 hoặc 5 nhé!
+      spinSpeeds.value[u.key] = 0;
+
     } else {
-      // CỘT CHÍNH & CỘT LỚN HƠN: Không spin (0 vòng)
+      // 3. CÁC CỘT LỚN HƠN (Ngày, Tháng, Năm): Đứng im không quay
       spinStates.value[u.key] = false;
-      spinSpeeds.value[u.key];
+
+      // Đã fix lỗi ở đây: Gán rõ ràng = 0 thay vì bỏ lửng biến
+      spinSpeeds.value[u.key] = 0;
     }
   });
-  console.log(spinSpeeds.value);
 
-  // 2. Mốc thời gian dừng ĐỒNG LOẠT
+  // Log ra để bạn kiểm tra tốc độ từng cột
+  console.log("Mốc thay đổi:", targetKey, " | Tốc độ Spin:", spinSpeeds.value);
+
   const stopAt = totalAnimTime.value;
 
   const tFinish = setTimeout(() => {
     // Dừng tất cả các cột đang xoay
     UNITS.forEach(u => (spinStates.value[u.key] = false));
 
-    // HIỆN DIFF NGAY LẬP TỨC KHI DỪNG
+    // Hiện Diff ngay lập tức
     UNITS.forEach(u => {
       if (pendingDiffTexts.value[u.key]) {
         diffTexts.value[u.key] = pendingDiffTexts.value[u.key]!;
@@ -111,7 +120,6 @@ function handleTimeChange(targetKey: keyof ReverseClockView) {
       }
     });
 
-    // Kích hoạt đếm ngược để hồi phục nhãn tên (Label)
     isCanTick.value = true;
     startRestoreTimer();
 
@@ -201,17 +209,18 @@ onMounted(async () => {
 });
 
 watch(() => unitValues.value.second, (newVal, oldVal) => {
-  if (newVal !== oldVal) {
-    // Bật hiệu ứng rung cho phút và giờ (có thể thêm các cột khác nếu muốn)
-    bumpStates.value.minute = true;
-    bumpStates.value.hour = true;
+  // Bỏ qua không bump nếu giá trị không đổi HOẶC đang trong quá trình spin (isCanTick = false)
+  if (newVal === oldVal || !isCanTick.value) return;
 
-    // Tắt trạng thái rung sau 150ms (khớp với thời gian CSS animation)
-    setTimeout(() => {
-      bumpStates.value.minute = false;
-      bumpStates.value.hour = false;
-    }, 150);
-  }
+  // Bật hiệu ứng rung
+  bumpStates.value.minute = true;
+  bumpStates.value.hour = true;
+
+  // Tắt trạng thái rung sau 150ms
+  setTimeout(() => {
+    bumpStates.value.minute = false;
+    bumpStates.value.hour = false;
+  }, 150);
 });
 
 watch(() => props.value, (newVal) => {

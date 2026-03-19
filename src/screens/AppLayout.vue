@@ -110,7 +110,7 @@ async function goToShareClock() {
         </div>
 
         <div :class="{ 'opacity-0 pointer-events-none': isFirstVisit, 'opacity-100': !isFirstVisit }"
-          class="grid grid-cols-2 gap-5 w-full my-5" style="transition: opacity 0.5s ease">
+          class="grid grid-cols-2 gap-1.5 w-full my-5" style="transition: opacity 0.5s ease">
           <ButtonComponent :icon="Question" :text="'Questions'" @click="goToQuestion" style="width: 100%;" />
           <ButtonComponent :icon="Share" :text="'Share Clock'" @click="goToShareClock" style="width: 100%;" />
         </div>
