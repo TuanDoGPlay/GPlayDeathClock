@@ -191,7 +191,7 @@ onMounted(async () => {
 
   // Timer chạy ngầm
   const timer = setInterval(() => {
-    if (isCanTick.value) time.value -= 1000;
+    if (isCanTick.value && time.value > 0) time.value -= 1000;
   }, 1000);
 
   // Lắng nghe sự kiện bên ngoài
@@ -209,7 +209,6 @@ onMounted(async () => {
 });
 
 watch(() => unitValues.value.second, (newVal, oldVal) => {
-  // Bỏ qua không bump nếu giá trị không đổi HOẶC đang trong quá trình spin (isCanTick = false)
   if (newVal === oldVal || !isCanTick.value) return;
 
   // Bật hiệu ứng rung

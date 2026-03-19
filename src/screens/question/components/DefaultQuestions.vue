@@ -11,8 +11,8 @@ import ButtonComponent from '@/components/button/ButtonComponent.vue'
 import type { UserData } from '@/common/types.ts'
 import { MS_IN_MONTH, MS_IN_YEAR, Utils } from '@/common/utils'
 import { CommonController } from '@/common/controller'
-import { DatePicker } from '@capacitor-community/date-picker';
 import SliderCarouselComponent from '@/components/carousel/SliderCarouselComponent.vue'
+import DobInputQuestion from './DobInputQuestion.vue'
 
 interface UserDataView {
   name: string
@@ -39,11 +39,6 @@ const userData = ref<UserDataView>({
 })
 
 const activeName = ref('0')
-
-const inputRefName = ref<any>(null)
-const inputRefDob = ref<any>(null)
-const inputRefHeight = ref<any>(null)
-const inputRefWeight = ref<any>(null)
 
 const currentTabIndex = computed(() => {
   const stepMap: Record<string, number> = {
@@ -190,15 +185,6 @@ async function onSelected(field: 'sex' | 'sexualOrientation', option: string) {
   }
 }
 
-async function openDatePicker() {
-  const { value } = await DatePicker.present({
-    mode: 'date',
-    format: 'dd/MM/yyyy',
-  })
-  if (value) {
-    userData.value.dob = value
-  }
-}
 </script>
 
 <template>
@@ -211,24 +197,21 @@ async function openDatePicker() {
             <template v-if="activeName === '0'">
               <p class=" text-center font-bold">What is your name?</p>
               <div class=" w-2/3">
-                <InputComponent ref="inputRefName" v-model="userData.name" @keydown.enter.prevent="goNextName" />
+                <!-- <InputComponent v-model="userData.name" @keydown.enter.prevent="goNextName" /> -->
+                <SliderCarouselComponent v-model="userData.height" :min="120" :max="200" :step="1" />
               </div>
               <ButtonComponent :icon="Next" icon-right template="primary" text="Next" @click="goNextName" />
             </template>
 
             <template v-else-if="activeName === '1'">
               <p class=" text-center font-bold">Enter your date of birth</p>
-              <div class=" w-2/3" @click="openDatePicker">
-                <InputComponent ref="inputRefDob" readonly v-model="userData.dob" @keydown.enter.prevent="goNextDob" />
-              </div>
-              <ButtonComponent :icon="Next" icon-right template="primary" text="Next" @click="goNextDob" />
+              <DobInputQuestion />
             </template>
 
             <template v-else-if="activeName === '2'">
               <p class=" text-center font-bold">Enter your height (cm)</p>
               <div class=" w-2/3">
-                <SliderCarouselComponent ref="inputRefHeight" v-model="userData.height" :min="120" :max="200"
-                  :step="1" />
+                <SliderCarouselComponent v-model="userData.height" :min="120" :max="200" :step="1" />
               </div>
               <ButtonComponent :icon="Next" icon-right template="primary" text="Next" @click="goNextHeight" />
             </template>
@@ -236,8 +219,7 @@ async function openDatePicker() {
             <template v-else-if="activeName === '3'">
               <p class=" text-center font-bold">Enter your current weight (kg)</p>
               <div class=" w-2/3">
-                <SliderCarouselComponent ref="inputRefWeight" v-model="userData.weight" :min="40" :max="200"
-                  :step="1" />
+                <SliderCarouselComponent v-model="userData.weight" :min="40" :max="200" :step="1" />
               </div>
               <ButtonComponent :icon="Next" icon-right template="primary" text="Next" @click="goNextWeight" />
             </template>
