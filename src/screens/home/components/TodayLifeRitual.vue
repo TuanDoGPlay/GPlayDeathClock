@@ -19,17 +19,23 @@ async function editMission(mission: MissionInstance) {
   await CommonController.editMission(mission)
 }
 </script>
-
 <template>
   <ContentFrame :current-tab="0" :icon="EyeQuestion" title="Today's Life Ritual">
     <div class="pt-2 flex flex-col justify-between h-full" style="font-size: 0.9rem">
-      <div class="flex-1 overflow-y-auto">
-        <CheckboxComponent v-for="mission in dailyMissions" :key="mission.id" v-model="mission.completed"
-          :label="mission.label" class="py-1" @change="editMission(mission)">
-          <span :style="{ opacity: mission.completed ? 1 : 0 }" class="min-w-fit ml-1"
-            style="color: var(--plus); transition: opacity 0.2s ease">+{{ mission.displayTime }}</span>
-        </CheckboxComponent>
+      <div class="list-wrapper flex-1">
+        <div class="list-scroll">
+          <CheckboxComponent v-for="mission in dailyMissions" :key="mission.id" v-model="mission.completed"
+            :label="mission.label" class="py-1" @change="editMission(mission)">
+            <span :style="{ opacity: mission.completed ? 1 : 0 }" class="min-w-fit ml-1"
+              style="color: var(--plus); transition: opacity 0.2s ease">
+              +{{ mission.displayTime }}
+            </span>
+          </CheckboxComponent>
+        </div>
+
+        <div class="fade-bottom"></div>
       </div>
+
       <div class="pt-4">
         <ButtonComponent :icon="ShareArrow" :disabled="dailyMissions.filter(i => i.completed).length == 0"
           class="mx-auto" template="primary" text="Share Today Ritual" @click="goToRouter({ name: 'share-ritual' })" />
@@ -38,4 +44,27 @@ async function editMission(mission: MissionInstance) {
   </ContentFrame>
 </template>
 
-<style scoped></style>
+<style scoped>
+.list-wrapper {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.list-scroll {
+  height: 100%;
+  overflow-y: auto;
+  padding-bottom: 2rem;
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 80%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 0%, black 80%, transparent 100%);
+}
+
+.fade-bottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 32px;
+  pointer-events: none;
+}
+</style>
