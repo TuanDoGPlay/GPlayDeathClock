@@ -94,8 +94,8 @@ async function goToShareClock() {
   <div class="main-container flex flex-col items-center justify-center h-full px-2 pt-10 pb-1 relative overflow-hidden"
     style="user-select: none;">
     <Teleport to="body">
-      <img ref="splashWrapper" alt="splash"
-        class="h-full w-full object-cover absolute inset-0 z-[200] pointer-events-none" src="/splash.svg">
+      <img ref="splashWrapper" alt="splash" src="/splash.svg"
+        class="fixed inset-0 z-[200] w-screen h-screen object-cover object-center pointer-events-none">
     </Teleport>
 
     <div :class="[

@@ -324,11 +324,11 @@ watch(() => props.value, (newVal) => {
 
 /* 1. Định nghĩa cường độ giật cho từng kim (tăng dần từ Year -> Minute) */
 .bump-minute {
-  --shake-intensity: 4px;
+  --shake-intensity: 0.2rem;
 }
 
 .bump-hour {
-  --shake-intensity: 3px;
+  --shake-intensity: 0.08rem;
 }
 
 .bump-day {

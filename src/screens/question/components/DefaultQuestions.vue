@@ -209,24 +209,24 @@ async function openDatePicker() {
         <Transition mode="out-in" name="question-slide">
           <div :key="activeName" class="step-section">
             <template v-if="activeName === '0'">
-              <p class="mb-10 text-center font-bold">What is your name?</p>
-              <div class="mb-4 w-2/3">
+              <p class=" text-center font-bold">What is your name?</p>
+              <div class=" w-2/3">
                 <InputComponent ref="inputRefName" v-model="userData.name" @keydown.enter.prevent="goNextName" />
               </div>
               <ButtonComponent :icon="Next" icon-right template="primary" text="Next" @click="goNextName" />
             </template>
 
             <template v-else-if="activeName === '1'">
-              <p class="mb-10 text-center font-bold">Enter your date of birth</p>
-              <div class="mb-4 w-2/3" @click="openDatePicker">
+              <p class=" text-center font-bold">Enter your date of birth</p>
+              <div class=" w-2/3" @click="openDatePicker">
                 <InputComponent ref="inputRefDob" readonly v-model="userData.dob" @keydown.enter.prevent="goNextDob" />
               </div>
               <ButtonComponent :icon="Next" icon-right template="primary" text="Next" @click="goNextDob" />
             </template>
 
             <template v-else-if="activeName === '2'">
-              <p class="mb-10 text-center font-bold">Enter your height (cm)</p>
-              <div class="mb-4 w-2/3">
+              <p class=" text-center font-bold">Enter your height (cm)</p>
+              <div class=" w-2/3">
                 <SliderCarouselComponent ref="inputRefHeight" v-model="userData.height" :min="120" :max="200"
                   :step="1" />
               </div>
@@ -234,8 +234,8 @@ async function openDatePicker() {
             </template>
 
             <template v-else-if="activeName === '3'">
-              <p class="mb-10 text-center font-bold">Enter your current weight (kg)</p>
-              <div class="mb-4 w-2/3">
+              <p class=" text-center font-bold">Enter your current weight (kg)</p>
+              <div class=" w-2/3">
                 <SliderCarouselComponent ref="inputRefWeight" v-model="userData.weight" :min="40" :max="200"
                   :step="1" />
               </div>
@@ -243,7 +243,7 @@ async function openDatePicker() {
             </template>
 
             <template v-else-if="activeName === '4'">
-              <p class="mb-10 text-center font-bold">What is your biological sex?</p>
+              <p class=" text-center font-bold">What is your biological sex?</p>
               <div class="flex w-full flex-col items-center">
                 <ButtonComponent v-for="option in ['Male', 'Female', 'Other']" :key="option" :text="option" class="mt-3"
                   style="width: 80%" template="primary" @click="onSelected('sex', option)" />
@@ -251,7 +251,7 @@ async function openDatePicker() {
             </template>
 
             <template v-else-if="activeName === '5'">
-              <p class="mb-10 text-center font-bold">What is your sexual orientation?</p>
+              <p class=" text-center font-bold">What is your sexual orientation?</p>
               <div class="flex w-full flex-col items-center">
                 <ButtonComponent v-for="option in ['Straight', 'Homosexual', 'Bisexual', 'Other']" :key="option"
                   :text="option" class="mt-3" style="width: 80%" template="primary"
@@ -274,8 +274,11 @@ async function openDatePicker() {
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 1.5rem;
+  padding-top: 2rem;
+  padding-bottom: 4rem;
   justify-content: center;
-  padding-bottom: 2.5rem;
+  overflow-y: auto;
 }
 
 /* slide */
