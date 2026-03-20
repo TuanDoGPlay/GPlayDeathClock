@@ -31,10 +31,11 @@ const props = defineProps<{
   animationDuration?: number;
 }>();
 
-const totalAnimTime = computed(() => props.animationDuration ?? 1500);
+const totalAnimTime = computed(() => props.animationDuration ?? 1000);
 const isCanTick = ref(true);
 const time = ref(0);
 
+const spinDirection = ref('')
 const spinSpeeds = ref<Record<string, number>>({
   year: 0, month: 0, day: 0, hour: 0, minute: 0, second: 0
 });
@@ -73,7 +74,6 @@ function handleTimeChange(targetKey: keyof ReverseClockView) {
   if (restoreTimeout) clearTimeout(restoreTimeout);
 
   hideLabels.value = true;
-
   // Lấy vị trí của cột bị thay đổi (VD: hour là 2)
   const targetIdx = UNIT_ORDER.indexOf(targetKey);
 
@@ -85,28 +85,17 @@ function handleTimeChange(targetKey: keyof ReverseClockView) {
       // 1. CÁC CỘT NHỎ HƠN (Phút, Giây): Cho xoay tít nhiều vòng
       spinStates.value[u.key] = true;
       spinSpeeds.value[u.key] = 0 + (targetIdx - unitIdx) * 20;
-
     } else if (unitIdx === targetIdx) {
-      // 2. CỘT CHÍNH (VD: Giờ): 
       spinStates.value[u.key] = true;
-
-      // Nếu để = 0: Nó chỉ cuộn quãng đường ngắn nhất (1 nhịp) tới số mới.
-      // Nếu bạn muốn cột chính CŨNG QUAY vài vòng cho đẹp mắt, hãy đổi số 0 thành 2, 3 hoặc 5 nhé!
       spinSpeeds.value[u.key] = 0;
-
     } else {
-      // 3. CÁC CỘT LỚN HƠN (Ngày, Tháng, Năm): Đứng im không quay
       spinStates.value[u.key] = false;
-
-      // Đã fix lỗi ở đây: Gán rõ ràng = 0 thay vì bỏ lửng biến
       spinSpeeds.value[u.key] = 0;
     }
   });
 
   // Log ra để bạn kiểm tra tốc độ từng cột
   console.log("Mốc thay đổi:", targetKey, " | Tốc độ Spin:", spinSpeeds.value);
-
-  const stopAt = totalAnimTime.value;
 
   const tFinish = setTimeout(() => {
     // Dừng tất cả các cột đang xoay
@@ -123,7 +112,7 @@ function handleTimeChange(targetKey: keyof ReverseClockView) {
     isCanTick.value = true;
     startRestoreTimer();
 
-  }, stopAt);
+  }, totalAnimTime.value);
 
   stopTimeouts.push(tFinish);
 }
@@ -181,6 +170,8 @@ async function processUpdate(newTime: number) {
   isCanTick.value = false;
   time.value = newTime;
   const targetKey = showChangedParts(newTime - prev);
+  if (newTime - prev > 0) spinDirection.value = 'forward'
+  else spinDirection.value = 'backward'
   handleTimeChange(targetKey);
 }
 
@@ -248,11 +239,8 @@ watch(() => props.value, (newVal) => {
         </Transition>
       </div>
 
-      <FlipClockItem :spin="spinStates[u.key]" :spinSpeed="spinSpeeds[u.key]" :type="u.key" :value="unitValues[u.key]"
-        :class="{
-          'is-bumping': bumpStates[u.key],
-          [`bump-${u.key}`]: true
-        }" />
+      <FlipClockItem :spin="spinStates[u.key]" :spinSpeed="spinSpeeds[u.key]" :spinDirection="spinDirection"
+        :type="u.key" :value="unitValues[u.key]" />
     </div>
   </div>
 </template>

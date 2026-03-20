@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import Question from '@/assets/icons/question.svg'
 import Next from '@/assets/icons/next.svg'
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import ContentFrame from '@/components/content-frame/ContentFrame.vue'
 import { goToRouter, showToast } from 'gplay-app-sdk'
 import questions from '@/assets/data/required-questions.json'
@@ -30,7 +30,7 @@ const emit = defineEmits<{
 
 const userData = ref<UserDataView>({
   name: '',
-  dob: '',
+  dob: new Date(2003, 1, 1).toISOString(),
   sex: '',
   height: 160,
   weight: 50,
@@ -54,6 +54,17 @@ const currentTabIndex = computed(() => {
   return stepMap[activeName.value] ?? 0
 })
 
+onMounted(async () => {
+  userData.value = await CommonController.getUserData()
+  if (userData.value.name) activeName.value = '1'
+  else if (userData.value.dob) activeName.value = '2'
+  else if (userData.value.height) activeName.value = '3'
+  else if (userData.value.weight) activeName.value = '4'
+  else if (userData.value.sex) activeName.value = '5'
+  else if (userData.value.sexualOrientation) activeName.value = '6'
+})
+
+
 function handleBack() {
   goToRouter({ name: 'home' })
 }
@@ -76,49 +87,24 @@ async function goNextName() {
     await showToast({ text: 'Please enter your name' })
     return
   }
-
+  saveUserData()
   activeName.value = '1'
 }
 
-async function goNextDob() {
-  // if (!userData.value.dob) {
-  //   await showToast({ text: 'Please enter your date of birth' })
-  //   return
-  // }
-  const [day, month, year] = userData.value.dob.split('/');
-
-  const dobDate = new Date(Number(year), Number(month) - 1, Number(day));
+async function goNextDob(date: Date) {
   const now = new Date()
-
-  if (Number.isNaN(dobDate.getTime())) {
-    await showToast({ text: 'Invalid date of birth' })
-    return
-  }
-
-  if (dobDate > now) {
-    await showToast({ text: 'Date of birth cannot be in the future' })
-    return
-  }
-
-  const yourAge = now.getFullYear() - dobDate.getFullYear()
-  const startDate = new Date('2000-01-01T00:00:00')
-  const futureDate = new Date(startDate)
-  futureDate.setFullYear(startDate.getFullYear() + 85 - yourAge)
-  console.log(futureDate.getTime())
+  userData.value.dob = date.toISOString()
+  const yourAge = now.getFullYear() - date.getFullYear()
+  const futureDate = new Date()
+  futureDate.setFullYear(futureDate.getFullYear() + 85 - yourAge)
   await CommonController.editRemainLiveTime(futureDate.getTime(), false)
 
+  saveUserData()
   activeName.value = '2'
 }
 
 async function goNextHeight() {
-  const height = Number(userData.value.height)
-
-  if (!height) {
-    await showToast({ text: 'Please enter your height' })
-    return
-  }
-
-  userData.value.height = height
+  const height = userData.value.height
 
   const randomYear = Math.random() * 4 - 2
   let randomTime = randomYear * MS_IN_YEAR
@@ -131,24 +117,22 @@ async function goNextHeight() {
 
   await CommonController.editRemainLiveTime(randomTime)
 
+  saveUserData()
   activeName.value = '3'
 }
 
 async function goNextWeight() {
-  const weight = Number(userData.value.weight)
-  const height = Number(userData.value.height)
+  const weight = userData.value.weight
+  const height = userData.value.height
 
   if (!weight) {
-    await showToast({ text: 'Please enter your weight' })
     return
   }
 
   if (!height) {
-    await showToast({ text: 'Missing height' })
     return
   }
 
-  userData.value.weight = weight
 
   const bmi = Utils.calculateBMI(weight, height)
   let deductedYears = 0
@@ -163,7 +147,7 @@ async function goNextWeight() {
   else deductedYears = 15
 
   await CommonController.editRemainLiveTime(-deductedYears * MS_IN_YEAR)
-
+  saveUserData()
   activeName.value = '4'
 }
 
@@ -197,15 +181,14 @@ async function onSelected(field: 'sex' | 'sexualOrientation', option: string) {
             <template v-if="activeName === '0'">
               <p class=" text-center font-bold">What is your name?</p>
               <div class=" w-2/3">
-                <!-- <InputComponent v-model="userData.name" @keydown.enter.prevent="goNextName" /> -->
-                <SliderCarouselComponent v-model="userData.height" :min="120" :max="200" :step="1" />
+                <InputComponent v-model="userData.name" @keydown.enter.prevent="goNextName" />
               </div>
               <ButtonComponent :icon="Next" icon-right template="primary" text="Next" @click="goNextName" />
             </template>
 
             <template v-else-if="activeName === '1'">
               <p class=" text-center font-bold">Enter your date of birth</p>
-              <DobInputQuestion />
+              <DobInputQuestion class="" @next="args => goNextDob(args)" />
             </template>
 
             <template v-else-if="activeName === '2'">

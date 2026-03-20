@@ -4,16 +4,14 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue"
 const props = defineProps<{
   value?: number;
   type?: "year" | "month" | "day" | "hour" | "minute" | "second";
-  scaleNear?: number;
-  scaleMid?: number;
-  scaleFar?: number;
   spinSpeed?: number
   spin?: boolean
+  spinDirection?: 'backward' | 'forward'
 }>();
 
 const start = ref(0);
 const end = ref(99);
-const animDuration = computed(() => (props.spin ? '1000ms' : '520ms'));
+const animDuration = computed(() => (props.spin ? '2000ms' : '520ms'));
 function fetchStartEnd() {
   if (props.type === "year") {
     start.value = 0;
@@ -157,32 +155,9 @@ async function goTo(val: number) {
     cycle * size + baseIdx,
     (cycle + 1) * size + baseIdx,
   ];
-
-  let best;
-
-  // ---> BẮT ĐẦU VIẾT LOGIC SPIN Ở ĐÂY <---
-  if (props.spin && props.spinSpeed && props.spinSpeed > 0) {
-
-    // 1. Tìm vị trí bến đỗ gần nhất nhưng bắt buộc phải ở phía trước (lớn hơn hoặc bằng vị trí hiện tại)
-    // Dùng mảng candidates có sẵn để tìm
-    const forwardBase = candidates.find(c => c >= currentVis) ?? candidates[1];
-
-    // 2. Cộng dồn số vòng quay mong muốn (mỗi vòng = size)
-    best = forwardBase + (props.spinSpeed * size);
-
-  } else {
-    // --- LOGIC TÌM QUÃNG ĐƯỜNG NGẮN NHẤT CŨ SẼ NẰM TRONG CÂU LỆNH ELSE ---
-    best = candidates[0];
-    let bestDist = Math.abs(candidates[0] - currentVis);
-
-    for (let i = 1; i < candidates.length; i++) {
-      const dist = Math.abs(candidates[i] - currentVis);
-      if (dist < bestDist) {
-        best = candidates[i];
-        bestDist = dist;
-      }
-    }
-  }
+  const best = candidates.reduce((prev, curr) =>
+    Math.abs(curr - currentVis) < Math.abs(prev - currentVis) ? curr : prev
+  );
 
   visualIndex.value = best;
   setTransformByIndex(visualIndex.value, true);
@@ -215,12 +190,6 @@ function itemStyle(i: number) {
   if (dist === 0) {
     scale = 1;
     opacity = 1;
-  } else if (dist === 1) {
-    scale = 0.6
-    opacity = 0.6;
-  } else if (dist === 2) {
-    scale = 0.6;
-    opacity = 0.6;
   } else {
     scale = 0.6
     opacity = 0.6;

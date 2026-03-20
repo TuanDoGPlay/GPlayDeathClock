@@ -173,10 +173,9 @@ onBeforeUnmount(() => {
   user-select: none;
   touch-action: pan-y pan-x;
   width: 100%;
-  /* Khắc phục: Đảm bảo luôn có chiều cao tối thiểu để hiện overlay */
+  height: 100%;
   min-height: 5rem;
   background-color: transparent;
-  /* Hoặc màu nền chung của bạn */
 }
 
 .selection-overlay {
@@ -187,8 +186,7 @@ onBeforeUnmount(() => {
   background-color: #fff5ea;
   border-radius: 1rem;
   pointer-events: none;
-  /* Chỉnh z-index: Để 1 là được nhưng viewport phải transparent */
-  z-index: 1;
+  z-index: 10;
 }
 
 .scroll-viewport {
@@ -196,12 +194,12 @@ onBeforeUnmount(() => {
   overflow: auto;
   scroll-snap-type: both mandatory;
   scrollbar-width: none;
-  /* Quan trọng: z-index cao hơn để số đè lên overlay, nhưng nền phải trong suốt */
-  z-index: 2;
   position: relative;
+  isolation: isolate;
   background: transparent;
   -ms-overflow-style: none;
   -webkit-overflow-scrolling: touch;
+  height: 100%;
 }
 
 /* Định vị Overlay dựa trên hướng */
@@ -211,18 +209,21 @@ onBeforeUnmount(() => {
   height: 3.5rem;
 }
 
+.vertical .scroll-viewport {
+  flex-direction: column;
+}
+
+.horizontal .scroll-viewport {
+  flex-direction: row;
+  align-items: center;
+}
+
 .vertical .selection-overlay {
   width: 90%;
   height: 3rem;
   /* Khớp với chiều cao picker-item */
 }
 
-/* Các phần CSS khác giữ nguyên của bạn */
-.horizontal .scroll-viewport {
-  flex-direction: row;
-  align-items: center;
-  height: 5rem;
-}
 
 .horizontal .edge-spacer {
   flex: 0 0 50%;
@@ -237,11 +238,6 @@ onBeforeUnmount(() => {
   align-items: center;
 }
 
-.vertical .scroll-viewport {
-  flex-direction: column;
-  height: 18rem;
-}
-
 .vertical .edge-spacer {
   flex: 0 0 50%;
 }
@@ -250,6 +246,9 @@ onBeforeUnmount(() => {
   flex: 0 0 3.5rem;
   scroll-snap-align: center;
   scroll-snap-stop: always;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .picker-item {
@@ -270,8 +269,47 @@ onBeforeUnmount(() => {
 }
 
 .is-selected .item-content {
-  color: var(--highlight-text, #d97706);
-  font-weight: 800;
-  transform: scale(1.25);
+  color: var(--highlight-text);
+  font-weight: 700;
+  transform: scale(1.15);
+}
+
+.horizontal .edge-spacer {
+  flex: 0 0 calc(50% - 2.25rem);
+}
+
+.vertical .edge-spacer {
+  flex: 0 0 calc(50% - 1.75rem);
+}
+
+.horizontal .selection-overlay {
+  width: 4.5rem;
+  height: 3rem;
+  z-index: 1;
+}
+
+.vertical .selection-overlay {
+  width: 100%;
+  height: 3.5rem;
+  z-index: 1;
+}
+
+.scroll-viewport {
+  display: flex;
+  overflow: auto;
+  scroll-snap-type: both mandatory;
+  scrollbar-width: none;
+  z-index: 2;
+  position: relative;
+  background: transparent;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.picker-item {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backface-visibility: hidden;
+  z-index: 3;
 }
 </style>
