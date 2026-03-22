@@ -4,13 +4,25 @@ import FlipClockItem from "@/components/flip-clock/FlipClockItem.vue";
 import { EventEnum } from "@/constants/events";
 import { CommonController } from "@/common/controller";
 import type { ReverseClockView } from "@/common/types";
-import { MS_IN_DAY, MS_IN_HOUR, MS_IN_MINUTE, MS_IN_MONTH, MS_IN_SECOND, MS_IN_YEAR, Utils } from "@/common/utils";
+import {
+  MS_IN_DAY,
+  MS_IN_HOUR,
+  MS_IN_MINUTE,
+  MS_IN_MONTH,
+  MS_IN_SECOND,
+  MS_IN_YEAR,
+  Utils,
+} from "@/common/utils";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface UnitConfig {
   key: keyof ReverseClockView;
   label: string;
   short: string;
 }
+
+// ─── Constants ────────────────────────────────────────────────────────────────
 
 const UNITS: UnitConfig[] = [
   { key: "year", label: "year", short: "y" },
@@ -21,8 +33,20 @@ const UNITS: UnitConfig[] = [
   { key: "second", label: "sec", short: "s" },
 ];
 
-// Thứ tự ưu tiên từ nhỏ đến lớn để xác định cột nào "bị tác động"
-const UNIT_ORDER: (keyof ReverseClockView)[] = ["second", "minute", "hour", "day", "month", "year"];
+const UNIT_ORDER: (keyof ReverseClockView)[] = [
+  "second", "minute", "hour", "day", "month", "year",
+];
+
+const THRESHOLDS = [
+  { key: "year", val: MS_IN_YEAR },
+  { key: "month", val: MS_IN_MONTH },
+  { key: "day", val: MS_IN_DAY },
+  { key: "hour", val: MS_IN_HOUR },
+  { key: "minute", val: MS_IN_MINUTE },
+  { key: "second", val: MS_IN_SECOND },
+] as const;
+
+// ─── Props ────────────────────────────────────────────────────────────────────
 
 const props = defineProps<{
   showLabel?: boolean;
@@ -31,28 +55,30 @@ const props = defineProps<{
   animationDuration?: number;
 }>();
 
-const totalAnimTime = computed(() => props.animationDuration ?? 1000);
+// ─── State ────────────────────────────────────────────────────────────────────
+
+const totalAnimTime = computed(() => props.animationDuration ?? 2000);
 const isCanTick = ref(true);
 const time = ref(0);
 
-const spinDirection = ref('')
-const spinSpeeds = ref<Record<string, number>>({
-  year: 0, month: 0, day: 0, hour: 0, minute: 0, second: 0
-});
+const spinDirection = ref<"forward" | "backward">("backward");
 
-const hideLabels = ref(false);
+const spinTurn = ref<Record<string, number>>({
+  year: 0, month: 0, day: 0, hour: 0, minute: 0, second: 0,
+});
 const spinStates = ref<Record<string, boolean>>({
-  year: false, month: false, day: false, hour: false, minute: false, second: false
+  year: false, month: false, day: false, hour: false, minute: false, second: false,
 });
 const diffTexts = ref<Record<string, string>>({
-  year: "", month: "", day: "", hour: "", minute: "", second: ""
+  year: "", month: "", day: "", hour: "", minute: "", second: "",
 });
 const pendingDiffTexts = ref<Record<string, string>>({
-  year: "", month: "", day: "", hour: "", minute: "", second: ""
+  year: "", month: "", day: "", hour: "", minute: "", second: "",
 });
-const bumpStates = ref<Record<string, boolean>>({
-  year: false, month: false, day: false, hour: false, minute: false, second: false
-});
+const hideLabels = ref(false);
+
+// ─── Computed ─────────────────────────────────────────────────────────────────
+
 const unitValues = computed((): ReverseClockView => {
   const t = time.value;
   return {
@@ -65,53 +91,56 @@ const unitValues = computed((): ReverseClockView => {
   };
 });
 
-let stopTimeouts: any[] = [];
-let restoreTimeout: any = null;
+// ─── Timers ───────────────────────────────────────────────────────────────────
+
+let stopTimeouts: ReturnType<typeof setTimeout>[] = [];
+let restoreTimeout: ReturnType<typeof setTimeout> | null = null;
+let tickInterval: ReturnType<typeof setInterval> | null = null;
+let onTimeChangeHandler: (() => Promise<void>) | null = null;
+
+// ─── Animation logic ──────────────────────────────────────────────────────────
 
 function handleTimeChange(targetKey: keyof ReverseClockView) {
   stopTimeouts.forEach(clearTimeout);
   stopTimeouts = [];
-  if (restoreTimeout) clearTimeout(restoreTimeout);
+  if (restoreTimeout) {
+    clearTimeout(restoreTimeout);
+    restoreTimeout = null;
+  }
 
   hideLabels.value = true;
-  // Lấy vị trí của cột bị thay đổi (VD: hour là 2)
   const targetIdx = UNIT_ORDER.indexOf(targetKey);
 
   UNITS.forEach((u) => {
     const unitIdx = UNIT_ORDER.indexOf(u.key);
-    diffTexts.value[u.key] = ""; // Reset diff cũ
+    diffTexts.value[u.key] = "";
 
     if (unitIdx < targetIdx) {
-      // 1. CÁC CỘT NHỎ HƠN (Phút, Giây): Cho xoay tít nhiều vòng
       spinStates.value[u.key] = true;
-      spinSpeeds.value[u.key] = 0 + (targetIdx - unitIdx) * 20;
+      spinTurn.value[u.key] = (targetIdx - unitIdx) * 3;
     } else if (unitIdx === targetIdx) {
       spinStates.value[u.key] = true;
-      spinSpeeds.value[u.key] = 0;
+      spinTurn.value[u.key] = 0;
     } else {
-      spinStates.value[u.key] = false;
-      spinSpeeds.value[u.key] = 0;
+      spinStates.value[u.key] = true;
+      spinTurn.value[u.key] = 0;
     }
   });
 
-  // Log ra để bạn kiểm tra tốc độ từng cột
-  console.log("Mốc thay đổi:", targetKey, " | Tốc độ Spin:", spinSpeeds.value);
-
   const tFinish = setTimeout(() => {
-    // Dừng tất cả các cột đang xoay
-    UNITS.forEach(u => (spinStates.value[u.key] = false));
+    UNITS.forEach((u) => (spinStates.value[u.key] = false));
 
-    // Hiện Diff ngay lập tức
-    UNITS.forEach(u => {
+    UNITS.forEach((u) => {
       if (pendingDiffTexts.value[u.key]) {
-        diffTexts.value[u.key] = pendingDiffTexts.value[u.key]!;
+        diffTexts.value[u.key] = pendingDiffTexts.value[u.key];
         pendingDiffTexts.value[u.key] = "";
       }
     });
 
-    isCanTick.value = true;
+    setTimeout(() => {
+      isCanTick.value = true;
+    }, 500)
     startRestoreTimer();
-
   }, totalAnimTime.value);
 
   stopTimeouts.push(tFinish);
@@ -121,101 +150,89 @@ function startRestoreTimer() {
   if (restoreTimeout) clearTimeout(restoreTimeout);
 
   restoreTimeout = setTimeout(() => {
-    // NHỊP QUYẾT ĐỊNH: Xóa Diff và tắt hideLabels trong cùng 1 tick
-    UNITS.forEach(u => {
-      diffTexts.value[u.key] = "";
-    });
-
-    // Khi hideLabels = false, tất cả cột không có Diff sẽ hiện lại Unit Name cùng lúc
+    UNITS.forEach((u) => (diffTexts.value[u.key] = ""));
     hideLabels.value = false;
-
   }, 1000);
 }
 
 function showChangedParts(diffMs: number): keyof ReverseClockView {
   const abs = Math.abs(diffMs);
-  if (abs < 1000) return "second";
-
   const sign = diffMs > 0 ? "+" : "-";
-  const thresholds = [
-    { key: "year", val: MS_IN_YEAR },
-    { key: "month", val: MS_IN_MONTH },
-    { key: "day", val: MS_IN_DAY },
-    { key: "hour", val: MS_IN_HOUR },
-    { key: "minute", val: MS_IN_MINUTE },
-    { key: "second", val: MS_IN_SECOND }
-  ] as const;
 
-  // Dòng 148 sửa thành:
-  const target = (thresholds.find(t => abs >= t.val) || thresholds[thresholds.length - 1])!;
+  const target = THRESHOLDS.find((t) => abs >= t.val) ?? THRESHOLDS[THRESHOLDS.length - 1];
+  let diffVal = Math.round(abs / target.val);
+  let unitInfo = UNITS.find((u) => u.key === target.key);
+  let finalTarget = target;
 
-  // Bây giờ các dòng dưới sẽ không còn báo lỗi nữa
-  const diffVal = Math.floor(abs / target.val);
-  const unitInfo = UNITS.find(u => u.key === target.key);
+  // Nếu round lên bằng đúng 1 đơn vị lớn hơn thì đổi sang đơn vị đó
+  const currentIdx = THRESHOLDS.findIndex((t) => t.key === target.key);
+  if (currentIdx > 0) {
+    const upperThreshold = THRESHOLDS[currentIdx - 1];
+    if (diffVal * target.val >= upperThreshold.val) {
+      finalTarget = upperThreshold;
+      diffVal = Math.round(abs / upperThreshold.val);
+      unitInfo = UNITS.find((u) => u.key === upperThreshold.key);
+    }
+  }
 
-  UNITS.forEach(u => pendingDiffTexts.value[u.key] = "");
-  pendingDiffTexts.value[target.key] = `${sign}${diffVal}${unitInfo?.short || ''}`;
+  UNITS.forEach((u) => (pendingDiffTexts.value[u.key] = ""));
+  pendingDiffTexts.value[finalTarget.key] = `${sign}${diffVal}${unitInfo?.short ?? ""}`;
 
-  return target.key as keyof ReverseClockView;
+  return finalTarget.key as keyof ReverseClockView;
 }
 
-// Hàm cập nhật chung
+// ─── Update entry point ───────────────────────────────────────────────────────
+
 async function processUpdate(newTime: number) {
   const prev = time.value;
-  if (props.hideAnimation || prev == 0) {
+  if (props.hideAnimation || prev === 0) {
     time.value = newTime;
     return;
   }
 
   isCanTick.value = false;
   time.value = newTime;
+  spinDirection.value = newTime - prev > 0 ? "forward" : "backward";
+
   const targetKey = showChangedParts(newTime - prev);
-  if (newTime - prev > 0) spinDirection.value = 'forward'
-  else spinDirection.value = 'backward'
   handleTimeChange(targetKey);
 }
 
+// ─── Lifecycle ────────────────────────────────────────────────────────────────
+
 onMounted(async () => {
-  // Lấy thời gian ban đầu
-  const initial = props.value ?? await CommonController.getRemainLiveTime();
+  const initial = props.value ?? (await CommonController.getRemainLiveTime());
   time.value = initial;
 
-  // Timer chạy ngầm
-  const timer = setInterval(() => {
+  tickInterval = setInterval(() => {
     if (isCanTick.value && time.value > 0) time.value -= 1000;
   }, 1000);
 
-  // Lắng nghe sự kiện bên ngoài
-  const onTimeChange = async () => {
+  onTimeChangeHandler = async () => {
     const next = await CommonController.getRemainLiveTime();
     processUpdate(next);
   };
 
-  document.addEventListener(EventEnum.ChangeTime, onTimeChange);
-
-  onBeforeUnmount(() => {
-    clearInterval(timer);
-    document.removeEventListener(EventEnum.ChangeTime, onTimeChange);
-  });
+  document.addEventListener(EventEnum.ChangeTime, onTimeChangeHandler);
 });
 
-watch(() => unitValues.value.second, (newVal, oldVal) => {
-  if (newVal === oldVal || !isCanTick.value) return;
-
-  // Bật hiệu ứng rung
-  bumpStates.value.minute = true;
-  bumpStates.value.hour = true;
-
-  // Tắt trạng thái rung sau 150ms
-  setTimeout(() => {
-    bumpStates.value.minute = false;
-    bumpStates.value.hour = false;
-  }, 150);
+onBeforeUnmount(() => {
+  if (tickInterval) clearInterval(tickInterval);
+  if (restoreTimeout) clearTimeout(restoreTimeout);
+  stopTimeouts.forEach(clearTimeout);
+  if (onTimeChangeHandler) {
+    document.removeEventListener(EventEnum.ChangeTime, onTimeChangeHandler);
+  }
 });
 
-watch(() => props.value, (newVal) => {
-  if (newVal !== undefined && newVal !== null) processUpdate(newVal);
-});
+// ─── Watchers ─────────────────────────────────────────────────────────────────
+
+watch(
+  () => props.value,
+  (newVal) => {
+    if (newVal !== undefined && newVal !== null) processUpdate(newVal);
+  }
+);
 </script>
 
 <template>
@@ -223,27 +240,25 @@ watch(() => props.value, (newVal) => {
     <div v-for="u in UNITS" :key="u.key" class="item">
       <div v-if="props.showLabel" class="label-wrapper">
         <Transition name="diff-float" mode="out-in">
-          <!-- Hiển thị Diff nếu có -->
           <div v-if="diffTexts[u.key]" :key="u.key + 'diff'" class="diff-label"
             :style="{ color: diffTexts[u.key]?.startsWith('+') ? '#66BC32' : '#E32626' }">
             {{ diffTexts[u.key] }}
           </div>
 
-          <!-- Hiển thị Label mặc định nếu không quay -->
           <span v-else-if="!hideLabels" :key="u.key + 'label'" class="unit-name">
             {{ u.label }}
           </span>
 
-          <!-- Giữ chỗ khi đang quay -->
-          <div v-else :key="u.key + 'empty'" class="empty-holder"></div>
+          <div v-else :key="u.key + 'empty'" class="empty-holder" />
         </Transition>
       </div>
 
-      <FlipClockItem :spin="spinStates[u.key]" :spinSpeed="spinSpeeds[u.key]" :spinDirection="spinDirection"
-        :type="u.key" :value="unitValues[u.key]" />
+      <FlipClockItem :spin="spinStates[u.key]" :spinTurn="spinTurn[u.key]" :spinDirection="spinDirection"
+        :duration="totalAnimTime" :type="u.key" :value="unitValues[u.key]" />
     </div>
   </div>
 </template>
+
 <style scoped>
 .clock-container {
   display: grid;
@@ -282,7 +297,7 @@ watch(() => props.value, (newVal) => {
 }
 
 .unit-name {
-  color: #4D4D4D;
+  color: #4d4d4d;
   font-weight: 500;
   font-size: 1.2rem;
 }
@@ -297,7 +312,8 @@ watch(() => props.value, (newVal) => {
   width: 1px;
 }
 
-/* ANIMATION */
+/* ─── Diff float transition ─────────────────────────────────────────────────── */
+
 .diff-float-enter-active {
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
@@ -314,59 +330,5 @@ watch(() => props.value, (newVal) => {
 .diff-float-leave-to {
   opacity: 0;
   transform: translateY(-15px);
-}
-
-/* --- HIỆU ỨNG RUNG GIẬT MẠNH DẦN --- */
-
-/* 1. Định nghĩa cường độ giật cho từng kim (tăng dần từ Year -> Minute) */
-.bump-minute {
-  --shake-intensity: 0.2rem;
-}
-
-.bump-hour {
-  --shake-intensity: 0.08rem;
-}
-
-.bump-day {
-  --shake-intensity: 2px;
-}
-
-.bump-month {
-  --shake-intensity: 1px;
-}
-
-.bump-year {
-  --shake-intensity: 0.5px;
-}
-
-/* 2. Class kích hoạt animation */
-.is-bumping {
-  animation: quick-shake-graduated 0.15s ease-out;
-}
-
-/* 3. Animation dùng biến CSS tính toán biên độ nảy */
-@keyframes quick-shake-graduated {
-  0% {
-    transform: translateY(0);
-  }
-
-  25% {
-    transform: translateY(calc(-1 * var(--shake-intensity)));
-  }
-
-  /* Nảy lên */
-  50% {
-    transform: translateY(calc(0.6 * var(--shake-intensity)));
-  }
-
-  /* Trì xuống */
-  75% {
-    transform: translateY(calc(-0.2 * var(--shake-intensity)));
-  }
-
-  /* Nảy lên nhẹ */
-  100% {
-    transform: translateY(0);
-  }
 }
 </style>
