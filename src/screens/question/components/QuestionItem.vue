@@ -22,27 +22,37 @@ function goNext() {
   emit("next", answer.value);
 }
 
+function goSkip() {
+  emit("next", undefined);
+}
+
+
 function handleInput() {
   emit('input', answer.value)
 }
 </script>
 
 <template>
-  <div class="flex flex-col items-center justify-around h-full overflow-y-auto py-5">
-    <p class="font-bold text-center mx-3">{{ props.question.question }}</p>
-    <div v-if="props.question.type == 'select'" class="w-full">
-      <ButtonComponent v-for="option in props.question.options" :text="option" class="mt-3 mx-auto" style="width: 80%"
-        template="primary" @click="onSelected(option)" />
-    </div>
-    <div v-else-if="props.question.type == 'slider'" class="w-full">
-      <SliderCarouselComponent v-model="answer" :max="props.question.max" :min="props.question.min" class="mt-3 mx-auto"
-        style="width: 80%" />
-    </div>
-    <div v-else class="w-2/3">
-      <InputComponent ref="inputRef" v-model="answer" :type="props.question.type" @input="handleInput"
-        @keydown.enter.prevent="goNext" />
-      <ButtonComponent :icon="Next" icon-right template="primary" text="Skip" class="mx-auto mt-2" @click="goNext" />
+  <div class="flex flex-col items-center justify-center h-full overflow-y-auto py-5">
+    <div class="flex flex-col items-center w-full  gap-5">
+      <p class="font-bold text-center mx-3">{{ props.question.question }}</p>
+      <div v-if="props.question.type == 'select'" class="w-full">
+        <ButtonComponent v-for="option in props.question.options" :text="option" class="mt-3 mx-auto" style="width: 80%"
+          template="primary" @click="onSelected(option)" />
+      </div>
+      <div v-else-if="props.question.type == 'slider'" class="w-full">
+        <SliderCarouselComponent v-model="answer" :max="props.question.max" :min="props.question.min"
+          class="mt-3 mx-auto" style="width: 80%" />
+        <ButtonComponent :icon="Next" icon-right template="primary" text="Skip" class="mx-auto mt-2" @click="goSkip" />
+        <ButtonComponent :icon="Next" icon-right template="primary" text="Next" class="mx-auto mt-2" @click="goNext" />
 
+      </div>
+      <div v-else class="w-2/3">
+        <InputComponent ref="inputRef" v-model="answer" :type="props.question.type" @input="handleInput"
+          @keydown.enter.prevent="goNext" />
+        <ButtonComponent :icon="Next" icon-right template="primary" text="Skip" class="mx-auto mt-2" @click="goNext" />
+
+      </div>
     </div>
   </div>
 </template>

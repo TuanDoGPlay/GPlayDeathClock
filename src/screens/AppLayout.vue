@@ -8,6 +8,7 @@ import ButtonComponent from "@/components/button/ButtonComponent.vue";
 import { EventEnum } from "@/constants/events.ts";
 import { CommonController } from "@/common/controller";
 import { goToRouter } from "gplay-app-sdk";
+import { App } from '@capacitor/app';
 
 const splashWrapper = ref<HTMLElement | null>(null);
 const clockWrapper = ref<HTMLElement | null>(null);
@@ -16,13 +17,18 @@ const textWrapper = ref<HTMLElement | null>(null);
 const isShowClock = ref(true);
 const isFirstVisit = ref(true);
 const isClockSpin = ref(false);
-
+const isPlaySound = ref(false);
 const lines = Array.from({ length: 20 });
 
 onMounted(async () => {
   await nextTick();
   await fetchIsFirstVisit();
   await CommonController.checkAndRunNewDayTask()
+
+  App.addListener('appStateChange', ({ isActive }) => {
+    console.log('isActive', isActive);
+    isPlaySound.value = isActive
+  });
 
   document.addEventListener(EventEnum.ToggleClock, (e) => {
     const event = e as CustomEvent<{ isShow: boolean }>;
@@ -64,12 +70,15 @@ function playMasterAnimation() {
       opacity: 1,
       duration: 1,
       ease: "power2.inOut",
-    }, "-=0.2") // Chạy đè lên khúc cuối của Splash 0.2s cho mượt
+    }, "-=0.2")
       .to(textWrapper.value, {
         opacity: 1,
         y: 0,
         duration: 0.8,
         ease: "power2.out",
+        onStart: () => {
+          isPlaySound.value = true
+        }
       }, "+=0")
       // Chờ 3s để User đọc chữ rồi chuyển màn
       .add(() => {
@@ -106,7 +115,7 @@ async function goToShareClock() {
 
         <div ref="clockWrapper" :class="{ 'opacity-0': isFirstVisit, 'opacity-100': !isFirstVisit }"
           class="transition-opacity w-full">
-          <FlipClock :show-label="!isFirstVisit" :spin="isClockSpin" class="w-full" />
+          <FlipClock :show-label="!isFirstVisit" :spin="isClockSpin" :play-sound="isPlaySound" class="w-full" />
         </div>
 
         <div :class="{ 'opacity-0 pointer-events-none': isFirstVisit, 'opacity-100': !isFirstVisit }"

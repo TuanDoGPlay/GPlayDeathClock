@@ -26,8 +26,8 @@ const animDuration = computed(() => {
 const animDurationString = computed(() => animDuration.value + 'ms');
 const animTransition = computed(() => {
   if (props.spin) return 'ease-in'
-  // return 'cubic-bezier(0.16, 1, 0.3, 1)'
-  return 'ease-in'
+  return 'cubic-bezier(0.16, 1, 0.3, 1)'
+  // return 'ease-in'
 });
 
 const baseNumbers = computed(() => {
@@ -180,7 +180,9 @@ async function goTo(val: number) {
   isAnimating = true;
   setTransformByIndex(visualIndex.value, true);
   lastValue = v;
-  setTimeout(() => triggerHeavyImpact(), animDuration.value);
+  if (props.spin) {
+    setTimeout(() => triggerHeavyImpact(), animDuration.value);
+  }
 }
 let animationFrameId: number | null = null;
 let isInfiniteSpinning = false;

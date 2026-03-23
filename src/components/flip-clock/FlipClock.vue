@@ -13,8 +13,7 @@ import {
   MS_IN_YEAR,
   Utils,
 } from "@/common/utils";
-
-// ─── Types ────────────────────────────────────────────────────────────────────
+import { NativeAudio } from "@capgo/native-audio";
 
 interface UnitConfig {
   key: keyof ReverseClockView;
@@ -53,11 +52,12 @@ const props = defineProps<{
   value?: number;
   hideAnimation?: boolean;
   animationDuration?: number;
+  playSound?: boolean
 }>();
 
 // ─── State ────────────────────────────────────────────────────────────────────
 
-const totalAnimTime = computed(() => props.animationDuration ?? 2000);
+const totalAnimTime = computed(() => props.animationDuration ?? 1500);
 const isCanTick = ref(true);
 const time = ref(0);
 
@@ -204,16 +204,28 @@ async function processUpdate(newTime: number) {
   handleTimeChange(targetKey);
 }
 
-// ─── Lifecycle ────────────────────────────────────────────────────────────────
-
 onMounted(async () => {
   const initial = props.value ?? (await CommonController.getRemainLiveTime());
   time.value = initial;
-
+  try {
+    await NativeAudio.preload({
+      assetId: 'clock',
+      assetPath: 'sounds/clock.mp3',
+      isUrl: false,
+    });
+  } catch (error) {
+    console.log('Audio already preloaded or error:', error);
+  }
   tickInterval = setInterval(() => {
-    if (isCanTick.value && time.value > 0) time.value -= 1000;
+    if (isCanTick.value && time.value > 0) {
+      time.value -= 1000;
+      if (props.playSound) {
+        NativeAudio.play({
+          assetId: 'clock',
+        });
+      }
+    }
   }, 1000);
-
   onTimeChangeHandler = async () => {
     console.log('on change time');
 
@@ -233,7 +245,13 @@ onBeforeUnmount(() => {
   }
 });
 
-// ─── Watchers ─────────────────────────────────────────────────────────────────
+watch(() => props.playSound, (isPlay) => {
+  console.log('props.playSound', props.playSound);
+
+  if (!isPlay) {
+    NativeAudio.stop({ assetId: 'clock' });
+  }
+});
 
 watch(
   () => props.value,
