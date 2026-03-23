@@ -20,8 +20,5 @@ project(':capacitor-status-bar').projectDir = new File('../node_modules/@capacit
 include ':capacitor-toast'
 project(':capacitor-toast').projectDir = new File('../node_modules/@capacitor/toast/android')
 
-include ':capgo-native-audio'
-project(':capgo-native-audio').projectDir = new File('../node_modules/@capgo/native-audio/android')
-
 include ':appsflyer-capacitor-plugin'
 project(':appsflyer-capacitor-plugin').projectDir = new File('../node_modules/appsflyer-capacitor-plugin/android')
