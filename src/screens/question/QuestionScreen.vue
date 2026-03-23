@@ -53,6 +53,8 @@ function handleBack() {
 }
 
 async function answerQuestion(question: QuestionInstance, answer: any) {
+  console.log('answer', answer);
+
   await CommonController.answerQuestion(question, answer);
 }
 

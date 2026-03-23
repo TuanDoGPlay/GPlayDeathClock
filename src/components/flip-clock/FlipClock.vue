@@ -217,7 +217,7 @@ onMounted(async () => {
     console.log('Audio already preloaded or error:', error);
   }
   tickInterval = setInterval(() => {
-    if (isCanTick.value && time.value > 0) {
+    if (isCanTick.value && time.value > 0 && !props.value) {
       time.value -= 1000;
       if (props.playSound) {
         NativeAudio.play({
@@ -227,8 +227,6 @@ onMounted(async () => {
     }
   }, 1000);
   onTimeChangeHandler = async () => {
-    console.log('on change time');
-
     const next = await CommonController.getRemainLiveTime();
     processUpdate(next);
   };

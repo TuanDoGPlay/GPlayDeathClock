@@ -13,9 +13,9 @@ onMounted(() => {
 })
 
 function handleAddMore() {
-  emit('more')
-  // showRewardedVideo(() => {
-  // })
+  showRewardedVideo(() => {
+    emit('more')
+  })
 }
 
 function handleShareClock() {

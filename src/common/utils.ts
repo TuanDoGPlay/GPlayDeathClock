@@ -214,7 +214,18 @@ export const Utils = {
       }
     }
 
-    return Math.max(increment, MS_IN_MONTH);
+    // Nếu increment đang dương nhưng chưa đủ 1 tháng -> Tăng lên 1 tháng
+    if (increment > 0 && increment < MS_IN_MONTH) {
+      return MS_IN_MONTH;
+    }
+
+    // Nếu increment đang âm nhưng lớn hơn -1 tháng (ví dụ -15 ngày) -> Giảm xuống -1 tháng
+    if (increment < 0 && increment > -MS_IN_MONTH) {
+      return -MS_IN_MONTH;
+    }
+
+    // Các trường hợp khác (đã đủ lớn hoặc bằng 0) thì giữ nguyên
+    return increment;
   },
   isNewDay(lastSavedDate: string): boolean {
     const today = new Date().toISOString().split("T")[0]; // Lấy định dạng "2026-03-09"
@@ -222,12 +233,11 @@ export const Utils = {
   },
 
   formatShortenDuration(totalMs: number): string {
-    if (!totalMs || totalMs === 0) return "0 seconds";
+    // Xử lý trường hợp không có giá trị hoặc giá trị quá nhỏ (dưới nửa giây)
+    if (!totalMs || Math.abs(totalMs) < MS_IN_SECOND / 2) return "0 seconds";
 
-    // Đảm bảo xử lý đúng số âm nếu có (chỉ lấy độ lớn)
-    let remainingMs = Math.abs(totalMs);
+    const remainingMs = Math.abs(totalMs);
 
-    // Sử dụng trực tiếp các hằng số ms đã khai báo ở đầu file
     const units = [
       { label: "year", value: MS_IN_YEAR },
       { label: "month", value: MS_IN_MONTH },
@@ -239,14 +249,14 @@ export const Utils = {
     ];
 
     for (const unit of units) {
-      const amount = Math.floor(remainingMs / unit.value);
-      if (amount > 0) {
-        // Trả về ngay lập tức đơn vị lớn nhất tìm được
-        return `${amount} ${unit.label}${amount > 1 ? "s" : ""}`;
+      const roundedAmount = Math.round(remainingMs / unit.value);
+
+      // Nếu sau khi làm tròn mà giá trị >= 1, ta lấy đơn vị này luôn
+      if (roundedAmount >= 1) {
+        return `${roundedAmount} ${unit.label}${roundedAmount > 1 ? "s" : ""}`;
       }
     }
 
-    // Trường hợp số ms quá nhỏ (dưới 1 giây)
     return "0 seconds";
   },
 };

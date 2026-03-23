@@ -85,7 +85,6 @@ export const CommonController = {
       );
       question.time = incrementTime;
       await CommonController.editRemainLiveTime(incrementTime);
-      return Promise.resolve();
     }
     const exist = await Database.selectTable<QuestionInstance>(QUESTION, {
       id: question.id,
