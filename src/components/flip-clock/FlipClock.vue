@@ -26,7 +26,7 @@ interface UnitConfig {
 
 const UNITS: UnitConfig[] = [
   { key: "year", label: "year", short: "y" },
-  { key: "month", label: "month", short: "m" },
+  { key: "month", label: "month", short: "mon" },
   { key: "day", label: "day", short: "d" },
   { key: "hour", label: "hour", short: "h" },
   { key: "minute", label: "min", short: "min" },
@@ -111,13 +111,19 @@ function handleTimeChange(targetKey: keyof ReverseClockView) {
   hideLabels.value = true;
   const targetIdx = UNIT_ORDER.indexOf(targetKey);
 
+  const spinValues = [1, 3, 5, 10, 15];
+
   UNITS.forEach((u) => {
     const unitIdx = UNIT_ORDER.indexOf(u.key);
     diffTexts.value[u.key] = "";
 
+    // Tính khoảng cách (càng xa targetIdx, số vòng xoay càng lớn)
+    const distance = targetIdx - unitIdx;
+
     if (unitIdx < targetIdx) {
       spinStates.value[u.key] = true;
-      spinTurn.value[u.key] = (targetIdx - unitIdx) * 3;
+      const arrayIdx = Math.min(distance - 1, spinValues.length - 1);
+      spinTurn.value[u.key] = spinValues[arrayIdx];
     } else if (unitIdx === targetIdx) {
       spinStates.value[u.key] = true;
       spinTurn.value[u.key] = 0;
@@ -209,6 +215,8 @@ onMounted(async () => {
   }, 1000);
 
   onTimeChangeHandler = async () => {
+    console.log('on change time');
+
     const next = await CommonController.getRemainLiveTime();
     processUpdate(next);
   };

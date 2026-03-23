@@ -295,6 +295,8 @@ function triggerHeavyImpact() {
 }
 
 async function doSpin() {
+  console.log(props.type, props.spin, props.spinTurn);
+
   await nextTick();
 
   const size = end.value - start.value + 1;

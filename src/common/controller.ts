@@ -90,7 +90,7 @@ export const CommonController = {
     const exist = await Database.selectTable<QuestionInstance>(QUESTION, {
       id: question.id,
     });
-    console.log(exist.length);
+    console.log(exist);
 
     if (exist.length) {
       await CommonController.editRemainLiveTime(-(exist[0]?.time ?? 0));

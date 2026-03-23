@@ -2,151 +2,151 @@
   {
     "id": 1,
     "label": "Drink a glass of water immediately upon waking up",
-    "time": 54000000
+    "time": 1296000000
   },
   {
     "id": 2,
     "label": "Stand with your back straight against the wall for 1 minute",
-    "time": 18000000
+    "time": 432000000
   },
   {
     "id": 3,
     "label": "Look 20 feet away for 20 seconds",
-    "time": 18000000
+    "time": 432000000
   },
   {
     "id": 4,
     "label": "Perform 10 squats",
-    "time": 36000000
+    "time": 864000000
   },
   {
     "id": 5,
     "label": "Clean your phone screen",
-    "time": 18000000
+    "time": 432000000
   },
   {
     "id": 6,
     "label": "Wash your hands thoroughly with soap for 20 seconds",
-    "time": 18000000
+    "time": 432000000
   },
   {
     "id": 7,
     "label": "Take 5 deep abdominal breaths",
-    "time": 36000000
+    "time": 864000000
   },
   {
     "id": 8,
     "label": "Walk around the room for 2 minutes",
-    "time": 18000000
+    "time": 432000000
   },
   {
     "id": 9,
     "label": "Eat any piece of fruit",
-    "time": 72000000
+    "time": 1728000000
   },
   {
     "id": 10,
     "label": "Massage your neck and shoulders for 1 minute",
-    "time": 18000000
+    "time": 432000000
   },
   {
     "id": 11,
     "label": "Think of one thing you are grateful for",
-    "time": 54000000
+    "time": 1296000000
   },
   {
     "id": 12,
     "label": "Smile at yourself in the mirror",
-    "time": 18000000
+    "time": 432000000
   },
   {
     "id": 13,
     "label": "Spend 2 minutes in complete silence",
-    "time": 72000000
+    "time": 1728000000
   },
   {
     "id": 14,
     "label": "Write down the single most important task to do",
-    "time": 36000000
+    "time": 864000000
   },
   {
     "id": 15,
     "label": "Read exactly one page of a book",
-    "time": 36000000
+    "time": 864000000
   },
   {
     "id": 16,
     "label": "Listen to a favorite song in its entirety",
-    "time": 36000000
+    "time": 864000000
   },
   {
     "id": 17,
     "label": "Forgive yourself for a small mistake",
-    "time": 54000000
+    "time": 1296000000
   },
   {
     "id": 18,
     "label": "Tidy up a small corner of your desk",
-    "time": 36000000
+    "time": 864000000
   },
   {
     "id": 19,
     "label": "Turn off all notifications for 30 minutes",
-    "time": 108000000
+    "time": 2592000000
   },
   {
     "id": 20,
     "label": "Record a dream you remember",
-    "time": 18000000
+    "time": 432000000
   },
   {
     "id": 21,
     "label": "Open the window for fresh air",
-    "time": 36000000
+    "time": 864000000
   },
   {
     "id": 22,
     "label": "Message a friend you haven't seen in a long time",
-    "time": 108000000
+    "time": 2592000000
   },
   {
     "id": 23,
     "label": "Look into the morning sunlight",
-    "time": 54000000
+    "time": 1296000000
   },
   {
     "id": 24,
     "label": "Water or look at a green sprout",
-    "time": 18000000
+    "time": 432000000
   },
   {
     "id": 25,
     "label": "Eat a meal without looking at a screen",
-    "time": 72000000
+    "time": 1728000000
   },
   {
     "id": 26,
     "label": "Sincerely compliment someone",
-    "time": 72000000
+    "time": 1728000000
   },
   {
     "id": 27,
     "label": "Leave your phone in another room while sleeping",
-    "time": 216000000
+    "time": 5184000000
   },
   {
     "id": 28,
     "label": "Prepare your clothes for tomorrow tonight",
-    "time": 36000000
+    "time": 864000000
   },
   {
     "id": 29,
     "label": "Soak your feet in warm water before bed",
-    "time": 108000000
+    "time": 2592000000
   },
   {
     "id": 30,
     "label": "Open the Death Clock app and check the time",
-    "time": 3600000
+    "time": 86400000
   }
 ]

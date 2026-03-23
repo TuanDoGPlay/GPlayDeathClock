@@ -95,7 +95,6 @@ export const Utils = {
     const units = [
       { label: "y", value: MS_IN_YEAR }, // 365 * 24 * 60 * 60
       { label: "mo", value: MS_IN_MONTH }, // 30 * 24 * 60 * 60
-      { label: "w", value: MS_IN_WEEK }, // 7 * 24 * 60 * 60
       { label: "d", value: MS_IN_DAY }, // 24 * 60 * 60
       { label: "h", value: MS_IN_HOUR },
       { label: "m", value: MS_IN_MINUTE },
@@ -167,53 +166,55 @@ export const Utils = {
     question: QuestionInstance,
     answer: any,
   ): number {
-    if (!answer) return 0;
-    if (question.method === QuestionMethodEnum.TextRandom) {
-      const logic = question.logic as TextRandomAnswerLogic;
-      const fromNumber = Utils.convertStringToMs(logic.from);
-      const toNumber = Utils.convertStringToMs(logic.to);
-      return Math.random() * (toNumber - fromNumber) + fromNumber;
-    }
-    if (question.method === QuestionMethodEnum.SelectRandom) {
-      const logic = question.logic as SelectRandomAnswerLogic;
-      const index = question.options?.findIndex((option) => option === answer);
-      if (index !== undefined && index >= 0 && logic.random[index]) {
-        const randomLogic = logic.random[index];
-        const fromNumber = Utils.convertStringToMs(randomLogic.from);
-        const toNumber = Utils.convertStringToMs(randomLogic.to);
-        return Math.random() * (toNumber - fromNumber) + fromNumber;
+    let increment = 0;
+
+    if (answer) {
+      if (question.method === QuestionMethodEnum.TextRandom) {
+        const logic = question.logic as TextRandomAnswerLogic;
+        const fromNumber = Utils.convertStringToMs(logic.from);
+        const toNumber = Utils.convertStringToMs(logic.to);
+        increment = Math.random() * (toNumber - fromNumber) + fromNumber;
+      } else if (question.method === QuestionMethodEnum.SelectRandom) {
+        const logic = question.logic as SelectRandomAnswerLogic;
+        const index = question.options?.findIndex(
+          (option) => option === answer,
+        );
+        if (index !== undefined && index >= 0 && logic.random[index]) {
+          const randomLogic = logic.random[index];
+          const fromNumber = Utils.convertStringToMs(randomLogic.from);
+          const toNumber = Utils.convertStringToMs(randomLogic.to);
+          increment = Math.random() * (toNumber - fromNumber) + fromNumber;
+        }
+      } else if (question.method === QuestionMethodEnum.SliderOffset) {
+        const logic = question.logic as SliderOffsetAnswerLogic;
+        const val = Number(answer);
+        const [minIdeal, maxIdeal] = logic.ideal;
+
+        if (val >= minIdeal && val <= maxIdeal) {
+          const fromBonus = Utils.convertStringToMs(logic.bonus.from);
+          const toBonus = Utils.convertStringToMs(logic.bonus.to);
+          increment = Math.random() * (toBonus - fromBonus) + fromBonus;
+        } else {
+          const offset = val < minIdeal ? minIdeal - val : val - maxIdeal;
+          const penaltyMs = Utils.convertStringToMs(logic.penaltyPerHour);
+          increment = offset * penaltyMs;
+        }
+      } else if (question.method === QuestionMethodEnum.ValueMatch) {
+        const logic = question.logic as ValueMatchAnswerLogic;
+        const val = Number(answer);
+        const matchedRule = logic.rules.find((rule) =>
+          rule.values.includes(val),
+        );
+
+        if (matchedRule) {
+          const fromNumber = Utils.convertStringToMs(matchedRule.from);
+          const toNumber = Utils.convertStringToMs(matchedRule.to);
+          increment = Math.random() * (toNumber - fromNumber) + fromNumber;
+        }
       }
-      return 0;
-    }
-    if (question.method === QuestionMethodEnum.SliderOffset) {
-      const logic = question.logic as SliderOffsetAnswerLogic;
-      const val = Number(answer);
-      const [minIdeal, maxIdeal] = logic.ideal;
-
-      if (val >= minIdeal && val <= maxIdeal) {
-        const fromBonus = Utils.convertStringToMs(logic.bonus.from);
-        const toBonus = Utils.convertStringToMs(logic.bonus.to);
-        return Math.random() * (toBonus - fromBonus) + fromBonus;
-      } else {
-        const offset = val < minIdeal ? minIdeal - val : val - maxIdeal;
-        const penaltyMs = Utils.convertStringToMs(logic.penaltyPerHour);
-        return offset * penaltyMs;
-      }
     }
 
-    if (question.method === QuestionMethodEnum.ValueMatch) {
-      const logic = question.logic as ValueMatchAnswerLogic;
-      const val = Number(answer);
-
-      const matchedRule = logic.rules.find((rule) => rule.values.includes(val));
-
-      if (matchedRule) {
-        const fromNumber = Utils.convertStringToMs(matchedRule.from);
-        const toNumber = Utils.convertStringToMs(matchedRule.to);
-        return Math.random() * (toNumber - fromNumber) + fromNumber;
-      }
-    }
-    return 0;
+    return Math.max(increment, MS_IN_MONTH);
   },
   isNewDay(lastSavedDate: string): boolean {
     const today = new Date().toISOString().split("T")[0]; // Lấy định dạng "2026-03-09"

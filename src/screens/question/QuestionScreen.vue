@@ -1,21 +1,20 @@
 <script lang="ts" setup>
 import Question from '@/assets/icons/question.svg'
-import {computed, nextTick, onBeforeMount, ref, watch} from "vue";
+import { computed, nextTick, onBeforeMount, ref, watch } from "vue";
 import ContentFrame from "@/components/content-frame/ContentFrame.vue";
-import {goToRouter} from "gplay-app-sdk";
+import { goToRouter } from "gplay-app-sdk";
 import QuestionItem from "@/screens/question/components/QuestionItem.vue";
 import MoreQuestion from "@/screens/question/components/MoreQuestion.vue";
 import TabComponent from "@/components/tab/TabComponent.vue";
 import TabPane from "@/components/tab/TabPane.vue";
-import type {QuestionInstance} from "@/common/types.ts";
-import {CommonController} from "@/common/controller.ts";
+import type { QuestionInstance } from "@/common/types.ts";
+import { CommonController } from "@/common/controller.ts";
 import DefaultQuestions from "@/screens/question/components/DefaultQuestions.vue";
 
 const questions = ref<QuestionInstance[]>([])
 const answers = ref<Record<string, any>>({}) // key: questionId (string)
 
 const isFirstVisit = ref(false)
-
 const activeName = ref("")
 
 const currentTabIndex = computed(() => {
@@ -32,13 +31,12 @@ watch(activeName, async (_newVal, oldVal) => {
   // oldVal là tab vừa rời đi
   // bỏ qua lần set initial hoặc oldVal rỗng
   if (!oldVal) return;
-
   // nếu rời khỏi tab câu hỏi (không phải tab "more")
   if (oldVal !== "more") {
     const question = questions.value.find(q => q.id.toString() === oldVal);
     const answer = answers.value[oldVal];
 
-    if (question) {
+    if (question && answer) {
       await answerQuestion(question, answer);
     }
   }
@@ -51,7 +49,7 @@ async function fetchQuestions() {
 }
 
 function handleBack() {
-  goToRouter({name: 'home'})
+  goToRouter({ name: 'home' })
 }
 
 async function answerQuestion(question: QuestionInstance, answer: any) {
@@ -71,23 +69,22 @@ function moreQuestions() {
 
 <template>
   <div class="h-full">
-    <DefaultQuestions v-if="isFirstVisit" @more="moreQuestions"/>
+    <DefaultQuestions v-if="isFirstVisit" @more="moreQuestions" />
 
     <ContentFrame v-else :current-tab="currentTabIndex" :icon="Question" :total-tab="questions.length + 1" show-back
-                  show-pagination-in-title title="Questions" @back="handleBack">
+      show-pagination-in-title title="Questions" @back="handleBack">
       <TabComponent v-model="activeName" :dots="true" :swipe="true">
 
         <TabPane v-for="question in questions" :key="question.id" :name="question.id.toString()">
-          <QuestionItem :question="question"
-                        @input="val => { answers[question.id.toString()] = val; }" @next="val => {
-              const id = question.id.toString()
-              answers[id] = val
-              goNext(id)
-            }"/>
+          <QuestionItem :question="question" @input="val => { answers[question.id.toString()] = val; }" @next="val => {
+            const id = question.id.toString()
+            answers[id] = val
+            goNext(id)
+          }" />
         </TabPane>
 
         <TabPane label="More" name="more">
-          <MoreQuestion @more="fetchQuestions"/>
+          <MoreQuestion @more="fetchQuestions" />
         </TabPane>
 
       </TabComponent>
