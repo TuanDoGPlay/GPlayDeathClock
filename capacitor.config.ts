@@ -5,7 +5,6 @@ const config: CapacitorConfig = {
   appName: "Death Clock",
   webDir: "dist",
   server: {
-    url: "http://192.168.10.10:5173",
     androidScheme: "https",
     cleartext: true,
   },

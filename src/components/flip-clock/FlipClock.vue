@@ -246,8 +246,6 @@ onBeforeUnmount(() => {
 });
 
 watch(() => props.playSound, (isPlay) => {
-  console.log('props.playSound', props.playSound);
-
   if (!isPlay) {
     NativeAudio.stop({ assetId: 'clock' });
   }

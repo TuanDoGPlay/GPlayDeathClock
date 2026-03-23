@@ -40,11 +40,13 @@ function handleInput() {
         <ButtonComponent v-for="option in props.question.options" :text="option" class="mt-3 mx-auto" style="width: 80%"
           template="primary" @click="onSelected(option)" />
       </div>
-      <div v-else-if="props.question.type == 'slider'" class="w-full">
+      <div v-else-if="props.question.type == 'slider'" class="w-full h-fit">
         <SliderCarouselComponent v-model="answer" :max="props.question.max" :min="props.question.min"
-          class="mt-3 mx-auto" style="width: 80%" />
-        <ButtonComponent :icon="Next" icon-right template="primary" text="Skip" class="mx-auto mt-2" @click="goSkip" />
-        <ButtonComponent :icon="Next" icon-right template="primary" text="Next" class="mx-auto mt-2" @click="goNext" />
+          class="mt-3 mx-auto" style="width: 80%;height: 6rem;" />
+        <div class="flex justify-center gap-2 mt-8">
+          <ButtonComponent :icon="Next" icon-right template="primary" text="Skip" @click="goSkip" />
+          <ButtonComponent :icon="Next" icon-right template="primary" text="Next" @click="goNext" />
+        </div>
 
       </div>
       <div v-else class="w-2/3">

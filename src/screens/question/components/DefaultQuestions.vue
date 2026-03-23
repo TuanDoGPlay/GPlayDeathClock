@@ -55,13 +55,21 @@ const currentTabIndex = computed(() => {
 })
 
 onMounted(async () => {
-  userData.value = await CommonController.getUserData()
-  if (userData.value.name) activeName.value = '1'
-  else if (userData.value.dob) activeName.value = '2'
-  else if (userData.value.height) activeName.value = '3'
-  else if (userData.value.weight) activeName.value = '4'
-  else if (userData.value.sex) activeName.value = '5'
-  else if (userData.value.sexualOrientation) activeName.value = '6'
+  const data = await CommonController.getUserData()
+
+  if (data.name) userData.value.name = data.name
+  if (data.dob) userData.value.dob = data.dob
+  if (data.height) userData.value.height = data.height
+  if (data.weight) userData.value.weight = data.weight
+  if (data.sex) userData.value.sex = data.sex
+  if (data.sexualOrientation) userData.value.sexualOrientation = data.sexualOrientation
+
+  if (data.sexualOrientation) activeName.value = 'more'
+  else if (data.sex) activeName.value = '5'
+  else if (data.weight) activeName.value = '4'
+  else if (data.height) activeName.value = '3'
+  else if (data.dob) activeName.value = '2'
+  else if (data.name) activeName.value = '1'
 })
 
 
