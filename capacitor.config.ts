@@ -12,9 +12,6 @@ const config: CapacitorConfig = {
     Keyboard: {
       resize: "none",
     },
-    NativeAudio: {
-      hls: false, // Disable HLS to reduce APK size by ~4MB
-    },
   },
 };
 

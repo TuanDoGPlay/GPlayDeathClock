@@ -19,7 +19,7 @@
     "@capacitor/toast": "^8.0.1",
     "appsflyer-capacitor-plugin": "^6.17.8",
     "cordova-plugin-applovin-max": "^2.1.0",
-    "gplay-app-sdk": "^1.0.2",
+    "gplay-app-sdk": "^1.0.5",
     "gsap": "^3.14.2",
     "swiper": "12.1.2",
     "uuid": "^13.0.0",
