@@ -12,12 +12,12 @@ import {
 import { type Pane, TABS_KEY } from "./tabContext";
 
 const props = withDefaults(
-    defineProps<{
-      modelValue: string;
-      dots?: boolean;
-      swipe?: boolean;
-    }>(),
-    { dots: true, swipe: true }
+  defineProps<{
+    modelValue: string;
+    dots?: boolean;
+    swipe?: boolean;
+  }>(),
+  { dots: true, swipe: true }
 );
 
 const emit = defineEmits<{
@@ -65,7 +65,7 @@ const syncInitial = async () => {
   const idxByModel = panes.findIndex((p) => p.name === props.modelValue);
   const idxFallback = panes.findIndex((p) => p.name !== "more");
   const idx =
-      idxByModel >= 0 ? idxByModel : idxFallback >= 0 ? idxFallback : 0;
+    idxByModel >= 0 ? idxByModel : idxFallback >= 0 ? idxFallback : 0;
 
   currentIndex.value = Math.max(0, idx);
 
@@ -151,15 +151,15 @@ const scrollToTab = (index: number) => {
 
 // ---------- external model change ----------
 watch(
-    () => props.modelValue,
-    (newVal) => {
-      activeName.value = newVal;
-      if (!hasSyncedInitial.value) return;
-      if (isEmitting.value) return;
+  () => props.modelValue,
+  (newVal) => {
+    activeName.value = newVal;
+    if (!hasSyncedInitial.value) return;
+    if (isEmitting.value) return;
 
-      const idx = panes.findIndex((p) => p.name === newVal);
-      if (idx >= 0) scrollToTab(idx);
-    }
+    const idx = panes.findIndex((p) => p.name === newVal);
+    if (idx >= 0) scrollToTab(idx);
+  }
 );
 
 // ---------- resize ----------
@@ -195,21 +195,17 @@ defineExpose({ scrollToTab });
 
 <template>
   <div class="flex flex-col h-full w-full overflow-hidden">
-    <div
-        ref="scrollContainer"
-        :class="[
-        'flex-1 flex snap-x snap-mandatory no-scrollbar custom-scroll',
-        swipe ? 'overflow-x-auto' : 'overflow-x-hidden'
-      ]"
-        @scroll.passive="handleScroll"
-    >
+    <div ref="scrollContainer" :class="[
+      'flex-1 flex snap-x snap-mandatory no-scrollbar custom-scroll',
+      swipe ? 'overflow-x-auto' : 'overflow-x-hidden'
+    ]" @scroll.passive="handleScroll">
       <slot />
     </div>
 
     <div v-if="dots && panes.length > 1" class="flex justify-center items-center py-2">
-      <div v-for="(_, idx) in panes" :key="idx" class="px-1.5 py-2 cursor-pointer" >
+      <div v-for="(_, idx) in panes" :key="idx" class="px-1.5 py-2 cursor-pointer">
         <div :class="idx === currentIndex ? 'bg-[#535353]' : 'bg-[#D9D9D9]'"
-             class="w-2 h-2 rounded-full transition-all duration-200" />
+          class="w-2 h-2 rounded-full transition-all duration-200" />
       </div>
     </div>
   </div>

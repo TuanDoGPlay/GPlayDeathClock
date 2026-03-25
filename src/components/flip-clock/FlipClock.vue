@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import {computed, onBeforeUnmount, onMounted, ref, watch} from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import FlipClockItem from "@/components/flip-clock/FlipClockItem.vue";
-import {EventEnum} from "@/constants/events";
-import {CommonController} from "@/common/controller";
-import type {ReverseClockView} from "@/common/types";
-import {MS_IN_DAY, MS_IN_HOUR, MS_IN_MINUTE, MS_IN_MONTH, MS_IN_SECOND, MS_IN_YEAR, Utils,} from "@/common/utils";
+import { EventEnum } from "@/constants/events";
+import { CommonController } from "@/common/controller";
+import type { ReverseClockView } from "@/common/types";
+import { MS_IN_DAY, MS_IN_HOUR, MS_IN_MINUTE, MS_IN_MONTH, MS_IN_SECOND, MS_IN_YEAR, Utils, } from "@/common/utils";
 
 interface UnitConfig {
   key: keyof ReverseClockView;
@@ -15,12 +15,12 @@ interface UnitConfig {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const UNITS: UnitConfig[] = [
-  {key: "year", label: "year", short: "y"},
-  {key: "month", label: "month", short: "mon"},
-  {key: "day", label: "day", short: "d"},
-  {key: "hour", label: "hour", short: "h"},
-  {key: "minute", label: "min", short: "min"},
-  {key: "second", label: "sec", short: "s"},
+  { key: "year", label: "year", short: "y" },
+  { key: "month", label: "month", short: "mon" },
+  { key: "day", label: "day", short: "d" },
+  { key: "hour", label: "hour", short: "h" },
+  { key: "minute", label: "min", short: "min" },
+  { key: "second", label: "sec", short: "s" },
 ];
 
 const UNIT_ORDER: (keyof ReverseClockView)[] = [
@@ -28,12 +28,12 @@ const UNIT_ORDER: (keyof ReverseClockView)[] = [
 ];
 
 const THRESHOLDS = [
-  {key: "year", val: MS_IN_YEAR},
-  {key: "month", val: MS_IN_MONTH},
-  {key: "day", val: MS_IN_DAY},
-  {key: "hour", val: MS_IN_HOUR},
-  {key: "minute", val: MS_IN_MINUTE},
-  {key: "second", val: MS_IN_SECOND},
+  { key: "year", val: MS_IN_YEAR },
+  { key: "month", val: MS_IN_MONTH },
+  { key: "day", val: MS_IN_DAY },
+  { key: "hour", val: MS_IN_HOUR },
+  { key: "minute", val: MS_IN_MINUTE },
+  { key: "second", val: MS_IN_SECOND },
 ] as const;
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -43,7 +43,7 @@ const props = defineProps<{
   value?: number;
   hideAnimation?: boolean;
   animationDuration?: number;
-  playSound?: boolean
+  playSound?: boolean;
 }>();
 
 // ─── State ────────────────────────────────────────────────────────────────────
@@ -136,7 +136,7 @@ function handleTimeChange(targetKey: keyof ReverseClockView) {
 
     setTimeout(() => {
       isCanTick.value = true;
-    }, 500)
+    }, 500);
     startRestoreTimer();
   }, totalAnimTime.value);
 
@@ -195,7 +195,7 @@ async function processUpdate(newTime: number) {
   handleTimeChange(targetKey);
 }
 
-const tickAudio = new Audio('/sounds/clock.mp3')
+const tickAudio = new Audio('/sounds/clock.mp3');
 onMounted(async () => {
   const initial = props.value ?? (await CommonController.getRemainLiveTime());
   time.value = initial;
@@ -228,15 +228,15 @@ onBeforeUnmount(() => {
 
 watch(() => props.playSound, (isPlay) => {
   if (!isPlay) {
-    tickAudio.pause()
+    tickAudio.pause();
   }
 });
 
 watch(
-    () => props.value,
-    (newVal) => {
-      if (newVal !== undefined && newVal !== null) processUpdate(newVal);
-    }
+  () => props.value,
+  (newVal) => {
+    if (newVal !== undefined && newVal !== null) processUpdate(newVal);
+  }
 );
 </script>
 
@@ -245,8 +245,8 @@ watch(
     <div v-for="u in UNITS" :key="u.key" class="item">
       <div v-if="props.showLabel" class="label-wrapper">
         <Transition mode="out-in" name="diff-float">
-          <div v-if="diffTexts[u.key]" :key="u.key + 'diff'" :style="{ color: diffTexts[u.key]?.startsWith('+') ? '#66BC32' : '#E32626' }"
-               class="diff-label">
+          <div v-if="diffTexts[u.key]" :key="u.key + 'diff'"
+            :style="{ color: diffTexts[u.key]?.startsWith('+') ? '#66BC32' : '#E32626' }" class="diff-label">
             {{ diffTexts[u.key] }}
           </div>
 
@@ -254,12 +254,12 @@ watch(
             {{ u.label }}
           </span>
 
-          <div v-else :key="u.key + 'empty'" class="empty-holder"/>
+          <div v-else :key="u.key + 'empty'" class="empty-holder" />
         </Transition>
       </div>
 
       <FlipClockItem :duration="totalAnimTime" :spin="spinStates[u.key]" :spinDirection="spinDirection"
-                     :spinTurn="spinTurn[u.key]" :type="u.key" :value="unitValues[u.key]"/>
+        :spinTurn="spinTurn[u.key]" :type="u.key" :value="unitValues[u.key]" />
     </div>
   </div>
 </template>

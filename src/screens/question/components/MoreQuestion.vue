@@ -6,16 +6,16 @@ import { onMounted } from "vue";
 import { goToRouter, loadRewardedVideo, showRewardedVideo } from "gplay-app-sdk";
 import { EventEnum } from "@/constants/events.ts";
 
-const emit = defineEmits(['more'])
+const emit = defineEmits(['more']);
 
 onMounted(() => {
-  loadRewardedVideo()
-})
+  loadRewardedVideo();
+});
 
 function handleAddMore() {
+  emit('more');
   showRewardedVideo(() => {
-    emit('more')
-  })
+  });
 }
 
 function handleShareClock() {
@@ -23,9 +23,9 @@ function handleShareClock() {
     name: 'share-clock'
   }).then(() => {
     setTimeout(() => {
-      document.dispatchEvent(new Event(EventEnum.ShareDeathStory))
-    }, 200)
-  })
+      document.dispatchEvent(new Event(EventEnum.ShareDeathStory));
+    }, 200);
+  });
 }
 </script>
 

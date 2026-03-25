@@ -1,14 +1,14 @@
 <script lang="ts" setup>
-import { nextTick, onMounted, ref } from "vue";
+import {nextTick, onMounted, ref} from "vue";
 import gsap from "gsap";
 import Question from '@/assets/icons/question.svg'
 import Share from '@/assets/icons/share.svg'
 import FlipClock from "@/components/flip-clock/FlipClock.vue";
 import ButtonComponent from "@/components/button/ButtonComponent.vue";
-import { EventEnum } from "@/constants/events.ts";
-import { CommonController } from "@/common/controller";
-import { goToRouter } from "gplay-app-sdk";
-import { App } from '@capacitor/app';
+import {EventEnum} from "@/constants/events.ts";
+import {CommonController} from "@/common/controller";
+import {goToRouter} from "gplay-app-sdk";
+import {App} from '@capacitor/app';
 
 const splashWrapper = ref<HTMLElement | null>(null);
 const clockWrapper = ref<HTMLElement | null>(null);
@@ -17,22 +17,22 @@ const textWrapper = ref<HTMLElement | null>(null);
 const isShowClock = ref(true);
 const isFirstVisit = ref(true);
 const isClockSpin = ref(false);
-const isPlaySound = ref(false);
-const lines = Array.from({ length: 20 });
+const isPlaySound = ref(true);
+const lines = Array.from({length: 20});
 
 onMounted(async () => {
   await nextTick();
   await fetchIsFirstVisit();
   await CommonController.checkAndRunNewDayTask()
 
-  App.addListener('appStateChange', ({ isActive }) => {
-    isPlaySound.value = isActive
+  App.addListener('appStateChange', ({isActive}) => {
+    isPlaySound.value = isActive && isShowClock.value;
   });
 
   document.addEventListener(EventEnum.ToggleClock, (e) => {
     const event = e as CustomEvent<{ isShow: boolean }>;
     isShowClock.value = event.detail.isShow;
-    if (!isShowClock.value) isPlaySound.value = false;
+    isPlaySound.value = isShowClock.value;
   });
 });
 
@@ -63,48 +63,48 @@ function playMasterAnimation() {
 
     const clockH = clockWrapper.value.getBoundingClientRect().height ?? 0;
 
-    gsap.set(clockWrapper.value, { opacity: 0 });
-    gsap.set(textWrapper.value, { opacity: 0, y: clockH / 2 + 100 });
+    gsap.set(clockWrapper.value, {opacity: 0});
+    gsap.set(textWrapper.value, {opacity: 0, y: clockH / 2 + 100});
 
     tl.to(clockWrapper.value, {
       opacity: 1,
       duration: 1,
       ease: "power2.inOut",
     }, "-=0.2")
-      .to(textWrapper.value, {
-        opacity: 1,
-        y: 0,
-        duration: 0.8,
-        ease: "power2.out",
-        onStart: () => {
-          isPlaySound.value = true
-        }
-      }, "+=0")
-      // Chờ 3s để User đọc chữ rồi chuyển màn
-      .add(() => {
-        setTimeout(() => {
-          isFirstVisit.value = false;
-          goToQuestion();
-        }, 3000);
-      });
+        .to(textWrapper.value, {
+          opacity: 1,
+          y: 0,
+          duration: 0.8,
+          ease: "power2.out",
+          onStart: () => {
+            isPlaySound.value = true
+          }
+        }, "+=0")
+        // Chờ 3s để User đọc chữ rồi chuyển màn
+        .add(() => {
+          setTimeout(() => {
+            isFirstVisit.value = false;
+            goToQuestion();
+          }, 3000);
+        });
   }
 }
 
 async function goToQuestion() {
-  await goToRouter({ name: 'question' });
+  await goToRouter({name: 'question'});
 }
 
 async function goToShareClock() {
-  await goToRouter({ name: 'share-clock' });
+  await goToRouter({name: 'share-clock'});
 }
 </script>
 
 <template>
   <div class="main-container flex flex-col items-center justify-center h-full px-2 pt-10 pb-1 relative overflow-hidden"
-    style="user-select: none;">
+       style="user-select: none;">
     <Teleport to="body">
-      <img ref="splashWrapper" alt="splash" src="/splash.svg"
-        class="fixed inset-0 z-[200] w-screen h-screen object-cover object-center pointer-events-none">
+      <img ref="splashWrapper" alt="splash" class="fixed inset-0 z-[200] w-screen h-screen object-cover object-center pointer-events-none"
+           src="/splash.svg">
     </Teleport>
 
     <div :class="[
@@ -114,14 +114,14 @@ async function goToShareClock() {
       <div class="flex flex-col items-center w-full">
 
         <div ref="clockWrapper" :class="{ 'opacity-0': isFirstVisit, 'opacity-100': !isFirstVisit }"
-          class="transition-opacity w-full">
-          <FlipClock :show-label="!isFirstVisit" :spin="isClockSpin" :play-sound="isPlaySound" class="w-full" />
+             class="transition-opacity w-full">
+          <FlipClock :play-sound="isPlaySound" :show-label="!isFirstVisit" :spin="isClockSpin" class="w-full"/>
         </div>
 
         <div :class="{ 'opacity-0 pointer-events-none': isFirstVisit, 'opacity-100': !isFirstVisit }"
-          class="grid grid-cols-2 gap-1.5 w-full my-5" style="transition: opacity 0.5s ease">
-          <ButtonComponent :icon="Question" :text="'Questions'" @click="goToQuestion" style="width: 100%;" />
-          <ButtonComponent :icon="Share" :text="'Share Clock'" @click="goToShareClock" style="width: 100%;" />
+             class="grid grid-cols-2 gap-1.5 w-full my-5" style="transition: opacity 0.5s ease">
+          <ButtonComponent :icon="Question" :text="'Questions'" style="width: 100%;" @click="goToQuestion"/>
+          <ButtonComponent :icon="Share" :text="'Share Clock'" style="width: 100%;" @click="goToShareClock"/>
         </div>
       </div>
     </div>
@@ -147,11 +147,11 @@ async function goToShareClock() {
     </Transition>
 
     <div :class="{ 'opacity-0 pointer-events-none': isFirstVisit, 'opacity-100': !isFirstVisit }"
-      class="w-full flex-1 rounded-2xl overflow-hidden"
-      style="background-color: var(--panel-theme-1); transition: opacity 2s ease">
+         class="w-full flex-1 rounded-2xl overflow-hidden"
+         style="background-color: var(--panel-theme-1); transition: opacity 2s ease">
       <RouterView v-slot="{ Component }">
         <Transition mode="out-in" name="fade">
-          <component :is="Component" class="h-full w-full" />
+          <component :is="Component" class="h-full w-full"/>
         </Transition>
       </RouterView>
     </div>
