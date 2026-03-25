@@ -1,8 +1,8 @@
 import {defineConfig} from 'vite'
 import vue from '@vitejs/plugin-vue'
 import {fileURLToPath, URL} from "node:url";
-import {gplayReloadPlugin} from "../gplay-app-sdk/src/vite/reloadPlugin.ts";
 import svgLoader from 'vite-svg-loader'
+import {gplayReloadPlugin} from "gplay-app-sdk/vite";
 
 
 // https://vite.dev/config/

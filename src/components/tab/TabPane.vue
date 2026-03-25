@@ -15,28 +15,26 @@ const ctx = inject(TABS_KEY);
 if (!ctx) throw new Error("TabPane must be used inside TabComponent");
 
 const uid = getCurrentInstance()!.uid;
-
-// ✅ thêm: bắt root element
 const elRef = ref<HTMLElement | null>(null);
 
 onMounted(() => {
   ctx.registerPane({
     uid,
     name: props.name,
-    el: elRef.value, // ✅ thêm dòng này
+    el: elRef.value,
   });
 });
 
 onBeforeUnmount(() => {
   ctx.unregisterPane(uid);
 });
-
-const isActive = computed(() => ctx.activeName.value === props.name);
 </script>
 
 <template>
-  <section ref="elRef" class="min-w-full h-full snap-start snap-always overflow-y-auto"
-    v-show="ctx.swipe.value ? true : isActive">
+  <section
+      ref="elRef"
+      class="min-w-full h-full snap-start snap-always overflow-y-auto"
+  >
     <slot />
   </section>
 </template>

@@ -4,12 +4,13 @@ import type { QuestionInstance } from "@/common/types.ts";
 import InputComponent from "@/components/input/InputComponent.vue";
 import { ref, } from "vue";
 import Next from "@/assets/icons/next.svg";
+import Skip from "@/assets/icons/skip.svg";
 import SliderCarouselComponent from "@/components/carousel/SliderCarouselComponent.vue";
 
 const props = defineProps<{
   question: QuestionInstance;
 }>();
-const emit = defineEmits(["next", 'input']);
+const emit = defineEmits(["next", 'input','skip']);
 
 const answer = ref<any>();
 
@@ -23,7 +24,7 @@ function goNext() {
 }
 
 function goSkip() {
-  emit("next", undefined);
+  emit("skip");
 }
 
 
@@ -34,7 +35,7 @@ function handleInput() {
 
 <template>
   <div class="flex flex-col items-center justify-center h-full overflow-y-auto py-5">
-    <div class="flex flex-col items-center w-full  gap-5">
+    <div class="flex flex-col items-center w-full gap-5">
       <p class="font-bold text-center mx-3">{{ props.question.question }}</p>
       <div v-if="props.question.type == 'select'" class="w-full">
         <ButtonComponent v-for="option in props.question.options" :text="option" class="mt-3 mx-auto" style="width: 80%"
@@ -44,7 +45,7 @@ function handleInput() {
         <SliderCarouselComponent v-model="answer" :max="props.question.max" :min="props.question.min"
           class="mt-3 mx-auto" style="width: 80%;height: 6rem;" />
         <div class="flex justify-center gap-2 mt-8">
-          <ButtonComponent :icon="Next" icon-right template="primary" text="Skip" @click="goSkip" />
+          <ButtonComponent :icon="Skip" icon-right template="primary" text="Skip" @click="goSkip" />
           <ButtonComponent :icon="Next" icon-right template="primary" text="Next" @click="goNext" />
         </div>
 
@@ -52,8 +53,10 @@ function handleInput() {
       <div v-else class="w-2/3">
         <InputComponent ref="inputRef" v-model="answer" :type="props.question.type" @input="handleInput"
           @keydown.enter.prevent="goNext" />
-        <ButtonComponent :icon="Next" icon-right template="primary" text="Skip" class="mx-auto mt-2" @click="goNext" />
-
+        <div class="flex justify-center gap-2 mt-8">
+          <ButtonComponent :icon="Skip" icon-right template="primary" text="Skip" @click="goSkip" />
+          <ButtonComponent :icon="Next" icon-right template="primary" text="Next" @click="goNext" />
+        </div>
       </div>
     </div>
   </div>

@@ -26,13 +26,13 @@ onMounted(async () => {
   await CommonController.checkAndRunNewDayTask()
 
   App.addListener('appStateChange', ({ isActive }) => {
-    console.log('isActive', isActive);
     isPlaySound.value = isActive
   });
 
   document.addEventListener(EventEnum.ToggleClock, (e) => {
     const event = e as CustomEvent<{ isShow: boolean }>;
     isShowClock.value = event.detail.isShow;
+    if (!isShowClock.value) isPlaySound.value = false;
   });
 });
 

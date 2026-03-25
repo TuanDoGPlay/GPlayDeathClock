@@ -12,12 +12,12 @@ import {
 import { type Pane, TABS_KEY } from "./tabContext";
 
 const props = withDefaults(
-  defineProps<{
-    modelValue: string;
-    dots?: boolean;
-    swipe?: boolean;
-  }>(),
-  { dots: true, swipe: true }
+    defineProps<{
+      modelValue: string;
+      dots?: boolean;
+      swipe?: boolean;
+    }>(),
+    { dots: true, swipe: true }
 );
 
 const emit = defineEmits<{
@@ -65,7 +65,7 @@ const syncInitial = async () => {
   const idxByModel = panes.findIndex((p) => p.name === props.modelValue);
   const idxFallback = panes.findIndex((p) => p.name !== "more");
   const idx =
-    idxByModel >= 0 ? idxByModel : idxFallback >= 0 ? idxFallback : 0;
+      idxByModel >= 0 ? idxByModel : idxFallback >= 0 ? idxFallback : 0;
 
   currentIndex.value = Math.max(0, idx);
 
@@ -87,7 +87,6 @@ const syncInitial = async () => {
   isReady.value = true;
 };
 
-// ✅ chỉ commit active khi scroll đã settle (snap xong)
 const commitActiveFromScroll = () => {
   const el = scrollContainer.value;
   if (!el) return;
@@ -122,17 +121,15 @@ provide(TABS_KEY, {
   },
 });
 
-// ---------- scroll (swipe) ----------
+// ---------- scroll ----------
 const handleScroll = () => {
   if (!isReady.value || !hasSyncedInitial.value) return;
   const el = scrollContainer.value;
   if (!el) return;
 
-  // ✅ cập nhật dot theo realtime (KHÔNG emit, KHÔNG đổi activeName)
   const idx = getIndexFromScroll(el);
   if (idx !== currentIndex.value) currentIndex.value = idx;
 
-  // ✅ debounce: chỉ khi dừng scroll mới commit activeName/modelValue
   clearTimeout(settleTimer);
   settleTimer = setTimeout(() => {
     commitActiveFromScroll();
@@ -144,29 +141,25 @@ const scrollToTab = (index: number) => {
   if (!el || index < 0 || index >= panes.length) return;
 
   const targetLeft = index * el.clientWidth;
-
-  // dot update ngay
   currentIndex.value = index;
 
-  // smooth cho click dot
   el.scrollTo({ left: targetLeft, behavior: "smooth" });
 
-  // sau khi settle sẽ commit chính xác (snap)
   clearTimeout(settleTimer);
   settleTimer = setTimeout(() => commitActiveFromScroll(), 200);
 };
 
 // ---------- external model change ----------
 watch(
-  () => props.modelValue,
-  (newVal) => {
-    activeName.value = newVal;
-    if (!hasSyncedInitial.value) return;
-    if (isEmitting.value) return;
+    () => props.modelValue,
+    (newVal) => {
+      activeName.value = newVal;
+      if (!hasSyncedInitial.value) return;
+      if (isEmitting.value) return;
 
-    const idx = panes.findIndex((p) => p.name === newVal);
-    if (idx >= 0) scrollToTab(idx);
-  }
+      const idx = panes.findIndex((p) => p.name === newVal);
+      if (idx >= 0) scrollToTab(idx);
+    }
 );
 
 // ---------- resize ----------
@@ -179,7 +172,6 @@ const onResize = () => {
 onMounted(() => {
   window.addEventListener("resize", onResize, { passive: true });
 
-  // nếu browser hỗ trợ scrollend -> commit chuẩn hơn
   const el = scrollContainer.value as any;
   if (el?.addEventListener) {
     el.addEventListener("scrollend", commitActiveFromScroll, { passive: true });
@@ -203,20 +195,21 @@ defineExpose({ scrollToTab });
 
 <template>
   <div class="flex flex-col h-full w-full overflow-hidden">
-    <div v-if="swipe" ref="scrollContainer"
-      class="flex-1 flex overflow-x-auto snap-x snap-mandatory no-scrollbar custom-scroll"
-      @scroll.passive="handleScroll">
-      <slot />
-    </div>
-
-    <div v-else class="flex-1 overflow-hidden">
+    <div
+        ref="scrollContainer"
+        :class="[
+        'flex-1 flex snap-x snap-mandatory no-scrollbar custom-scroll',
+        swipe ? 'overflow-x-auto' : 'overflow-x-hidden'
+      ]"
+        @scroll.passive="handleScroll"
+    >
       <slot />
     </div>
 
     <div v-if="dots && panes.length > 1" class="flex justify-center items-center py-2">
-      <div v-for="(_, idx) in panes" :key="idx" class="px-1.5 py-2 cursor-pointer" @click="scrollToTab(idx)">
+      <div v-for="(_, idx) in panes" :key="idx" class="px-1.5 py-2 cursor-pointer" >
         <div :class="idx === currentIndex ? 'bg-[#535353]' : 'bg-[#D9D9D9]'"
-          class="w-2 h-2 rounded-full transition-all duration-200" />
+             class="w-2 h-2 rounded-full transition-all duration-200" />
       </div>
     </div>
   </div>
@@ -232,7 +225,6 @@ defineExpose({ scrollToTab });
   scrollbar-width: none;
 }
 
-/* swipe thì để native, đừng ép smooth ở container */
 .custom-scroll {
   scroll-behavior: auto;
   scroll-padding: 0;

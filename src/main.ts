@@ -23,6 +23,11 @@ const config: ProjectConfigData = {
       component: () => import("@/screens/share-clock/ShareClockScreen.vue"),
     },
     {
+      name: "share-clock-detail",
+      path: "/share-clock-detail/:id",
+      component: () => import("@/screens/share-clock-detail/ShareClockDetail.vue"),
+    },
+    {
       name: "share-ritual",
       path: "share-ritual",
       component: () => import("@/screens/share-ritual/ShareRitualScreen.vue"),

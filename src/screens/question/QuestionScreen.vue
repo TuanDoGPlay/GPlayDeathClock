@@ -1,14 +1,14 @@
 <script lang="ts" setup>
 import Question from '@/assets/icons/question.svg'
-import { computed, nextTick, onBeforeMount, ref, watch } from "vue";
+import {computed, nextTick, onBeforeMount, ref, watch} from "vue";
 import ContentFrame from "@/components/content-frame/ContentFrame.vue";
-import { goToRouter } from "gplay-app-sdk";
+import {goToRouter, showToast} from "gplay-app-sdk";
 import QuestionItem from "@/screens/question/components/QuestionItem.vue";
 import MoreQuestion from "@/screens/question/components/MoreQuestion.vue";
 import TabComponent from "@/components/tab/TabComponent.vue";
 import TabPane from "@/components/tab/TabPane.vue";
-import type { QuestionInstance } from "@/common/types.ts";
-import { CommonController } from "@/common/controller.ts";
+import type {QuestionInstance} from "@/common/types.ts";
+import {CommonController} from "@/common/controller.ts";
 import DefaultQuestions from "@/screens/question/components/DefaultQuestions.vue";
 
 const questions = ref<QuestionInstance[]>([])
@@ -49,13 +49,22 @@ async function fetchQuestions() {
 }
 
 function handleBack() {
-  goToRouter({ name: 'home' })
+  goToRouter({name: 'home'})
 }
 
 async function answerQuestion(question: QuestionInstance, answer: any) {
-  console.log('answer', answer);
-
+  if (!answer) {
+    await showToast({
+      text: "Please answer"
+    })
+    return
+  }
   await CommonController.answerQuestion(question, answer);
+}
+
+async function skipQuestion(question: QuestionInstance) {
+  await CommonController.skipQuestion(question);
+  goNext(question.id.toString())
 }
 
 function goNext(currentId: string) {
@@ -71,22 +80,24 @@ function moreQuestions() {
 
 <template>
   <div class="h-full">
-    <DefaultQuestions v-if="isFirstVisit" @more="moreQuestions" />
+    <DefaultQuestions v-if="isFirstVisit" @more="moreQuestions"/>
 
     <ContentFrame v-else :current-tab="currentTabIndex" :icon="Question" :total-tab="questions.length + 1" show-back
-      show-pagination-in-title title="Questions" @back="handleBack">
-      <TabComponent v-model="activeName" :dots="true" :swipe="true">
+                  show-pagination-in-title title="Questions" @back="handleBack">
+      <TabComponent v-model="activeName" :dots="true" :swipe="false">
 
         <TabPane v-for="question in questions" :key="question.id" :name="question.id.toString()">
-          <QuestionItem :question="question" @input="val => { answers[question.id.toString()] = val; }" @next="val => {
+          <QuestionItem :question="question" @input="val => { answers[question.id.toString()] = val; }"
+                        @next="val => {
             const id = question.id.toString()
             answers[id] = val
             goNext(id)
-          }" />
+          }"
+                        @skip="skipQuestion(question)"/>
         </TabPane>
 
         <TabPane label="More" name="more">
-          <MoreQuestion @more="fetchQuestions" />
+          <MoreQuestion @more="fetchQuestions"/>
         </TabPane>
 
       </TabComponent>

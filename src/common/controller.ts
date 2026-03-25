@@ -1,18 +1,18 @@
-import { Database } from "gplay-app-sdk";
+import {Database} from "gplay-app-sdk";
 import questions from "@/assets/data/questions.json";
 import {
-  type BucketItemData,
-  type MissionData,
-  MissionInstance,
-  type QuestionData,
-  QuestionInstance,
-  type UserData,
+    type BucketItemData,
+    type MissionData,
+    MissionInstance,
+    type QuestionData,
+    QuestionInstance,
+    type UserData,
 } from "@/common/types.ts";
-import { v4 as uuidv4 } from "uuid";
+import {v4 as uuidv4} from "uuid";
 import dailyMissions from "@/assets/data/daily-missions.json";
-import { Utils } from "./utils";
-import { Preferences } from "@capacitor/preferences";
-import { EventEnum } from "@/constants/events";
+import {Utils} from "./utils";
+import {Preferences} from "@capacitor/preferences";
+import {EventEnum} from "@/constants/events";
 
 const USER = "user";
 const REMAINLIVE = "remain";
@@ -23,221 +23,231 @@ const MISSION = "missions";
 const QUESTION = "questions";
 
 export const CommonController = {
-  async init() {
-    const db = {
-      [BUCKET]: [],
-      [MISSION]: [],
-      [QUESTION]: [],
-    };
-    await Database.initDatabase(db);
-  },
-  async checkAndRunNewDayTask() {
-    const today = new Date().toISOString().split("T")[0];
-    const lastDate = (
-      await Preferences.get({
-        key: LASTVISIT,
-      })
-    ).value;
-    if (today && lastDate !== today) {
-      await this.refreshDailyMission();
-      await Preferences.set({
-        key: LASTVISIT,
-        value: today,
-      });
-      return true;
-    }
+    async init() {
+        const db = {
+            [BUCKET]: [],
+            [MISSION]: [],
+            [QUESTION]: [],
+        };
+        await Database.initDatabase(db);
+    },
+    async checkAndRunNewDayTask() {
+        const today = new Date().toISOString().split("T")[0];
+        const lastDate = (
+            await Preferences.get({
+                key: LASTVISIT,
+            })
+        ).value;
+        if (today && lastDate !== today) {
+            await this.refreshDailyMission();
+            await Preferences.set({
+                key: LASTVISIT,
+                value: today,
+            });
+            return true;
+        }
 
-    return false;
-  },
+        return false;
+    },
 
-  async refreshDailyMission(): Promise<void> {
-    return await Database.deleteTable(MISSION, {});
-  },
+    async refreshDailyMission(): Promise<void> {
+        return await Database.deleteTable(MISSION, {});
+    },
 
-  async getQuestions(): Promise<QuestionInstance[]> {
-    const answeredQuestions =
-      await Database.selectTable<QuestionData>(QUESTION);
-    const notAnsweredQuestions: QuestionData[] = [];
-    questions.forEach((q) => {
-      if (!answeredQuestions.find((i) => i.id == q.id))
-        notAnsweredQuestions.push(q);
-    });
-    return notAnsweredQuestions
-      .slice(0, 10)
-      .map((q: QuestionData) => new QuestionInstance(q));
-  },
+    async getQuestions(): Promise<QuestionInstance[]> {
+        const answeredQuestions =
+            await Database.selectTable<QuestionData>(QUESTION);
+        const notAnsweredQuestions: QuestionData[] = [];
+        questions.forEach((q) => {
+            if (!answeredQuestions.find((i) => i.id == q.id))
+                notAnsweredQuestions.push(q);
+        });
+        return notAnsweredQuestions
+            .slice(0, 10)
+            .map((q: QuestionData) => new QuestionInstance(q));
+    },
 
-  async getTopTimeDeductionQuestions(): Promise<QuestionInstance[]> {
-    const answeredQuestions =
-      await Database.selectTable<QuestionData>(QUESTION);
-    const data = answeredQuestions.filter((i) => (i.time ?? 0) < 0);
-    data.sort((a, b) => (a.time || 0) - (b.time || 0));
-    return Promise.resolve(data.slice(0, 5));
-  },
+    async getTopTimeDeductionQuestions(): Promise<QuestionInstance[]> {
+        const answeredQuestions =
+            await Database.selectTable<QuestionData>(QUESTION);
+        const data = answeredQuestions.filter((i) => (i.time ?? 0) < 0);
+        data.sort((a, b) => (a.time || 0) - (b.time || 0));
+        return Promise.resolve(data.slice(0, 5));
+    },
 
-  async answerQuestion(question: QuestionInstance, answer: any): Promise<void> {
-    console.log("answer", answer);
+    async answerQuestion(question: QuestionInstance, answer: any): Promise<void> {
+        console.log("answer", answer);
 
-    if (answer) {
-      const incrementTime = Utils.calculateQuestionIncrementTime(
-        question,
-        answer,
-      );
-      question.time = incrementTime;
-      await CommonController.editRemainLiveTime(incrementTime);
-    }
-    const exist = await Database.selectTable<QuestionInstance>(QUESTION, {
-      id: question.id,
-    });
-    console.log(exist);
+        if (answer) {
+            const incrementTime = Utils.calculateQuestionIncrementTime(
+                question,
+                answer,
+            );
+            question.time = incrementTime;
+            await CommonController.editRemainLiveTime(incrementTime);
+        }
+        const exist = await Database.selectTable<QuestionInstance>(QUESTION, {
+            id: question.id,
+        });
+        console.log(exist);
 
-    if (exist.length) {
-      await CommonController.editRemainLiveTime(-(exist[0]?.time ?? 0));
-      await Database.updateTable(QUESTION, { id: question.id }, question);
-      return Promise.resolve();
-    }
-    await Database.insertTable(QUESTION, question);
-    return Promise.resolve();
-  },
+        if (exist.length) {
+            await CommonController.editRemainLiveTime(-(exist[0]?.time ?? 0));
+            await Database.updateTable(QUESTION, {id: question.id}, question);
+            return Promise.resolve();
+        }
+        await Database.insertTable(QUESTION, question);
+        return Promise.resolve();
+    },
+    async skipQuestion(question: QuestionInstance): Promise<void> {
+        const exist = await Database.selectTable<QuestionInstance>(QUESTION, {
+            id: question.id,
+        });
+        if (exist.length) {
+            return Promise.resolve();
+        }
+        await Database.insertTable(QUESTION, question);
+        return Promise.resolve();
+    },
 
-  async getDailyMission(): Promise<MissionInstance[]> {
-    try {
-      const raw = (await Database.selectTable<MissionData>(MISSION)) ?? [];
-      const missions = dailyMissions.map((m) => new MissionInstance(m));
-      missions.forEach((m) => {
-        m.completed = raw.some((r) => r.id === m.id);
-      });
+    async getDailyMission(): Promise<MissionInstance[]> {
+        try {
+            const raw = (await Database.selectTable<MissionData>(MISSION)) ?? [];
+            const missions = dailyMissions.map((m) => new MissionInstance(m));
+            missions.forEach((m) => {
+                m.completed = raw.some((r) => r.id === m.id);
+            });
 
-      const completedMissions = missions.filter((m) => m.completed);
-      const uncompletedMissions = missions.filter((m) => !m.completed);
+            const completedMissions = missions.filter((m) => m.completed);
+            const uncompletedMissions = missions.filter((m) => !m.completed);
 
-      return Promise.resolve([...uncompletedMissions, ...completedMissions]);
-    } catch (e) {
-      return Promise.reject(e);
-    }
-  },
+            return Promise.resolve([...uncompletedMissions, ...completedMissions]);
+        } catch (e) {
+            return Promise.reject(e);
+        }
+    },
 
-  async getCompletedMission(): Promise<MissionInstance[]> {
-    try {
-      const raw = await Database.selectTable<MissionData>(MISSION);
-      return Promise.resolve(
-        raw.map((i) => {
-          const ins = new MissionInstance(i);
-          ins.completed = true;
-          return ins;
-        }),
-      );
-    } catch (e) {
-      return Promise.reject(e);
-    }
-  },
+    async getCompletedMission(): Promise<MissionInstance[]> {
+        try {
+            const raw = await Database.selectTable<MissionData>(MISSION);
+            return Promise.resolve(
+                raw.map((i) => {
+                    const ins = new MissionInstance(i);
+                    ins.completed = true;
+                    return ins;
+                }),
+            );
+        } catch (e) {
+            return Promise.reject(e);
+        }
+    },
 
-  async editMission(mission: MissionInstance): Promise<void> {
-    try {
-      if (mission.completed) {
-        await Database.insertTable(MISSION, mission);
-        await this.editRemainLiveTime(mission.time);
-      } else {
-        await Database.deleteTable(MISSION, { id: mission.id });
-        await this.editRemainLiveTime(-mission.time);
-      }
-      return Promise.resolve();
-    } catch (e) {
-      return Promise.reject(e);
-    }
-  },
+    async editMission(mission: MissionInstance): Promise<void> {
+        try {
+            if (mission.completed) {
+                await Database.insertTable(MISSION, mission);
+                await this.editRemainLiveTime(mission.time);
+            } else {
+                await Database.deleteTable(MISSION, {id: mission.id});
+                await this.editRemainLiveTime(-mission.time);
+            }
+            return Promise.resolve();
+        } catch (e) {
+            return Promise.reject(e);
+        }
+    },
 
-  async getUserData(): Promise<UserData> {
-    const { value } = await Preferences.get({ key: USER });
-    if (!value) {
-      const newData = {
-        name: "",
-        dob: "",
-        sex: "",
-        height: 0,
-        weight: 0,
-        sexualOrientation: "",
-      };
-      await Preferences.set({ key: USER, value: JSON.stringify(newData) });
-      return Promise.resolve(newData);
-    }
-    return Promise.resolve(JSON.parse(value));
-  },
+    async getUserData(): Promise<UserData> {
+        const {value} = await Preferences.get({key: USER});
+        if (!value) {
+            const newData = {
+                name: "",
+                dob: "",
+                sex: "",
+                height: 0,
+                weight: 0,
+                sexualOrientation: "",
+            };
+            await Preferences.set({key: USER, value: JSON.stringify(newData)});
+            return Promise.resolve(newData);
+        }
+        return Promise.resolve(JSON.parse(value));
+    },
 
-  async saveUserData(data: UserData): Promise<void> {
-    await Preferences.set({ key: USER, value: JSON.stringify(data) });
-    return Promise.resolve();
-  },
+    async saveUserData(data: UserData): Promise<void> {
+        await Preferences.set({key: USER, value: JSON.stringify(data)});
+        return Promise.resolve();
+    },
 
-  async getRemainLiveTime(): Promise<number> {
-    const { value } = await Preferences.get({ key: REMAINLIVE });
-    if (!value) {
-      return Promise.resolve(0);
-    }
-    const deathMoment = new Date(value);
-    const now = new Date();
-    const diff = deathMoment.getTime() - now.getTime();
-    return Promise.resolve(diff);
-  },
+    async getRemainLiveTime(): Promise<number> {
+        const {value} = await Preferences.get({key: REMAINLIVE});
+        if (!value) {
+            return Promise.resolve(0);
+        }
+        const deathMoment = new Date(value);
+        const now = new Date();
+        const diff = deathMoment.getTime() - now.getTime();
+        return Promise.resolve(diff);
+    },
 
-  async editRemainLiveTime(
-    time: number,
-    isIncrement: boolean = true,
-  ): Promise<void> {
-    const { value } = await Preferences.get({ key: REMAINLIVE });
+    async editRemainLiveTime(
+        time: number,
+        isIncrement: boolean = true,
+    ): Promise<void> {
+        const {value} = await Preferences.get({key: REMAINLIVE});
 
-    const oldDate = new Date(value ?? 0);
-    const newTime = isIncrement
-      ? new Date(oldDate.getTime() + time)
-      : new Date(time);
-    await Preferences.set({
-      key: REMAINLIVE,
-      value: newTime.toString(),
-    });
-    document.dispatchEvent(new Event(EventEnum.ChangeTime));
-    return Promise.resolve();
-  },
+        const oldDate = new Date(value ?? 0);
+        const newTime = isIncrement
+            ? new Date(oldDate.getTime() + time)
+            : new Date(time);
+        await Preferences.set({
+            key: REMAINLIVE,
+            value: newTime.toString(),
+        });
+        document.dispatchEvent(new Event(EventEnum.ChangeTime));
+        return Promise.resolve();
+    },
 
-  async getDeathMoment(): Promise<Date> {
-    const { value } = await Preferences.get({ key: REMAINLIVE });
-    if (!value) {
-      return Promise.resolve(new Date());
-    }
-    return Promise.resolve(new Date(value));
-  },
+    async getDeathMoment(): Promise<Date> {
+        const {value} = await Preferences.get({key: REMAINLIVE});
+        if (!value) {
+            return Promise.resolve(new Date());
+        }
+        return Promise.resolve(new Date(value));
+    },
 
-  async getBucketList() {
-    const res = (await Database.selectTable<BucketItemData>(BUCKET)) ?? [];
-    return res as BucketItemData[];
-  },
+    async getBucketList() {
+        const res = (await Database.selectTable<BucketItemData>(BUCKET)) ?? [];
+        return res as BucketItemData[];
+    },
 
-  async createBucketItem(name: string): Promise<void> {
-    const item: BucketItemData = {
-      id: uuidv4(),
-      label: name,
-      completed: false,
-    };
-    await Database.insertTable(BUCKET, item);
-    return Promise.resolve();
-  },
+    async createBucketItem(name: string): Promise<void> {
+        const item: BucketItemData = {
+            id: uuidv4(),
+            label: name,
+            completed: false,
+        };
+        await Database.insertTable(BUCKET, item);
+        return Promise.resolve();
+    },
 
-  async editBucketItem(item: BucketItemData): Promise<void> {
-    await Database.updateTable(BUCKET, { id: item.id }, item);
-    return Promise.resolve();
-  },
+    async editBucketItem(item: BucketItemData): Promise<void> {
+        await Database.updateTable(BUCKET, {id: item.id}, item);
+        return Promise.resolve();
+    },
 
-  async getIsFirstVisit(): Promise<boolean> {
-    const userData = await this.getUserData();
-    if (
-      userData.name &&
-      userData.dob &&
-      userData.sex &&
-      userData.height &&
-      userData.weight &&
-      userData.sexualOrientation
-    ) {
-      return Promise.resolve(false);
-    }
-    return Promise.resolve(true);
-  },
+    async getIsFirstVisit(): Promise<boolean> {
+        const userData = await this.getUserData();
+        if (
+            userData.name &&
+            userData.dob &&
+            userData.sex &&
+            userData.height &&
+            userData.weight &&
+            userData.sexualOrientation
+        ) {
+            return Promise.resolve(false);
+        }
+        return Promise.resolve(true);
+    },
 };
