@@ -4,7 +4,7 @@ import ShareArrow from "@/assets/icons/share-arrow.svg";
 import CheckboxComponent from "@/components/checkbox/CheckboxComponent.vue";
 import ButtonComponent from "@/components/button/ButtonComponent.vue";
 import ContentFrame from "@/components/content-frame/ContentFrame.vue";
-import { goToRouter } from "gplay-app-sdk";
+import { goToRouter } from "@gplay/app-sdk";
 import { CommonController } from "@/common/controller.ts";
 import { onMounted, ref } from "vue";
 import type { MissionInstance } from "@/common/types.ts";

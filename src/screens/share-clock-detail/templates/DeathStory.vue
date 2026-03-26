@@ -10,7 +10,7 @@ import ContentFrame from "@/components/content-frame/ContentFrame.vue";
 import { CommonController } from '@/common/controller';
 import gsap from 'gsap';
 import { QuestionInstance } from '@/common/types';
-import { captureImage, loadRewardedVideo, showRewardedVideo } from 'gplay-app-sdk';
+import { captureImage, loadRewardedVideo, showRewardedVideo } from '@gplay/app-sdk';
 import { Directory, Filesystem } from "@capacitor/filesystem";
 import { Share } from '@capacitor/share';
 

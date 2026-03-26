@@ -8,7 +8,7 @@ import "swiper/css/effect-coverflow";
 import {onMounted, ref} from "vue";
 import {type ShareTemplate, Utils} from "@/common/utils.ts";
 import ContentFrame from "@/components/content-frame/ContentFrame.vue";
-import {goToRouter} from "gplay-app-sdk";
+import {goToRouter} from "@gplay/app-sdk";
 
 const templates = ref<ShareTemplate[]>([])
 

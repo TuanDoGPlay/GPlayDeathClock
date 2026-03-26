@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import {Utils} from "@/common/utils.ts";
-import {goToRouter} from "gplay-app-sdk";
+import {goToRouter} from "@gplay/app-sdk";
 import {EventEnum} from "@/constants/events.ts";
 import {onBeforeUnmount, onMounted} from "vue";
 

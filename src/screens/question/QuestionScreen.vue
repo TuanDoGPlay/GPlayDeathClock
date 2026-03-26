@@ -2,7 +2,7 @@
 import Question from '@/assets/icons/question.svg'
 import {computed, nextTick, onBeforeMount, ref, watch} from "vue";
 import ContentFrame from "@/components/content-frame/ContentFrame.vue";
-import {goToRouter, showToast} from "gplay-app-sdk";
+import {goToRouter, showToast} from "@gplay/app-sdk";
 import QuestionItem from "@/screens/question/components/QuestionItem.vue";
 import MoreQuestion from "@/screens/question/components/MoreQuestion.vue";
 import TabComponent from "@/components/tab/TabComponent.vue";

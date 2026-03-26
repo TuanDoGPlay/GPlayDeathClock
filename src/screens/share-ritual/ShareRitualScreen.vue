@@ -7,7 +7,7 @@ import {Utils} from '@/common/utils';
 import CheckboxComponent from '@/components/checkbox/CheckboxComponent.vue';
 import ContentFrame from '@/components/content-frame/ContentFrame.vue';
 import {EventEnum} from "@/constants/events.ts";
-import {captureImage, goToRouter, loadRewardedVideo, showRewardedVideo} from 'gplay-app-sdk';
+import {captureImage, goToRouter, loadRewardedVideo, showRewardedVideo} from '@gplay/app-sdk';
 import {computed, onBeforeMount, onBeforeUnmount, ref} from 'vue';
 import ButtonComponent from '@/components/button/ButtonComponent.vue';
 import {Directory, Filesystem} from "@capacitor/filesystem";

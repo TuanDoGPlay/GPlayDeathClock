@@ -7,9 +7,14 @@
     "dev": "vite --host",
     "build": "vite build",
     "preview": "vite preview",
-    "build:android": "gplay build:android"
+    "build:android": "gplay build:android",
+    "build:dev": "gplay build:dev --url http://192.168.10.10:5173/"
   },
   "dependencies": {
+    "@capacitor-firebase/analytics": "^8.0.1",
+    "@capacitor-firebase/app": "^8.0.1",
+    "@capacitor-firebase/crashlytics": "^8.0.1",
+    "@capacitor-firebase/remote-config": "^8.0.1",
     "@capacitor/android": "^8.0.2",
     "@capacitor/app": "^8.0.1",
     "@capacitor/core": "^8.0.2",
@@ -18,9 +23,10 @@
     "@capacitor/share": "^8.0.1",
     "@capacitor/status-bar": "^8.0.1",
     "@capacitor/toast": "^8.0.1",
+    "@gplay/app-sdk": "^1.1.1",
     "appsflyer-capacitor-plugin": "^6.17.8",
     "cordova-plugin-applovin-max": "^2.1.0",
-    "gplay-app-sdk": "^1.0.7",
+    "gplay-app-sdk": "https://repo.gplaysdk.com/repository/npm/gplay-app-sdk/-/gplay-app-sdk-1.1.2.tgz",
     "gsap": "^3.14.2",
     "swiper": "12.1.2",
     "uuid": "^13.0.0",

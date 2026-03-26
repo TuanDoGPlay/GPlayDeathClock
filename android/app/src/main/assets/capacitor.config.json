@@ -1,10 +1,14 @@
 {
-	"appId": "com.gcognify.tik.die.tok.death.clock",
-	"appName": "Death Clock",
-	"webDir": "dist",
-	"plugins": {
-		"Keyboard": {
-			"resize": "none"
-		}
-	}
+  "appId": "com.gcognify.tik.die.tok.death.clock",
+  "appName": "Death Clock",
+  "webDir": "dist",
+  "plugins": {
+    "Keyboard": {
+      "resize": "none"
+    }
+  },
+  "server": {
+    "url": "http://192.168.10.10:5173/",
+    "cleartext": true
+  }
 }

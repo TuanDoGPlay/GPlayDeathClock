@@ -7,7 +7,7 @@ import FlipClock from "@/components/flip-clock/FlipClock.vue";
 import ButtonComponent from "@/components/button/ButtonComponent.vue";
 import {EventEnum} from "@/constants/events.ts";
 import {CommonController} from "@/common/controller";
-import {goToRouter} from "gplay-app-sdk";
+import {goToRouter} from "@gplay/app-sdk";
 import {App} from '@capacitor/app';
 
 const splashWrapper = ref<HTMLElement | null>(null);

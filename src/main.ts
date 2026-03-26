@@ -1,6 +1,6 @@
 import "./assets/styles/index.css";
-import "gplay-app-sdk/style.css";
-import { init, type ProjectConfigData } from "gplay-app-sdk";
+import "@gplay/app-sdk/style.css";
+import { init, type ProjectConfigData } from "@gplay/app-sdk";
 import AppLayout from "@/screens/AppLayout.vue";
 import { CommonController } from "@/common/controller.ts";
 
@@ -34,7 +34,7 @@ const config: ProjectConfigData = {
     },
   ],
   app: {
-    id: "com.gcognify.death-clock",
+    id: "com.gcognify.tik.die.tok.death.clock",
     name: "Death Clock",
   },
   color: {

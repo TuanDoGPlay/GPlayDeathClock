@@ -5,7 +5,7 @@ import {CommonController} from '@/common/controller';
 import ButtonComponent from "@/components/button/ButtonComponent.vue";
 import ContentFrame from "@/components/content-frame/ContentFrame.vue";
 import {computed, onMounted, ref} from "vue";
-import {captureImage, loadRewardedVideo, showRewardedVideo} from 'gplay-app-sdk';
+import {captureImage, loadRewardedVideo, showRewardedVideo} from '@gplay/app-sdk';
 import {Directory, Filesystem} from "@capacitor/filesystem";
 import {Share} from '@capacitor/share';
 

@@ -3,7 +3,7 @@ import Share from "@/assets/icons/share.svg";
 import Add from "@/assets/icons/add.svg";
 import ButtonComponent from "@/components/button/ButtonComponent.vue";
 import { onMounted } from "vue";
-import { goToRouter, loadRewardedVideo, showRewardedVideo } from "gplay-app-sdk";
+import { goToRouter, loadRewardedVideo, showRewardedVideo } from "@gplay/app-sdk";
 import { EventEnum } from "@/constants/events.ts";
 
 const emit = defineEmits(['more']);

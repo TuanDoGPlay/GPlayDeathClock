@@ -1,4 +1,4 @@
-import {Database} from "gplay-app-sdk";
+import { Database } from "@gplay/app-sdk";
 import questions from "@/assets/data/questions.json";
 import {
     type BucketItemData,
@@ -8,11 +8,11 @@ import {
     QuestionInstance,
     type UserData,
 } from "@/common/types.ts";
-import {v4 as uuidv4} from "uuid";
+import { v4 as uuidv4 } from "uuid";
 import dailyMissions from "@/assets/data/daily-missions.json";
-import {Utils} from "./utils";
-import {Preferences} from "@capacitor/preferences";
-import {EventEnum} from "@/constants/events";
+import { Utils } from "./utils";
+import { Preferences } from "@capacitor/preferences";
+import { EventEnum } from "@/constants/events";
 
 const USER = "user";
 const REMAINLIVE = "remain";
@@ -93,7 +93,7 @@ export const CommonController = {
 
         if (exist.length) {
             await CommonController.editRemainLiveTime(-(exist[0]?.time ?? 0));
-            await Database.updateTable(QUESTION, {id: question.id}, question);
+            await Database.updateTable(QUESTION, { id: question.id }, question);
             return Promise.resolve();
         }
         await Database.insertTable(QUESTION, question);
@@ -148,7 +148,7 @@ export const CommonController = {
                 await Database.insertTable(MISSION, mission);
                 await this.editRemainLiveTime(mission.time);
             } else {
-                await Database.deleteTable(MISSION, {id: mission.id});
+                await Database.deleteTable(MISSION, { id: mission.id });
                 await this.editRemainLiveTime(-mission.time);
             }
             return Promise.resolve();
@@ -158,7 +158,7 @@ export const CommonController = {
     },
 
     async getUserData(): Promise<UserData> {
-        const {value} = await Preferences.get({key: USER});
+        const { value } = await Preferences.get({ key: USER });
         if (!value) {
             const newData = {
                 name: "",
@@ -168,19 +168,19 @@ export const CommonController = {
                 weight: 0,
                 sexualOrientation: "",
             };
-            await Preferences.set({key: USER, value: JSON.stringify(newData)});
+            await Preferences.set({ key: USER, value: JSON.stringify(newData) });
             return Promise.resolve(newData);
         }
         return Promise.resolve(JSON.parse(value));
     },
 
     async saveUserData(data: UserData): Promise<void> {
-        await Preferences.set({key: USER, value: JSON.stringify(data)});
+        await Preferences.set({ key: USER, value: JSON.stringify(data) });
         return Promise.resolve();
     },
 
     async getRemainLiveTime(): Promise<number> {
-        const {value} = await Preferences.get({key: REMAINLIVE});
+        const { value } = await Preferences.get({ key: REMAINLIVE });
         if (!value) {
             return Promise.resolve(0);
         }
@@ -194,7 +194,7 @@ export const CommonController = {
         time: number,
         isIncrement: boolean = true,
     ): Promise<void> {
-        const {value} = await Preferences.get({key: REMAINLIVE});
+        const { value } = await Preferences.get({ key: REMAINLIVE });
 
         const oldDate = new Date(value ?? 0);
         const newTime = isIncrement
@@ -209,7 +209,7 @@ export const CommonController = {
     },
 
     async getDeathMoment(): Promise<Date> {
-        const {value} = await Preferences.get({key: REMAINLIVE});
+        const { value } = await Preferences.get({ key: REMAINLIVE });
         if (!value) {
             return Promise.resolve(new Date());
         }
@@ -232,7 +232,7 @@ export const CommonController = {
     },
 
     async editBucketItem(item: BucketItemData): Promise<void> {
-        await Database.updateTable(BUCKET, {id: item.id}, item);
+        await Database.updateTable(BUCKET, { id: item.id }, item);
         return Promise.resolve();
     },
 
